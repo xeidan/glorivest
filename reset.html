@@ -105,7 +105,7 @@
       }
 
       try {
-        const verifyRes = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/verify-reset', {
+        const verifyRes = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/verify-reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, otp })
@@ -116,7 +116,7 @@
           return showToast(errData.message || "Invalid OTP.");
         }
 
-        const resetRes = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/reset-password', {
+        const resetRes = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, newPassword })

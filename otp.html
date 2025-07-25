@@ -89,7 +89,7 @@
       }
 
       try {
-        const res = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/verify', {
+        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, otp }),
@@ -129,7 +129,7 @@
     async function resendOtp() {
       startCountdown(60);
       try {
-        const res = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/request-reset', {
+        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/request-reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),

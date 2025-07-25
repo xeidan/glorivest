@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xeidan/earnrave.git"
+    "url": "git+https://github.com/xeidan/Glorivest.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/xeidan/earnrave/issues"
+    "url": "https://github.com/xeidan/Glorivest/issues"
   },
-  "homepage": "https://github.com/xeidan/earnrave#readme",
+  "homepage": "https://github.com/xeidan/Glorivest#readme",
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.5",

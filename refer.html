@@ -11,7 +11,7 @@
 
   <!-- Logo -->
   <div class="mb-6 flex justify-center">
-    <img src="logo.svg" alt="EarnRave Logo" class="h-10" />
+    <img src="logo.svg" alt="Glorivest Logo" class="h-10" />
   </div>
 
   <h1 class="text-2xl font-bold mb-4 text-center">Your Referral Stats</h1>
@@ -47,8 +47,8 @@
       }
 
       // Show user's referral info
-      const referralCode = user.referral_code || `rave${user.id}`;
-      const referralLink = `https://earnrave.com/signup.html?ref=${referralCode}`;
+      const referralCode = user.referral_code || `Glorivest${user.id}`;
+      const referralLink = `https://Glorivest.com/signup.html?ref=${referralCode}`;
 
       document.getElementById("referral-code").textContent = referralCode;
       document.getElementById("referral-link").textContent = referralLink;
@@ -70,7 +70,7 @@
       });
 
       try {
-        const res = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/referral/stats', {
+        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/referral/stats', {
           headers: { Authorization: 'Bearer ' + token }
         });
 
@@ -82,7 +82,7 @@
           console.error("Failed to fetch referral stats");
         }
 
-        const lb = await fetch('https://earnrave-backend-0c5eddaec35e.herokuapp.com/referral/leaderboard');
+        const lb = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/referral/leaderboard');
         if (lb.ok) {
           const topUsers = await lb.json();
           const list = document.getElementById("leaderboard");

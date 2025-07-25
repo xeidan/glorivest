@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EarnRave App</title>
+  <title>Glorivest App</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
   <link href="output.css" rel="stylesheet" />
   <link rel="stylesheet" href="input.css">
@@ -19,7 +19,7 @@
       </div>
       <div>
         <p class="text-sm text-gray-300 font-semibold">Hello, <span id="account-user-email">email@email.com</span></p>
-        <p class="text-sm text-white/70">ID: <span id="user-id-display">#RAVE000001</span></p>
+        <p class="text-sm text-white/70">ID: <span id="user-id-display">#Glorivest000001</span></p>
         <p class="text-xs text-white/50">Welcome back</p>
       </div>
     </div>
@@ -338,7 +338,7 @@
   
       <!-- App Info -->
       <div class="text-xs text-white/50 text-center pt-4">
-        EarnRave v1.0.0 • Last updated: Jun 2025<br>
+        Glorivest v1.0.0 • Last updated: Jun 2025<br>
         Built for smart traders. Powered by AI.
       </div>
     </div>
@@ -462,7 +462,7 @@
   
     function formatUserId(id) {
       const base = 150000;
-      return `#RAVE${base + parseInt(id)}`;
+      return `#Glorivest${base + parseInt(id)}`;
     }
   
     function showTab(tabId) {
@@ -501,7 +501,7 @@
     async function fetchUserAccount() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("https://earnrave-backend-0c5eddaec35e.herokuapp.com/account/me", {
+        const response = await fetch("https://Glorivest-backend-0c5eddaec35e.herokuapp.com/account/me", {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -577,13 +577,13 @@
       if (!token) return;
   
       try {
-        const res = await fetch("https://earnrave-backend-0c5eddaec35e.herokuapp.com/account/me", {
+        const res = await fetch("https://Glorivest-backend-0c5eddaec35e.herokuapp.com/account/me", {
           headers: { Authorization: `Bearer ${token}` }
         });
         const user = await res.json();
   
         const code = user.referral_code || "N/A";
-        const link = `https://earnrave.github.io/index.html?ref=${code}`;
+        const link = `https://Glorivest.github.io/index.html?ref=${code}`;
         const count = user.total_referrals || 0;
         const earnings = parseFloat(user.referral_earnings || 0).toFixed(2);
   
@@ -640,7 +640,7 @@
   
     async function loadLeaderboard() {
       try {
-        const res = await fetch("https://earnrave-backend-0c5eddaec35e.herokuapp.com/leaderboard");
+        const res = await fetch("https://Glorivest-backend-0c5eddaec35e.herokuapp.com/leaderboard");
         const data = await res.json();
   
   
@@ -1042,7 +1042,7 @@ ws.onmessage = (msg) => {
       }
   
       try {
-        const res = await fetch("https://earnrave-backend-0c5eddaec35e.herokuapp.com/account/me", {
+        const res = await fetch("https://Glorivest-backend-0c5eddaec35e.herokuapp.com/account/me", {
           headers: { Authorization: "Bearer " + token }
         });
   
@@ -1051,13 +1051,13 @@ ws.onmessage = (msg) => {
         const data = await res.json();
   
         const emailEl = document.getElementById("account-email");
-        const raveIdEl = document.getElementById("account-rave-id");
+        const GlorivestIdEl = document.getElementById("account-Glorivest-id");
         const balanceEl = document.getElementById("account-balance");
         const earningsEl = document.getElementById("account-referral-earnings");
         const totalEl = document.getElementById("account-total-balance");
   
         if (emailEl) emailEl.textContent = data.email || "N/A";
-        if (raveIdEl) raveIdEl.textContent = `#${data.rave_id || "N/A"}`;
+        if (GlorivestIdEl) GlorivestIdEl.textContent = `#${data.Glorivest_id || "N/A"}`;
         if (balanceEl) balanceEl.textContent = `$${parseFloat(data.balance || 0).toFixed(2)}`;
         if (earningsEl) earningsEl.textContent = `$${parseFloat(data.reward_balance || 0).toFixed(2)}`;
         if (totalEl) totalEl.textContent = `$${parseFloat(data.total_balance || 0).toFixed(2)}`;
