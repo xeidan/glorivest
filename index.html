@@ -145,43 +145,6 @@
   </div>
 </div>
 
-<script>
-  function handleMenuClick(el, target) {
-    el.classList.add('text-[#00D2B1]');
-    
-    setTimeout(() => {
-      el.classList.remove('text-[#00D2B1]');
-      toggleMobileMenu();
-      
-      // Scroll to section if target is valid
-      if (target && document.querySelector(target)) {
-        document.querySelector(target).scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 1000);
-  }
-</script>
-
-
-<script>
-  function toggleMobileMenu() {
-    const overlay = document.getElementById('mobileMenu');
-    const panel = document.getElementById('mobileMenuPanel');
-    const isOpen = !overlay.classList.contains('hidden');
-
-    if (isOpen) {
-      panel.classList.remove('translate-x-0');
-      panel.classList.add('translate-x-full');
-      setTimeout(() => overlay.classList.add('hidden'), 300);
-    } else {
-      overlay.classList.remove('hidden');
-      setTimeout(() => {
-        panel.classList.remove('translate-x-full');
-        panel.classList.add('translate-x-0');
-      }, 10);
-    }
-  }
-</script>
-
 
   <!-- HERO SECTION -->
   <section class="relative pt-32 pb-20 px-6 z-10 text-left md:text-center" id="hero">
@@ -193,9 +156,9 @@
     <!-- Desktop-only centering -->
     <div class="z-10 max-w-2xl mt-64 md:mt-32 md:mx-auto md:flex md:flex-col md:items-center md:justify-center">
       <h1 class="text-6xl md:text-8xl lg:text-7xl font-semibold whitespace-nowrap mb-4">
-        <span class="text-gray-200 bg-clip-text">Smart.</span><br>
-        <span class="text-gray-200 bg-clip-text">Secure.</span><br>
-        <span class="text-gray-200 bg-clip-text">AI-Powered.</span>
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="200">Smart.</span><br>
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="300">Secure.</span><br>
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="400">AI-Powered.</span>
       </h1>
       <p class="text-md md:text-lg text-gray-w00 pb-6">
         Grow your assets with intelligent automation and precision. Experience trading with confidence.
@@ -207,30 +170,30 @@
   </section>
   
 
-  <!-- GET STARTED SECTION -->
+  <!-- HOW IT WORKS SECTION -->
   <section id="how" class="bg-white text-[#1C1C1C] py-20 px-6">
     <div class="max-w-5xl mx-auto text-center mb-12">
-      <h2 class="text-3xl font-bold mb-4">How It Works</h2>
+      <h2 class="text-4xl md:text-5xl font-extrabold mb-4">How It Works</h2>
       <p class="text-gray-600 max-w-xl mx-auto">Simple steps to start growing your assets securely with AI-driven tools.</p>
     </div>
   
     <div class="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto text-left">
       <!-- Step 1 -->
-      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="200">
         <div class="text-[#00C8B3] text-3xl mb-4">1</div>
         <h3 class="font-semibold text-xl mb-2">Create an Account</h3>
         <p class="text-gray-500">Sign up in seconds with your email and verify your account instantly.</p>
       </div>
   
       <!-- Step 2 -->
-      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="300">
         <div class="text-[#00C8B3] text-3xl mb-4">2</div>
         <h3 class="font-semibold text-xl mb-2">Fund Your Wallet</h3>
         <p class="text-gray-500">Deposit securely via crypto or fiat to activate your trading journey.</p>
       </div>
   
       <!-- Step 3 -->
-      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="400">
         <div class="text-[#00C8B3] text-3xl mb-4">3</div>
         <h3 class="font-semibold text-xl mb-2">Start Earning Daily</h3>
         <p class="text-gray-500">Our smart trading engine works for you — profit builds automatically.</p>
@@ -238,17 +201,20 @@
     </div>
   </section>
   
+
   <div class="bg-gradient-to-br from-[#1C1C1C] via-[#000000] to-[#1C1C1C]">
+
+
   <!-- WHY CHOOSE US -->
-  <section id="why" class="text-white py-24 px-6">
+  <section id="why" class="text-white py-20 px-6">
     <div class="max-w-5xl mx-auto text-center mb-16">
-      <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Choose Us</h2>
+      <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Why Choose Us</h2>
       <p class="text-gray-400 max-w-2xl mx-auto">We combine smart automation, security, and user empowerment — so you can grow your assets with ease and confidence.</p>
     </div>
   
     <div class="grid gap-10 md:grid-cols-3 max-w-6xl mx-auto">
       <!-- Feature 1 -->
-      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition">
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="200">
         <div class="text-4xl mb-4 text-[#00D2B1]">
           <i class="fas fa-robot"></i>
         </div>
@@ -257,7 +223,7 @@
       </div>
   
       <!-- Feature 2 -->
-      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition">
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="300">
         <div class="text-4xl mb-4 text-[#00D2B1]">
           <i class="fas fa-shield-alt"></i>
         </div>
@@ -266,7 +232,7 @@
       </div>
   
       <!-- Feature 3 -->
-      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition">
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="400">
         <div class="text-4xl mb-4 text-[#00D2B1]">
           <i class="fas fa-users"></i>
         </div>
@@ -301,7 +267,7 @@
           No clutter. No confusion. Just beautifully responsive, data-rich visuals built for performance and ease.
         </p>
         <div class="text-center">
-          <button type="button" onclick="toggleAuthPanel()" class="w-full px-6 py-3 rounded-md bg-[#00C8B3] hover:bg-[#00a896] transition text-white font-medium">
+          <button type="button" onclick="toggleAuthPanel()" class="w-full px-6 py-3 rounded-md bg-[#00C8B3] hover:bg-[#00a896] transition text-white font-semibold">
             Start Trading
           </button>
         </div>
@@ -311,7 +277,7 @@
   </div>   
 
   <!-- TESTIMONIALS -->
-  <section id="testimonials" class="bg-white py-16 overflow-hidden">
+  <section id="testimonials" class="bg-white py-20 overflow-hidden">
     <h2 class="text-4xl md:text-5xl font-extrabold text-center text-gray-900 mb-12">
         What People Are Saying
     </h2>
@@ -627,11 +593,11 @@
             </div>
         </div>
     </div>
-</section>
+  </section>
 
   
 <!-- JOIN OUR COMMUNITY -->
-<section id="community" class="relative overflow-hidden py-16 px-6 md:grid md:grid-cols-2 md:gap-12 md:items-center mx-auto max-w-7xl">
+<section id="community" class="relative overflow-hidden py-20 px-6 md:grid md:grid-cols-2 md:gap-12 md:items-center mx-auto max-w-7xl">
   <!-- Left Text Section -->
   <div class="md:text-left text-center" data-animate="fade-in-up" data-delay="200">
     <h2 class="text-4xl md:text-5xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#00D2B1] to-white mb-6">
@@ -650,7 +616,7 @@
     </div>
 
     <!-- Avatar -->
-    <img src="woman.svg" alt="woman avatar" class="w-36 md:w-52 mx-auto rounded-xl relative z-10 mb-4" />
+    <img src="community.jpg" alt="woman avatar" class="w-full md:w-96 mx-auto rounded-xl relative z-10 mb-4" />
 
     <!-- Text -->
     <h3 class="text-xl font-bold relative z-10 mb-2">Stay Updated</h3>
@@ -690,8 +656,8 @@
 
 
 <!-- FAQS -->
-  <section class="relative overflow-hidden py-10 px-6 text-white" id="faq">
-    <h1 class="text-4xl md:text-6xl font-normal mb-12 bg-gradient-to-b from-gray-600 to-white text-transparent bg-clip-text text-center z-10 relative" data-animate="fade-in-up" data-delay="200">
+  <section class="relative overflow-hidden py-20 px-6 text-white" id="faq">
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-12 text-white bg-clip-text text-center z-10 relative" data-animate="fade-in-up" data-delay="200">
       FAQs
     </h1>
     <div class="max-w-3xl mx-auto space-y-6">
@@ -781,10 +747,7 @@
     </div>
   </section>
   
-  <!-- <section>
-    <a href="app.html" onclick="toggleAuthPanel()" class="text-green-400 hover:underline">app</a>
-  </section> -->
-
+  <!-- FOOTER -->
   <footer class="mt-20 backdrop-blur-md bg-white/5 border-t border-white/10 text-white py-10 px-6">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
       
@@ -828,9 +791,10 @@
     </div>
   </footer>
   
+  <!-- BACK TO TOP BTN -->
 <button id="backToTopBtn"
   onclick="scrollToTop()"
-  class="hidden fixed bottom-6 right-6 z-50 bg-white/10 backdrop-blur-md border border-white/20 text-white p-3 rounded-full shadow-md hover:bg-white/20 transition duration-300">
+  class="hidden fixed bottom-6 right-6 z-50 bg-[#00C8B3] backdrop-blur-md border border-white/20 text-white p-3 rounded-full shadow-md hover:bg-white/20 transition duration-300">
   ↑
 </button>
 
@@ -838,358 +802,79 @@
 <div id="authBackdrop" onclick="closeOnBackdrop(event)" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex justify-center items-center px-4">
 
 <!-- AUTH MODAL -->
-    <!-- Modal -->
-    <div id="authModal" class="w-full max-w-md bg-white/5 border border-white/20 text-white backdrop-blur-md rounded-2xl p-6 shadow-xl transform transition-all duration-500 opacity-0 translate-y-10 scale-95">
-      
-  
-    <!-- Tabs -->
-<div class="relative mb-6">
+<div id="authModal" class="w-full max-w-md bg-white/5 border border-white/20 text-white backdrop-blur-md rounded-2xl p-6 shadow-xl transform transition-all duration-500 opacity-0 translate-y-10 scale-95">
+
+  <!-- Tabs -->
+  <div class="relative mb-6">
     <div class="flex justify-between">
       <button id="tabRegister" onclick="showRegister()" class="w-1/2 text-center text-white font-semibold py-2 z-10 relative">Register</button>
       <button id="tabLogin" onclick="showLogin()" class="w-1/2 text-center text-gray-400 py-2 z-10 relative">Login</button>
     </div>
     <!-- Underline Slider -->
-    <div id="tabSlider" class="absolute bottom-0 left-0 w-1/2 h-0.5 bg-gradient-to-r from-[#00FFFF] to-blue-600 transition-all duration-300"></div>
+    <div id="tabSlider" class="absolute bottom-0 left-0 w-1/2 h-0.5 bg-[#00C8B3] transition-all duration-300"></div>
   </div>
-  
 
-<!-- Register Form -->
-<form id="registerForm" class="space-y-4">
-  <input
-    id="registerEmail"
-    type="email"
-    placeholder="Email"
-    class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500"/>
-
-  <div class="relative">
+  <!-- Register Form -->
+  <form id="registerForm" class="space-y-4">
     <input
-      id="registerPassword"
-      type="password"
-      placeholder="Password"
-      class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500"/>
-    <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('registerPassword', this)"></i>
-  </div>
+      id="registerEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
 
-  <button type="submit" class="w-full py-3 bg-gradient-to-r from-[#00FFFF] to-blue-600 text-white font-medium rounded">
-    Register
-  </button>
-</form>
+    <div class="relative">
+      <input
+        id="registerPassword"
+        type="password"
+        placeholder="Password"
+        class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+      <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('registerPassword', this)"></i>
+    </div>
 
-<!-- Login Form -->
-<form id="loginForm" class="space-y-4 hidden">
-  <input
-    id="loginEmail"
-    type="email"
-    placeholder="Email"
-    class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500"/>
+    <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
+      Register
+    </button>
+  </form>
 
-  <div class="relative">
+  <!-- Login Form -->
+  <form id="loginForm" class="space-y-4 hidden">
     <input
-      id="loginPassword"
-      type="password"
-      placeholder="Password"
-      class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500"/>
-    <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('loginPassword', this)"></i>
-  </div>
+      id="loginEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
 
-  <button type="submit" class="w-full py-3 bg-gradient-to-r from-[#00FFFF] to-blue-600 text-white font-medium rounded">
-    Login
-  </button>
+    <div class="relative">
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+      <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('loginPassword', this)"></i>
+    </div>
 
-  <div class="flex justify-between items-center text-sm mt-2">
-    <p class="text-right text-gray-400 hover:underline">
-      <a href="#" onclick="forgotPassword()">Forgot password?</a>
-    </p>
-  </div>
-</form>
+    <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
+      Login
+    </button>
 
-<p class="text-xs text-gray-400 mt-4 text-center">
-  By continuing, you agree to our
-  <a href="#" class="text-blue-400 underline">Terms</a> and
-  <a href="#" class="text-blue-400 underline">Privacy Policy</a>.
-</p>
+    <div class="flex justify-between items-center text-sm mt-2">
+      <p class="text-right text-gray-400 hover:underline">
+        <a href="#" onclick="forgotPassword()">Forgot password?</a>
+      </p>
+    </div>
+  </form>
 
-<!-- Close Button -->
-<button onclick="toggleAuthPanel()" class="absolute top-4 right-4 text-white/60 text-xl">✕</button>
-  <script>
-    
-    const backendUrl = 'https://Glorivest-backend-0c5eddaec35e.herokuapp.com';
-  
-    // === Back to Top Button Logic ===
-    const backToTopBtn = document.getElementById('backToTopBtn');
-    let hideTimeout;
-  
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 100) {
-        backToTopBtn.classList.remove('hidden');
-        clearTimeout(hideTimeout);
-        hideTimeout = setTimeout(() => {
-          backToTopBtn.classList.add('hidden');
-        }, 3000);
-      } else {
-        backToTopBtn.classList.add('hidden');
-      }
-    });
-  
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  
-    // === FAQ Accordion Logic ===
-    document.addEventListener('DOMContentLoaded', () => {
-      const faqButtons = document.querySelectorAll('.backdrop-blur-md button');
-      faqButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const answer = button.nextElementSibling;
-    if (!answer) return; // 🛡️ Prevent error if null
+  <p class="text-xs text-gray-400 mt-4 text-center">
+    By continuing, you agree to our
+    <a href="#" class="text-[#00C8B3] underline">Terms</a> and
+    <a href="#" class="text-[#00C8B3] underline">Privacy Policy</a>.
+  </p>
 
-    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-    const icon = button.querySelector('svg');
-
-    if (isExpanded) {
-      answer.style.maxHeight = '0';
-      button.setAttribute('aria-expanded', 'false');
-      icon?.classList.remove('rotate-180');
-    } else {
-      faqButtons.forEach(otherButton => {
-        const otherAnswer = otherButton.nextElementSibling;
-        if (otherButton !== button && otherButton.getAttribute('aria-expanded') === 'true' && otherAnswer) {
-          otherAnswer.style.maxHeight = '0';
-          otherButton.setAttribute('aria-expanded', 'false');
-          otherButton.querySelector('svg')?.classList.remove('rotate-180');
-        }
-      });
-      answer.style.maxHeight = answer.scrollHeight + 'px';
-      button.setAttribute('aria-expanded', 'true');
-      icon?.classList.add('rotate-180');
-    }
-  });
-});
-
-    });
-  
-    // === Star Rating Logic ===
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".star-row").forEach(container => {
-        for (let i = 0; i < 5; i++) {
-          container.innerHTML += `
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white/70" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 .587l3.668 7.431 8.2 1.193-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.87 1.4-8.168L.132 9.211l8.2-1.193z"/>
-            </svg>`;
-        }
-      });
-    });
-  
-    // === Scroll Animation ===
-    document.addEventListener("DOMContentLoaded", () => {
-      const animatedElements = document.querySelectorAll('[data-animate]');
-      const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const delay = parseInt(entry.target.dataset.delay) || 0;
-            setTimeout(() => {
-              entry.target.classList.add('animate-visible');
-            }, delay);
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-  
-      animatedElements.forEach(el => observer.observe(el));
-    });
-  
-    // === Auth Modal Logic ===
-    const authBackdrop = document.getElementById('authBackdrop');
-    const authModal = document.getElementById('authModal');
-    const tabSlider = document.getElementById('tabSlider');
-  
-    function toggleAuthPanel() {
-      const isHidden = authBackdrop.classList.contains('hidden');
-      if (isHidden) {
-        authBackdrop.classList.remove('hidden');
-        setTimeout(() => {
-          authModal.classList.remove('translate-y-10', 'opacity-0', 'scale-95');
-          authModal.classList.add('translate-y-0', 'opacity-100', 'scale-100');
-        }, 50);
-      } else {
-        authModal.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
-        authModal.classList.add('translate-y-10', 'opacity-0', 'scale-95');
-        authBackdrop.classList.add('hidden');
-      }
-    }
-  
-    function closeOnBackdrop(e) {
-      if (e.target.id === 'authBackdrop') toggleAuthPanel();
-    }
-  
-    function showRegister() {
-      document.getElementById('registerForm').classList.remove('hidden');
-      document.getElementById('loginForm').classList.add('hidden');
-      document.getElementById('tabRegister').classList.add('text-white');
-      document.getElementById('tabLogin').classList.remove('text-white');
-      document.getElementById('tabLogin').classList.add('text-gray-400');
-      tabSlider.style.left = '0%';
-    }
-  
-    function showLogin() {
-      document.getElementById('registerForm').classList.add('hidden');
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('tabLogin').classList.add('text-white');
-      document.getElementById('tabRegister').classList.remove('text-white');
-      document.getElementById('tabRegister').classList.add('text-gray-400');
-      tabSlider.style.left = '50%';
-    }
-  
-// === Register Logic ===
-document.getElementById('registerForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const emailInput = document.querySelector('#registerForm input[type="email"]');
-  const passwordInput = document.querySelector('#registerForm input[type="password"]');
-
-  if (!emailInput || !passwordInput) {
-    alert("Form inputs not found. Please reload the page.");
-    return;
-  }
-
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  const referralCode = generateReferralCode();
-  const referredBy = getReferralFromURL();
-
-  try {
-    const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, referral_code: referralCode, referred_by: referredBy }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('email', email);
-      alert("Signup successful! Check your email.");
-      window.location.href = 'otp.html';
-    } else {
-      alert(data.message || data.error || "Signup failed");
-    }
-  } catch (err) {
-    alert("Signup error: " + err.message);
-  }
-});
-
-
-// === Login Logic ===
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const emailInput = document.getElementById('loginEmail');
-  const passwordInput = document.getElementById('loginPassword');
-
-  if (!emailInput || !passwordInput) {
-    alert("Login form not found. Please try again.");
-    return;
-  }
-
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
-  try {
-    const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('token', data.token); // ✅ save token
-      localStorage.setItem('user', JSON.stringify(data.user)); // ✅ save user (was missing)
-
-      alert("Login successful!");
-      window.location.href = 'app.html';
-    } else {
-      alert(data.message || "Login failed");
-    }
-  } catch (err) {
-    alert("Login error: " + err.message);
-  }
-});
-
+  <!-- Close Button -->
+  <button onclick="toggleAuthPanel()" class="absolute top-4 right-4 text-white/60 text-xl">✕</button>
+</div>
 
   
-    // === Helpers ===
-    function generateReferralCode() {
-      return 'Glorivest' + Math.floor(Math.random() * 1000000);
-    }
-  
-    function getReferralFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('ref') || '';
-    }
-
-
-    async function resendVerification() {
-  const email = document.querySelector('#loginForm input[type="email"]').value;
-  if (!email) {
-    alert("Please enter your email first.");
-    return;
-  }
-
-  try {
-    const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/resend-verification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("OTP sent to your email.");
-    } else {
-      alert(data.message || "Could not resend verification email.");
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-async function forgotPassword() {
-  const email = document.querySelector('#loginForm input[type="email"]').value;
-  if (!email) {
-    alert("Please enter your email first.");
-    return;
-  }
-
-  try {
-    const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/request-reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('email', email);
-      alert("OTP sent to your email. Redirecting to reset...");
-      window.location.href = 'reset.html';
-    } else {
-      alert(data.message || "Could not send reset OTP.");
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-
-function togglePassword(inputId, icon) {
-  const input = document.getElementById(inputId);
-  const isPassword = input.type === 'password';
-  input.type = isPassword ? 'text' : 'password';
-  icon.classList.toggle('fa-eye-slash');
-  icon.classList.toggle('fa-eye');
-}
-
-  </script>
-    
+    <script src="script.js"></script>
 </body>
 </html>
