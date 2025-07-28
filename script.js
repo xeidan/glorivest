@@ -1,5 +1,5 @@
 
-    const backendUrl = 'https://glorivest-backend-0c5eddaec35e.herokuapp.com';
+    const backendUrl = 'https://glorivest-api.herokuapp.com';
   
     // === Back to Top Button Logic ===
     const backToTopBtn = document.getElementById('backToTopBtn');
@@ -144,7 +144,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   const referredBy = getReferralFromURL();
 
   try {
-    const res = await fetch('https://glorivest-backend-0c5eddaec35e.herokuapp.com/signup', {
+    const res = await fetch('https://glorivest-api.herokuapp.com/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, referral_code: referralCode, referred_by: referredBy }),
@@ -180,7 +180,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   const password = passwordInput.value;
 
   try {
-    const res = await fetch('https://glorivest-backend-0c5eddaec35e.herokuapp.com/login', {
+    const res = await fetch('https://glorivest-api.herokuapp.com/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -223,7 +223,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 
   try {
-    const res = await fetch('https://glorivest-backend-0c5eddaec35e.herokuapp.com/resend-verification', {
+    const res = await fetch('https://glorivest-api.herokuapp.com/resend-verification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -248,7 +248,7 @@ async function forgotPassword() {
   }
 
   try {
-    const res = await fetch('https://glorivest-backend-0c5eddaec35e.herokuapp.com/request-reset', {
+    const res = await fetch('https://glorivest-api.herokuapp.com/request-reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
