@@ -1,7 +1,6 @@
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
 
-    const backendUrl = 'https://glorivest-api.herokuapp.com';
-  
-    // === Back to Top Button Logic ===
+// === Back to Top Button Logic ===
     const backToTopBtn = document.getElementById('backToTopBtn');
     let hideTimeout;
   
@@ -85,12 +84,18 @@
       animatedElements.forEach(el => observer.observe(el));
     });
   
-    // === Auth Modal Logic ===
+   // === Auth Modal Logic ===
+document.addEventListener('DOMContentLoaded', () => {
     const authBackdrop = document.getElementById('authBackdrop');
     const authModal = document.getElementById('authModal');
     const tabSlider = document.getElementById('tabSlider');
+    const loginTab = document.getElementById('tabLogin');
+    const registerTab = document.getElementById('tabRegister');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
   
-    function toggleAuthPanel() {
+    // Toggle modal visibility
+    window.toggleAuthPanel = function () {
       const isHidden = authBackdrop.classList.contains('hidden');
       if (isHidden) {
         authBackdrop.classList.remove('hidden');
@@ -101,180 +106,56 @@
       } else {
         authModal.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
         authModal.classList.add('translate-y-10', 'opacity-0', 'scale-95');
-        authBackdrop.classList.add('hidden');
+        setTimeout(() => authBackdrop.classList.add('hidden'), 300);
       }
-    }
+    };
   
-    function closeOnBackdrop(e) {
+    // Close modal when clicking outside the box
+    window.closeOnBackdrop = function (e) {
       if (e.target.id === 'authBackdrop') toggleAuthPanel();
-    }
+    };
   
-    function showRegister() {
-      document.getElementById('registerForm').classList.remove('hidden');
-      document.getElementById('loginForm').classList.add('hidden');
-      document.getElementById('tabRegister').classList.add('text-white');
-      document.getElementById('tabLogin').classList.remove('text-white');
-      document.getElementById('tabLogin').classList.add('text-gray-400');
+    // Show Register Form
+    window.showRegister = function () {
+      if (!loginTab || !registerTab || !loginForm || !registerForm || !tabSlider) return;
+  
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+  
+      registerTab.classList.add('text-white');
+      loginTab.classList.remove('text-white');
+      loginTab.classList.add('text-gray-400');
+  
       tabSlider.style.left = '0%';
-    }
+    };
   
-    function showLogin() {
-      document.getElementById('registerForm').classList.add('hidden');
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('tabLogin').classList.add('text-white');
-      document.getElementById('tabRegister').classList.remove('text-white');
-      document.getElementById('tabRegister').classList.add('text-gray-400');
+    // Show Login Form
+    window.showLogin = function () {
+      if (!loginTab || !registerTab || !loginForm || !registerForm || !tabSlider) return;
+  
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+  
+      loginTab.classList.add('text-white');
+      registerTab.classList.remove('text-white');
+      registerTab.classList.add('text-gray-400');
+  
       tabSlider.style.left = '50%';
-    }
+    };
   
-// === Register Logic ===
-document.getElementById('registerForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const emailInput = document.querySelector('#registerForm input[type="email"]');
-  const passwordInput = document.querySelector('#registerForm input[type="password"]');
-
-  if (!emailInput || !passwordInput) {
-    alert("Form inputs not found. Please reload the page.");
-    return;
-  }
-
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  const referralCode = generateReferralCode();
-  const referredBy = getReferralFromURL();
-
-  try {
-    const res = await fetch('https://glorivest-api.herokuapp.com/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, referral_code: referralCode, referred_by: referredBy }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('email', email);
-      alert("Signup successful! Check your email.");
-      window.location.href = 'otp.html';
-    } else {
-      alert(data.message || data.error || "Signup failed");
-    }
-  } catch (err) {
-    alert("Signup error: " + err.message);
-  }
-});
-
-
-// === Login Logic ===
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const emailInput = document.getElementById('loginEmail');
-  const passwordInput = document.getElementById('loginPassword');
-
-  if (!emailInput || !passwordInput) {
-    alert("Login form not found. Please try again.");
-    return;
-  }
-
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
-  try {
-    const res = await fetch('https://glorivest-api.herokuapp.com/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('token', data.token); // ✅ save token
-      localStorage.setItem('user', JSON.stringify(data.user)); // ✅ save user (was missing)
-
-      alert("Login successful!");
-      window.location.href = 'app.html';
-    } else {
-      alert(data.message || "Login failed");
-    }
-  } catch (err) {
-    alert("Login error: " + err.message);
-  }
-});
-
-
+    // Toggle password visibility
+    window.togglePassword = function (inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
   
-    // === Helpers ===
-    function generateReferralCode() {
-      return 'Glorivest' + Math.floor(Math.random() * 1000000);
-    }
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
   
-    function getReferralFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('ref') || '';
-    }
-
-
-    async function resendVerification() {
-  const email = document.querySelector('#loginForm input[type="email"]').value;
-  if (!email) {
-    alert("Please enter your email first.");
-    return;
-  }
-
-  try {
-    const res = await fetch('https://glorivest-api.herokuapp.com/resend-verification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("OTP sent to your email.");
-    } else {
-      alert(data.message || "Could not resend verification email.");
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-async function forgotPassword() {
-  const email = document.querySelector('#loginForm input[type="email"]').value;
-  if (!email) {
-    alert("Please enter your email first.");
-    return;
-  }
-
-  try {
-    const res = await fetch('https://glorivest-api.herokuapp.com/request-reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('email', email);
-      alert("OTP sent to your email. Redirecting to reset...");
-      window.location.href = 'reset.html';
-    } else {
-      alert(data.message || "Could not send reset OTP.");
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-
-function togglePassword(inputId, icon) {
-  const input = document.getElementById(inputId);
-  const isPassword = input.type === 'password';
-  input.type = isPassword ? 'text' : 'password';
-  icon.classList.toggle('fa-eye-slash');
-  icon.classList.toggle('fa-eye');
-}
+      icon.classList.toggle('fa-eye-slash');
+      icon.classList.toggle('fa-eye');
+    };
+  });
+  
 
 
 //smooth-scroll
@@ -312,3 +193,175 @@ function togglePassword(inputId, icon) {
       }, 10);
     }
   }
+
+
+// ========== REGISTER ==========
+const registerForm = document.getElementById('register-form');
+if (registerForm) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('otpEmail', email);
+        window.location.href = 'otp.html';
+      } else {
+        alert(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      alert('Something went wrong. Try again.');
+    }
+  });
+}
+
+// ========== LOGIN ==========
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Login successful');
+        localStorage.setItem('glorivestToken', data.token);
+        window.location.href = 'app.html'; // or dashboard
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (err) {
+      alert('Something went wrong. Try again.');
+    }
+  });
+}
+
+// ======== FORGOT PASSWORD ========
+function forgotPassword(link) {
+    link.classList.add('text-[#00D2B1]'); // or use 'text-green-500'
+    return true; // allow default navigation to reset.html
+  }
+  
+
+// ========== RESET PASSWORD =======
+async function resetPassword() {
+    const email = document.getElementById('email').value.trim();
+    const newPassword = document.getElementById('new-password').value.trim();
+
+    if (!email || !newPassword) {
+      document.getElementById('status').textContent = 'Both fields are required.';
+      return;
+    }
+
+    try {
+      const res = await fetch('https://glorivest-api-a16f75b6b330.herokuapp.com/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('status').textContent = 'Password reset successful. You can now log in.';
+        document.getElementById('status').classList.remove('text-red-500');
+        document.getElementById('status').classList.add('text-green-600');
+
+        // Show "Go back to login" button
+        document.getElementById('login-btn').classList.remove('hidden');
+      } else {
+        document.getElementById('status').textContent = data.message || 'Reset failed.';
+      }
+    } catch (err) {
+      document.getElementById('status').textContent = 'Something went wrong.';
+    }
+  }
+  const resetBtn = document.getElementById('reset-btn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', resetPassword);
+}
+
+
+// ========== VERIFY OTP ==========
+const otpForm = document.getElementById('otp-form');
+if (otpForm) {
+  otpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otp = document.getElementById('otp-input').value.trim();
+    const email = localStorage.getItem('otpEmail');
+
+    if (!email) return alert('No email found. Please register again.');
+
+    try {
+      const res = await fetch(`${BASE_URL}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('OTP verified. You can now log in.');
+        localStorage.removeItem('otpEmail');
+        window.location.href = 'index.html';
+      } else {
+        alert(data.message || 'OTP verification failed');
+      }
+    } catch (err) {
+      alert('Something went wrong. Try again.');
+    }
+  });
+}
+
+// ========== RESEND OTP ==========
+const resendLink = document.getElementById('resend-link');
+if (resendLink) {
+  resendLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = localStorage.getItem('otpEmail');
+    if (!email) return alert('No email found. Please register again.');
+
+    try {
+      const res = await fetch(`${BASE_URL}/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('OTP resent successfully');
+      } else {
+        alert(data.message || 'Failed to resend OTP');
+      }
+    } catch (err) {
+      alert('Something went wrong. Try again.');
+    }
+  });
+}
+
+
+
+
+
+

@@ -815,7 +815,7 @@
   </div>
 
   <!-- Register Form -->
-  <form id="registerForm" class="space-y-4">
+  <form id="register-form" class="space-y-4">
     <input
       id="registerEmail"
       type="email"
@@ -837,7 +837,7 @@
   </form>
 
   <!-- Login Form -->
-  <form id="loginForm" class="space-y-4 hidden">
+  <form id="login-form" class="space-y-4 hidden">
     <input
       id="loginEmail"
       type="email"
@@ -859,9 +859,9 @@
 
     <div class="flex justify-between items-center text-sm mt-2">
       <p class="text-right text-gray-400 hover:underline">
-        <a href="#" onclick="forgotPassword()">Forgot password?</a>
+        <a href="reset.html" onclick="return forgotPassword(this)">Forgot password?</a>
       </p>
-    </div>
+    </div>    
   </form>
 
   <p class="text-xs text-gray-400 mt-4 text-center">
@@ -875,7 +875,7 @@
 </div>
 
   
-<script src="script.js" defer></script>
+<script src="script.js"></script>
 
 </body>
 </html>

@@ -2,148 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Verify OTP</title>
   <link href="output.css" rel="stylesheet" />
-  <style>
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #00FFFF;
-      color: #000;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 1000;
-    }
-    #toast.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-  </style>
 </head>
-<body class="bg-black text-white font-sans flex items-center justify-center min-h-screen px-4">
+<body class="bg-gradient-to-br from-[#00D2B1] to-[#008080] min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white shadow-lg rounded-xl max-w-md w-full p-8 animate-fade-in">
+    <h2 class="text-3xl font-bold text-gray-800 text-center mb-3">Verify Your Email</h2>
+    <p class="text-sm text-gray-500 text-center mb-6">Enter the 6-digit code sent to your email</p>
 
-  <div class="bg-white/5 border border-white/20 rounded-2xl p-8 max-w-md w-full shadow-xl text-center backdrop-blur-md">
-    <h2 class="text-2xl font-bold mb-4">Verify Your Email</h2>
-    <p class="text-sm text-white/70 mb-6">Enter the 6-digit OTP sent to your email.</p>
+    <input id="otp" maxlength="6" placeholder="123456"
+      class="w-full text-center text-xl tracking-widest border rounded-lg px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
 
-    <form id="verifyOtpForm" class="space-y-4" autocomplete="one-time-code">
-      <input
-        type="text"
-        id="otpInput"
-        placeholder="Enter OTP"
-        maxlength="6"
-        required
-        inputmode="numeric"
-        pattern="\d{6}"
-        autocomplete="one-time-code"
-        class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-center"
-      />
-      <button
-        type="submit"
-        class="w-full py-3 bg-gradient-to-r from-[#00FFFF] to-blue-600 text-black font-medium rounded hover:from-cyan-400 hover:to-blue-500 transition">
-        Verify OTP
-      </button>
-    </form>
-
-    <p id="resendText" class="text-xs text-white/50 mt-6">
-      Didn’t receive the code?
-      <span class="text-gray-500 ml-1">(wait 60s)</span>
-    </p>
-    <button id="resendBtn" onclick="resendOtp()" class="text-cyan-400 hover:underline text-xs mt-2 hidden">
-      Resend OTP
+    <button onclick="verifyOTP()"
+      class="w-full bg-[#00D2B1] hover:bg-[#00b8a1] transition text-white font-bold py-3 rounded-lg mb-4">
+      Verify OTP
     </button>
+
+    <p class="text-center text-sm text-gray-600">Didn't receive code?
+      <button onclick="resendOTP()" class="text-[#00D2B1] font-medium hover:underline">Resend</button>
+    </p>
+
+    <p id="status" class="text-center text-sm mt-4 text-red-500"></p>
   </div>
 
-  <!-- Toast -->
-  <div id="toast"></div>
-
-  <script>
-    const email = localStorage.getItem('email');
-    if (!email) {
-      showToast("No email found. Redirecting...");
-      setTimeout(() => window.location.href = 'index.html', 1500);
+  <style>
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in-out;
     }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
+  </style>
 
-    document.getElementById('verifyOtpForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const otp = document.getElementById('otpInput').value.trim();
 
-      if (!/^\d{6}$/.test(otp)) {
-        showToast("Enter a valid 6-digit OTP.");
-        return;
-      }
+<script>
+  const email = localStorage.getItem('otpEmail');
 
-      try {
-        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, otp }),
-        });
+async function verifyOTP() {
+  if (!email) {
+    document.getElementById('status').textContent = 'No email found. Please sign up again.';
+    return;
+  }
 
-        const data = await res.json();
+  const otp = document.getElementById('otp').value.trim();
+  const res = await fetch('https://glorivest-api-a16f75b6b330.herokuapp.com/verify-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp })
+  });
+  const data = await res.json();
 
-        if (res.ok) {
-          showToast("OTP verified successfully!");
-          localStorage.removeItem('email');
-          setTimeout(() => window.location.href = 'app.html', 1500);
-        } else {
-          showToast(data.message || "Invalid OTP.");
-        }
-      } catch (err) {
-        showToast("Verification error: " + err.message);
-      }
-    });
+  if (res.ok) {
+    localStorage.setItem('verified', 'true');
+    window.location.href = 'app.html';
+  } else {
+    document.getElementById('status').textContent = data.message || 'Invalid OTP';
+  }
+}
 
-    function startCountdown(seconds) {
-      const resendBtn = document.getElementById('resendBtn');
-      const resendText = document.getElementById('resendText');
-      resendBtn.classList.add('hidden');
-      resendText.querySelector('span').textContent = `(wait ${seconds}s)`;
+async function resendOTP() {
+  if (!email) {
+    document.getElementById('status').textContent = 'No email found. Please sign up again.';
+    return;
+  }
 
-      const interval = setInterval(() => {
-        seconds--;
-        resendText.querySelector('span').textContent = `(wait ${seconds}s)`;
-        if (seconds <= 0) {
-          clearInterval(interval);
-          resendBtn.classList.remove('hidden');
-          resendText.querySelector('span').textContent = '';
-        }
-      }, 1000);
-    }
+  const res = await fetch('https://glorivest-api-a16f75b6b330.herokuapp.com/resend-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const data = await res.json();
+  document.getElementById('status').textContent = data.message;
+}
 
-    async function resendOtp() {
-      startCountdown(60);
-      try {
-        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/request-reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        showToast(data.message || "OTP resent via email.");
-      } catch (err) {
-        showToast("Error resending OTP: " + err.message);
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      startCountdown(60);
-    });
-  </script>
+</script>
 </body>
+
 </html>
