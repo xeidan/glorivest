@@ -64,14 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       li.innerHTML = `
         <div class="flex items-center space-x-4">
-          <div class="text-xl font-bold text-cyan-400">#${index + 1}</div>
+          <div class="text-xl font-bold text-[#00D2B1]">#${index + 1}</div>
           <div>
             <p class="text-white font-semibold text-sm">${maskEmail(user.email || "anonymous")}</p>
             <p class="text-white/60 text-xs">${user.total_referrals || 0} referral${user.total_referrals === 1 ? "" : "s"}</p>
           </div>
         </div>
         <div class="text-right">
-          <p class="text-green-400 font-bold text-sm">$${parseFloat(user.reward_balance || 0).toFixed(2)}</p>
+          <p class="text-[#00D2B1] font-bold text-sm">$${parseFloat(user.reward_balance || 0).toFixed(2)}</p>
           <p class="text-white/40 text-xs">Earned</p>
         </div>
       `;
