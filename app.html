@@ -44,6 +44,48 @@
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
     }
   </style>
+  <style>
+    /* General tab button layout */
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: white;
+      transition: color 0.3s ease;
+    }
+    
+    /* Active tab highlights */
+    .tab-btn.active-tab {
+      color: #00D2B1;
+    }
+    
+    .tab-btn.active-tab i,
+    .tab-btn.active-tab span {
+      color: #00D2B1;
+    }
+    
+    .tab-btn i,
+    .tab-btn span {
+      transition: color 0.3s ease;
+    }
+    
+    /* Optional: tab content layout */
+    .tab-section {
+      display: none;
+    }
+    
+    .tab-section:not(.hidden) {
+      display: block;
+    }
+    
+    /* Nav styling */
+    .nav-glow {
+      box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
+      z-index: 100;
+    }
+    </style>
+    
 </head>
 <body class="bg-black text-gray-300 min-h-screen">
 
@@ -59,7 +101,7 @@
     <!-- User Info -->
     <div class="leading-tight">
       <p class="text-sm font-semibold">Hello <span id="user-email">user@example.com</span></p>
-      <p class="text-xs text-gray-400">ID: <span id="gv-id">GV000000</span></p>
+      <p class="text-xs text-gray-400">ID: <span id="glorivest-id">GV000000</span></p>
     </div>
   </div>
   <div class="flex items-center gap-4 text-lg">
@@ -82,7 +124,7 @@
           <div class="flex justify-between items-center">
             <div>
               <p class="text-xs font-light text-white/60">Total Balance</p>
-              <h3 id="total-balance" data-amount="12960" class="text-3xl font-bold text-white mt-1">$12,960.00</h3>
+              <h3 id="total-balance" class="text-3xl font-bold text-white mt-1">$0.00</h3>
             </div>
             <button onclick="toggleBalance()">
               <i id="real-balance-eye-icon" class="fa-solid fa-eye text-white/70 text-lg"></i>
@@ -98,17 +140,18 @@
           <!-- Available Balance Card -->
           <div>
             <p class="text-xs font-light text-white/60">Available Balance</p>
-            <h3 id="available-balance" data-amount="10500" class="text-xl font-bold text-white mt-1">$10,500.00</h3>
+            <h3 id="available-balance" class="text-xl font-bold text-white mt-1">$0.00</h3>
           </div>
       
           <!-- Referral Earnings Card -->
           <div>
             <p class="text-xs font-light text-white/60">Referral Earnings</p>
-            <h3 id="referral-earnings" data-amount="560" class="text-xl font-bold text-white mt-1">$560.00</h3>
+            <h3 id="referral-earnings" class="text-xl font-bold text-white mt-1">$0.00</h3>
           </div>
       
         </div>
       </div>
+      
       
 
 
@@ -393,11 +436,11 @@
       <button onclick="closeModal('guide-modal')" class="mb-6 self-center text-white/70 text-3xl font-bold z-40">&times;</button>
     </div>
 
-    
+
     <!-- Deposit Tab -->
-    <section id="tab-deposit" class="tab-content hidden py-6 text-white space-y-6">
+    <section id="tab-deposit" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
       <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#0b2f29] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
-        <button onclick="closeTab(this)" class="absolute top-3 right-3 text-white/60 hover:text-white text-xl">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h2 class="text-2xl font-bold mb-2">Deposit Funds</h2>
@@ -430,9 +473,9 @@
     </section>
 
     <!-- Withdraw Tab -->
-    <section id="tab-withdraw" class="tab-content hidden py-6 text-white space-y-6">
+    <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
       <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#0b2f29] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
-        <button onclick="closeTab(this)" class="absolute top-3 right-3 text-white/60 hover:text-white text-xl">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h2 class="text-2xl font-bold mb-2">Withdraw Funds</h2>
@@ -465,9 +508,9 @@
 
     
     <!-- Transactions Tab -->
-    <section id="tab-transactions" class="tab-content hidden py-6 text-white space-y-6">
+    <section id="tab-transactions" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
       <div class="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-xl p-6 shadow-xl relative">
-        <button onclick="closeTab(this)" class="absolute top-3 right-3 text-white/60 hover:text-white text-xl">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
@@ -492,30 +535,34 @@
   </main>
 
   <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 left-0 w-full flex justify-around py-4 text-sm nav-glow bg-black">
-    <button onclick="showTab('dashboard', this)" class="tab-btn active-tab">
+  <nav class="fixed bottom-0 left-0 w-full flex justify-around py-4 text-sm nav-glow bg-black z-50">
+    <button data-tab="dashboard" class="tab-btn active-tab">
       <i class="fas fa-home mb-2"></i>
       <span class="text-xs font-light">Dashboard</span>
     </button>
-    <button onclick="showTab('earn', this)" class="tab-btn">
+    <button data-tab="earn" class="tab-btn">
       <i class="fas fa-wallet mb-2"></i>
       <span class="text-xs font-light">Earn</span>
     </button>
-    <button onclick="showTab('trade', this)" class="tab-btn">
+    <button data-tab="trade" class="tab-btn">
       <i class="fas fa-arrow-trend-up mb-2"></i>
       <span class="text-xs font-light">Trade</span>
     </button>
-    <button onclick="showTab('positions', this)" class="tab-btn">
+    <button data-tab="positions" class="tab-btn">
       <i class="fas fa-briefcase mb-2"></i>
       <span class="text-xs font-light">Positions</span>
     </button>
-    <button onclick="showTab('account', this)" class="tab-btn">
+    <button data-tab="account" class="tab-btn">
       <i class="fas fa-user mb-2"></i>
       <span class="text-xs font-light">Account</span>
     </button>
   </nav>
+  
 
-
+  <!-- <script>
+    console.log('Token:', localStorage.getItem('token'));
+  </script> -->
+  
 
 <script src="global.js"></script>
 <script src="dashboard.js"></script>

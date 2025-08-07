@@ -33,48 +33,73 @@ function showTab(tab) {
     }
   }
   
-  // --- Populate Dashboard Balances ---
-  window.addEventListener('DOMContentLoaded', () => {
-    const total = 12960;
-    const available = 10500;
-    const referral = 560;
-    const profit = total - (available + referral); // 1900
-    const percentage = ((profit / total) * 100).toFixed(2); // e.g. 14.66
+  // --- Load Balances + User Info ---
+  async function loadBalances() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
   
-    const totalEl = document.getElementById('total-balance');
-    const availEl = document.getElementById('available-balance');
-    const refEl = document.getElementById('referral-earnings');
-    const percEl = document.getElementById('percentage-increase');
-    const profitEl = document.getElementById('profit-increase');
+      const res = await fetch("https://glorivest-api-a16f75b6b330.herokuapp.com/account/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
   
-    if (totalEl) {
-      const val = `$${total.toFixed(2)}`;
-      totalEl.textContent = val;
-      totalEl.dataset.value = val;
+      if (!res.ok) throw new Error("Failed to fetch user data");
+  
+      const user = await res.json();
+  
+      const balance = parseFloat(user.balance || 0);
+      const earnings = parseFloat(user.reward_balance || 0);
+      const percentage = ((earnings / (balance || 1)) * 100).toFixed(1);
+      const glorivestId = user.glorivest_id || 'GV000000';
+      const email = user.email || 'Unknown';
+  
+      // Format values
+      const balanceStr = `$${balance.toFixed(2)}`;
+      const earningsStr = `$${earnings.toFixed(2)}`;
+      const percentageStr = `+${percentage}%`;
+      const profitStr = `+$${earnings.toFixed(2)}`;
+  
+      // Inject into DOM
+      const totalEl = document.getElementById('total-balance');
+      const availEl = document.getElementById('available-balance');
+      const refEl = document.getElementById('referral-earnings');
+      const percEl = document.getElementById('percentage-increase');
+      const profitEl = document.getElementById('profit-increase');
+      const idEl = document.getElementById('glorivest-id');
+      const emailEl = document.getElementById('user-email');
+  
+      if (totalEl) {
+        totalEl.textContent = balanceStr;
+        totalEl.dataset.value = balanceStr;
+      }
+  
+      if (availEl) {
+        availEl.textContent = balanceStr;
+        availEl.dataset.value = balanceStr;
+      }
+  
+      if (refEl) {
+        refEl.textContent = earningsStr;
+        refEl.dataset.value = earningsStr;
+      }
+  
+      if (percEl) {
+        percEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${percentageStr}`;
+        percEl.dataset.value = percentageStr;
+      }
+  
+      if (profitEl) {
+        profitEl.textContent = profitStr;
+        profitEl.dataset.value = profitStr;
+      }
+  
+      if (idEl) idEl.textContent = glorivestId;
+      if (emailEl) emailEl.textContent = email;
+  
+    } catch (err) {
+      console.error("Error loading balances:", err);
     }
+  }
   
-    if (availEl) {
-      const val = `$${available.toFixed(2)}`;
-      availEl.textContent = val;
-      availEl.dataset.value = val;
-    }
-  
-    if (refEl) {
-      const val = `$${referral.toFixed(2)}`;
-      refEl.textContent = val;
-      refEl.dataset.value = val;
-    }
-  
-    if (percEl) {
-      const val = `+${percentage}%`;
-      percEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${val}`;
-      percEl.dataset.value = val;
-    }
-  
-    if (profitEl) {
-      const val = `+$${profit.toFixed(2)}`;
-      profitEl.textContent = val;
-      profitEl.dataset.value = val;
-    }
-  });
+  window.addEventListener("DOMContentLoaded", loadBalances);
   

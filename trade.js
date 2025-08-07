@@ -36,22 +36,40 @@ function updateUI() {
 }
 
 function simulateTrade() {
-  if (!botRunning || daysActive >= totalDays) return;
-  capital += targetProfit / totalDays; // Add fixed daily profit
-  daysActive++;
-
-  localStorage.setItem('capital', capital);
-  localStorage.setItem('botDays', daysActive);
-
-  updateUI();
-  drawSparkline();
-
-  if (daysActive >= totalDays) {
-    botRunning = false;
-    startBotBtn.disabled = true;
-    startBotBtn.innerHTML = '<i class="fas fa-check"></i> <span>Completed</span>';
+    if (!botRunning || daysActive >= totalDays) return;
+  
+    // Create trade entry
+    const entryPrice = 74 + Math.random(); // fake price
+    const isWin = true;
+    const trade = {
+      time: new Date().toISOString(),
+      amount: 10,
+      entry: entryPrice,
+      status: isWin ? "won" : "lost"
+    };
+  
+    // Save to localStorage
+    const history = JSON.parse(localStorage.getItem("tradeHistory") || "[]");
+    history.push(trade);
+    localStorage.setItem("tradeHistory", JSON.stringify(history));
+  
+    // Update stats
+    capital += targetProfit / totalDays;
+    daysActive++;
+  
+    localStorage.setItem('capital', capital);
+    localStorage.setItem('botDays', daysActive);
+  
+    updateUI();
+    drawSparkline();
+  
+    if (daysActive >= totalDays) {
+      botRunning = false;
+      startBotBtn.disabled = true;
+      startBotBtn.innerHTML = '<i class="fas fa-check"></i> <span>Completed</span>';
+    }
   }
-}
+  
 
 function drawSparkline() {
   sparklineData.push(capital);
@@ -126,3 +144,10 @@ setInterval(() => {
 // Initial load
 updateUI();
 drawSparkline();
+
+// DOM Content Load
+window.addEventListener("DOMContentLoaded", () => {
+    updateUI();
+    drawSparkline();
+  });
+  

@@ -59,9 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   
       const user = await res.json();
-      console.log("Account Loaded:", user);
+      // console.log("Account Loaded:", user);
   
-      // You can optionally show their email, name, or RAVE ID
+      // // You can optionally show their email, name, or RAVE ID
   
     } catch (err) {
       console.error("Failed to load account:", err);

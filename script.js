@@ -214,6 +214,8 @@ if (registerForm) {
 
       if (res.ok) {
         localStorage.setItem('otpEmail', email);
+        localStorage.setItem('token', data.token);
+        console.log("✅ Token saved on signup:", data.token);
         window.location.href = 'otp.html';
       } else {
         alert(data.message || 'Registration failed');
@@ -243,7 +245,7 @@ if (loginForm) {
 
       if (res.ok) {
         alert('Login successful');
-        localStorage.setItem('glorivestToken', data.token);
+        localStorage.setItem('token', data.token);
         window.location.href = 'app.html'; // or dashboard
       } else {
         alert(data.message || 'Login failed');
