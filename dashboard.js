@@ -103,3 +103,4 @@ function showTab(tab) {
   
   window.addEventListener("DOMContentLoaded", loadBalances);
   
+  

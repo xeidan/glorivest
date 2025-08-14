@@ -117,7 +117,7 @@
 
     <!-- Dashboard Tab -->
     <section id="tab-dashboard" class="tab-section">
-      <div class="rounded-2xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
+      <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
         <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           
           <!-- Total Balance + Eye Toggle -->
@@ -255,7 +255,7 @@
       </div>
     
       <!-- VIX75 Live Chart -->
-      <div class="bg-gradient-to-br from-black to-[#0b2f29] border border-white/10 rounded-2xl p-4 shadow-md">
+      <div class="bg-gradient-to-br from-black to-[#0b2f29] border border-white/10 rounded-xl p-4 shadow-md">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold">VIX75 Live Chart</h2>
           <div class="flex items-center gap-2 text-sm">
@@ -263,37 +263,32 @@
             <span id="vix75-arrow-trade" class="text-xs"></span>
           </div>
         </div>
-        <canvas id="vix75-sparkline" height="600" width="600" class="w-full border border-white/10 rounded"></canvas>
+        <div id="vix-chart-wrap" class="relative w-full aspect-square border border-white/10 rounded-xl overflow-hidden">
+          <canvas id="vix75-sparkline" class="absolute inset-0 w-full h-full block"></canvas>
+        </div>
       </div>
-    
-      <!-- Inline Price Display -->
-      <div class="flex justify-between items-center px-4 py-2 border-b border-white/10 text-white/70 text-sm">
-        <span>Live VIX75 Price:</span>
-        <span class="flex items-center gap-1 font-bold text-[#00D2B1]">
-          <span id="vix75-price-inline">$0.00</span>
-          <span id="vix75-arrow-inline" class="text-xs"></span>
-        </span>
-      </div>
+
     
       <!-- Bot Action Section -->
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex-grow w-full">
-          <p id="bot-action-label" class="text-sm text-white/70 mb-1">Ready to Trade</p>
-          <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
-          </div>
+      <!-- Progress block: let it shrink nicely -->
+      <div class="flex-grow min-w-0">
+        <p id="bot-action-label" class="text-sm text-white/70 mb-1">Ready to Trade</p>
+        <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
+          <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
         </div>
-    
-        <!-- Start Bot Button -->
-        <button id="start-bot" class="py-2 px-4 bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold rounded-lg flex items-center gap-2 w-48">
+      </div>
+
+      <!-- Buttons: grouped, no-wrap -->
+      <div class="flex items-center gap-6 shrink-0 justify-center">
+        <button id="start-bot" class="py-2 px-4 bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
           <i class="fas fa-play"></i> <span>Start Bot</span>
         </button>
-    
-        <!-- Stop Bot Button (Initially hidden) -->
-        <button id="stop-bot" class="py-2 px-4 hidden bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-2 w-48">
+
+        <button id="stop-bot" class="py-2 px-4 hidden bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
           <i class="fas fa-stop"></i> <span>Stop Bot</span>
         </button>
       </div>
+
     
       <p class="text-xs text-white/50 text-center pt-4">
         Bot executes trades every 20 seconds and grows your capital by 20% in 30 days.
@@ -316,27 +311,34 @@
     
 
     <!-- Positions tab -->
-    <section id="tab-positions" class="tab-section hidden py-6 text-white space-y-6">
-      <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <div class="bg-white/10 px-4 py-2 border-b border-white/10 uppercase text-xs font-bold tracking-wide text-white/60">
-          Trade History
-        </div>
-    
-        <div class="max-h-80 overflow-y-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead class="sticky top-0 bg-white/10 text-white text-xs uppercase z-10">
-              <tr>
-                <th class="px-2 py-2">Time</th>
-                <th class="px-2 py-2 text-red-400">Lost</th>
-                <th class="px-2 py-2 text-green-400">Won</th>
-                <th class="px-2 py-2">Stake</th>
-                <th class="px-2 py-2">Buy Price</th>
-                <th class="px-2 py-2">P/L</th>
-                <th class="px-2 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody id="trade-history" class="text-white/80 font-mono text-xs"></tbody>
-          </table>
+    <section id="tab-positions" class="tab-section hidden py-6 mb-20 text-white">
+      <div class="max-w-6xl mx-auto space-y-6">
+
+        <!-- Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-white/5 text-white/70">
+                <tr>
+                  <th class="text-left p-3">Time</th>
+                  <th class="text-left p-3">Symbol</th>
+                  <th class="text-left p-3">Side</th>
+                  <th class="text-right p-3">Qty</th>
+                  <th class="text-right p-3">Entry</th>
+                  <th class="text-right p-3">Exit</th>
+                  <th class="text-left p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="pos-tbody"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between p-3 text-xs bg-black/40 border-t border-white/10">
+            <div id="pos-pagination-info">Page 1 of 1</div>
+            <div class="flex gap-2">
+              <button id="pos-prev" class="px-3 py-1 bg-white/10 rounded">Prev</button>
+              <button id="pos-next" class="px-3 py-1 bg-white/10 rounded">Next</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
