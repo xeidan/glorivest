@@ -224,33 +224,37 @@
       </div>
     
       <h2 class="text-xl font-bold mb-3 text-white">Leaderboard</h2>
-      <ul id="leaderboard" class="space-y-3 text-white text-sm"></ul>
+      <ul id="leaderboard" class="space-y-3 text-white text-sm pb-12"></ul>
     </section>
     
     
     <!-- Trade tab -->
     <section id="tab-trade" class="tab-section hidden py-6 text-white space-y-6">
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+
+      <!-- AI Bot Summary Card -->
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
         <h2 class="text-xl font-bold mb-2">AI Auto Trader</h2>
-        <div class="text-sm text-white/70 flex justify-between mt-2">
-          <span>Capital:</span><span id="bot-capital">$0</span>
+    
+        <div class="text-sm text-white/70 flex justify-between">
+          <span>Capital:</span><span id="bot-capital">$0.00</span>
         </div>
         <div class="text-sm text-white/70 flex justify-between">
           <span>Days Active:</span><span id="bot-days">0</span>
         </div>
         <div class="text-sm text-white/70 flex justify-between">
-          <span>Projected Profit:</span><span id="bot-profit">$0</span>
+          <span>Projected Profit (20%):</span><span id="bot-profit">$0.00</span>
         </div>
     
         <div class="mt-4">
           <p class="text-xs text-white/50 mb-1">Progress to 20% Goal</p>
           <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="bot-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 50%"></div>
+            <div id="bot-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1] transition-all duration-500 ease-out" style="width: 0%"></div>
           </div>
-          <p id="bot-progress-label" class="text-xs text-white/70 text-right mt-1">50%</p>
+          <p id="bot-progress-label" class="text-xs text-white/70 text-right mt-1">0%</p>
         </div>
       </div>
     
+      <!-- VIX75 Live Chart -->
       <div class="bg-gradient-to-br from-black to-[#0b2f29] border border-white/10 rounded-2xl p-4 shadow-md">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold">VIX75 Live Chart</h2>
@@ -259,26 +263,10 @@
             <span id="vix75-arrow-trade" class="text-xs"></span>
           </div>
         </div>
-        <div class="relative">
-          <canvas id="vix75-sparkline" height="600" width="600" class="w-full border border-white/10 rounded"></canvas>
-    
-          <div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-white/50 text-xs pl-1">
-            <span>75.00</span>
-            <span>74.00</span>
-            <span>73.00</span>
-            <span>72.00</span>
-          </div>
-    
-          <div class="absolute bottom-0 left-0 right-0 flex justify-between text-white/50 text-[10px] px-6">
-            <span>00:00</span>
-            <span>06:00</span>
-            <span>12:00</span>
-            <span>18:00</span>
-            <span>24:00</span>
-          </div>
-        </div>
+        <canvas id="vix75-sparkline" height="600" width="600" class="w-full border border-white/10 rounded"></canvas>
       </div>
     
+      <!-- Inline Price Display -->
       <div class="flex justify-between items-center px-4 py-2 border-b border-white/10 text-white/70 text-sm">
         <span>Live VIX75 Price:</span>
         <span class="flex items-center gap-1 font-bold text-[#00D2B1]">
@@ -287,24 +275,33 @@
         </span>
       </div>
     
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center flex-wrap gap-4">
-        <div class="w-full md:w-auto flex-grow">
-          <p id="bot-action-label" class="text-sm text-white/70 mb-1">Buying Contract</p>
+      <!-- Bot Action Section -->
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex-grow w-full">
+          <p id="bot-action-label" class="text-sm text-white/70 mb-1">Ready to Trade</p>
           <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 33%"></div>
+            <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
           </div>
         </div>
+    
+        <!-- Start Bot Button -->
         <button id="start-bot" class="py-2 px-4 bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold rounded-lg flex items-center gap-2 w-48">
           <i class="fas fa-play"></i> <span>Start Bot</span>
+        </button>
+    
+        <!-- Stop Bot Button (Initially hidden) -->
+        <button id="stop-bot" class="py-2 px-4 hidden bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-2 w-48">
+          <i class="fas fa-stop"></i> <span>Stop Bot</span>
         </button>
       </div>
     
       <p class="text-xs text-white/50 text-center pt-4">
-        Bot executes trades daily and grows your balance by 20% over 30 days.
+        Bot executes trades every 20 seconds and grows your capital by 20% in 30 days.
       </p>
     
-      <div id="stop-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 flex">
-        <div class="bg-white text-black rounded-xl p-6 max-w-sm text-center animate__animated animate__fadeInUp">
+      <!-- Stop Confirmation Modal -->
+      <div id="stop-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
+        <div class="bg-white text-black rounded-xl p-6 max-w-sm text-center shadow-lg">
           <h3 class="text-lg font-bold mb-2">Stop Bot?</h3>
           <p class="text-sm text-gray-700 mb-4">You’ll lose all progress and profit if you stop the bot now. Are you sure?</p>
           <div class="flex justify-center gap-4">
@@ -313,7 +310,9 @@
           </div>
         </div>
       </div>
+    
     </section>
+    
     
 
     <!-- Positions tab -->
