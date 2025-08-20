@@ -119,16 +119,26 @@
     <section id="tab-dashboard" class="tab-section">
       <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
         <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      
+          <!-- Header Row -->
+          <div>
+            <div class="flex justify-between items-center">
+              <h1 id="current-account-tier" class="text-3xl font-bold">Standard</h1>
+              <button id="open-account-sheet-btn" class="px-3 hover:bg-white/10" title="Accounts">
+                <i class="fa-solid fa-chevron-down text-[#00D2B1]"></i>
+              </button>
+            </div>
           
-          <!-- Total Balance + Eye Toggle -->
-          <div class="flex justify-between items-center">
+            <!-- content-width badge (not full width, independent of the title) -->
+            <p id="current-account-code" style="display:inline-block; white-space:nowrap;" class="text-xs font-medium text-white/70 bg-white/10 rounded-md border border-white/10 px-1">#GV000000-00</p>
+          </div>
+      
+          <!-- Total Balance -->
+          <div class="flex items-center">
             <div>
               <p class="text-xs font-light text-white/60">Total Balance</p>
-              <h3 id="total-balance" class="text-3xl font-bold text-white mt-1">$0.00</h3>
+              <h3 id="total-balance" class="text-2xl font-bold text-white mt-1">$0.00</h3>
             </div>
-            <button onclick="toggleBalance()">
-              <i id="real-balance-eye-icon" class="fa-solid fa-eye text-white/70 text-lg"></i>
-            </button>
           </div>
       
           <!-- Profit Section -->
@@ -152,38 +162,128 @@
         </div>
       </div>
       
-      
 
+      <!-- Accounts Bottom Sheet -->
+      <div id="account-sheet-modal" class="fixed inset-0 z-40 hidden">
+        <div id="account-sheet-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="account-sheet-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300">
+          <div class="mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl" style="height:52vh;">
+            <!-- Handle -->
+            <div id="account-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none">
+              <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="grid grid-cols-3 items-center px-4 pb-2">
+              <div></div>
+              <h3 class="text-xl font-semibold text-white text-center">Accounts</h3>
+              <div class="justify-self-end">
+                <button id="account-create-btn" class="p-2 rounded-lg hover:bg-white/10" title="Create New Account" aria-label="Create New Account">
+                  <i class="fa-solid fa-plus text-[#00D2B1]"></i>
+                </button>
+              </div>
+            </div>            
+
+            <!-- List (centers if 1, scrolls if many) -->
+            <div id="account-sheet-list" class="px-4 py-4 h-[calc(52vh-72px)] overflow-y-auto flex flex-col gap-2">
+              <!-- rows injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- New Account Bottom Sheet -->
+      <div id="new-account-sheet" class="fixed inset-0 z-50 hidden">
+        <div id="new-sheet-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="new-sheet-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300">
+          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height:52vh;">
+            <!-- Slide container for right-to-left animation -->
+            <div id="new-sheet-slide" class="absolute inset-0 transition-transform duration-300">
+              <!-- Handle -->
+              <div id="new-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none">
+                <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+              </div>
+
+              <!-- Header: back chevron on left, centered title -->
+              <div class="px-4 py-2 flex items-center relative">
+                <button id="new-back-btn" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
+                  <i class="fa-solid fa-chevron-left text-white/80"></i>
+                </button>
+                <h3 class="text-xl font-semibold text-white mx-auto">Create New Account</h3>
+              </div>
+
+              <!-- Options -->
+              <div class="px-4 pt-8 h-[calc(52vh-120px)] overflow-y-auto">
+                <div class="grid gap-6" id="tier-options">
+                  <!-- Custom selectable cards (no blue radios) -->
+                  <button data-tier="standard" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Standard</div>
+                      <div class="text-xs text-white/70">Fee: Free</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 15% • Min $20 • USDT-TRC20</div>
+                  </button>
+
+                  <button data-tier="pro" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Pro</div>
+                      <div class="text-xs text-white/70">Fee: $20</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 20% • Min $200 • USDT-TRC20</div>
+                  </button>
+
+                  <button data-tier="elite" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Elite</div>
+                      <div class="text-xs text-white/70">Fee: $50</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 25% • Min $1000 • USDT-TRC20</div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="px-4 py-3 flex justify-end">
+                <button id="new-sheet-create" class="px-4 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">Create</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+        
 
       <!-- Action Buttons -->
-<div class="flex justify-around py-10">
-  <!-- Deposit -->
-  <div class="flex flex-col items-center">
-    <div onclick="showTab('deposit')" class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
-      <i class="fa-solid fa-plus"></i>
-    </div>
-    <p class="mt-2 text-xs font-light">Deposit</p>
-  </div>
+      <div class="flex justify-around py-10">
+        <!-- Deposit -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('deposit')" class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Deposit</p>
+        </div>
 
-  <!-- Withdraw -->
-  <div class="flex flex-col items-center">
-    <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-      <i class="fa-solid fa-minus"></i>
-    </div>
-    <p class="mt-2 text-xs font-light">Withdraw</p>
-  </div>
+        <!-- Withdraw -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+            <i class="fa-solid fa-minus"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Withdraw</p>
+        </div>
 
-  <!-- Transactions -->
-  <div class="flex flex-col items-center">
-    <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-      <i class="fa-solid fa-arrow-right-arrow-left"></i>
-    </div>
-    <p class="mt-2 text-xs font-light">Transactions</p>
-  </div>
-</div>
+        <!-- Transactions -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Transactions</p>
+        </div>
+      </div>
 
 
-      
   
       <!-- Refer and Earn Promo -->
       <hr class="border-white/10">
@@ -196,11 +296,263 @@
         <button onclick="showTab('earn')" class="bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
           Refer Now
         </button>
-      </div>
-    </div>
-  </div>
+            </div>
+          </div>
+        </div>
     </section>
     
+
+
+    <script>
+      (function(){
+        const token = localStorage.getItem('token');
+      
+        // header fields
+        const elTier  = document.getElementById('current-account-tier');
+        const elCode  = document.getElementById('current-account-code');
+        const elTotal = document.getElementById('total-balance');
+        const elAvail = document.getElementById('available-balance');
+      
+        // open button (support either id)
+        const openBtn = document.querySelector('#open-account-sheet-btn, #account-sheet');
+      
+        // accounts sheet
+        const sheetModal  = document.getElementById('account-sheet-modal');
+        const sheetBg     = document.getElementById('account-sheet-backdrop');
+        const sheetPanel  = document.getElementById('account-sheet-panel');
+        const sheetList   = document.getElementById('account-sheet-list');
+        const sheetHandle = document.getElementById('account-handle');
+        const createBtn   = document.getElementById('account-create-btn');
+      
+        // new account sheet
+        const newModal    = document.getElementById('new-account-sheet');
+        const newBg       = document.getElementById('new-sheet-backdrop');
+        const newPanel    = document.getElementById('new-sheet-panel');
+        const newSlide    = document.getElementById('new-sheet-slide');
+        const newHandle   = document.getElementById('new-handle');
+        const newBackBtn  = document.getElementById('new-back-btn');
+        const newCreate   = document.getElementById('new-sheet-create');
+        const tierOptions = document.getElementById('tier-options');
+      
+        const GREEN = '#00D2B1';
+      
+        const state = { accounts: [], currentId: null, selectedTier: 'standard' };
+      
+        function fmtUSD(cents = 0) {
+          const n = Number(cents || 0) / 100;
+          return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+        }
+      
+        async function fetchAccounts() {
+          try {
+            const r = await fetch('/accounts', { headers: { Authorization: `Bearer ${token}` } });
+            if (!r.ok) return [];
+            return await r.json();
+          } catch { return []; }
+        }
+      
+        function applyHeader(acc){
+          if (!acc) return;
+          const tierText = (acc.display_name || acc.tier || '').replace(/\s*Account$/i,'') || 'Standard';
+          const rawCode  = (acc.account_code || '').trim();
+          const codeText = rawCode.startsWith('#') ? rawCode : `#${rawCode || '—'}`;
+      
+          elTier.textContent = tierText;
+          elCode.textContent = codeText;
+      
+          const bal = Number(acc.balance_cents || 0);
+          const fmt = `$${(bal/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`;
+          elTotal.textContent = fmt;
+          elAvail.textContent = fmt;
+        }
+      
+        function renderAccountList(){
+          sheetList.innerHTML = '';
+          const accs = state.accounts;
+      
+          // center if exactly one account
+          if (accs.length === 1) {
+            sheetList.classList.add('justify-center');
+            sheetList.classList.add('items-center');
+            sheetList.classList.add('flex');
+          } else {
+            sheetList.classList.remove('justify-center','items-center','flex');
+            sheetList.classList.add('flex');
+          }
+      
+          // guarantee at least one visible row (Standard) – uses server data
+          const renderRow = (acc, markCurrent=false) => {
+            const row = document.createElement('button');
+            row.className = 'w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 mb-2';
+            row.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-lg font-semibold text-white">${(acc.display_name || acc.tier || 'Standard').replace(/\s*Account$/i,'')}</div>
+                  <div class="mt-1 flex items-center gap-2 text-xs text-white/70">
+                    <span class="px-1 rounded-md bg-white/10 border border-white/10">${(acc.account_code && acc.account_code.startsWith('#')) ? acc.account_code : '#'+(acc.account_code||'—')}</span>
+                  </div>
+                </div>
+                <div class="text-sm font-semibold text-white/90">${fmtUSD(acc.balance_cents)}</div>
+              </div>
+              ${markCurrent ? '<div class="mt-2 text-[11px]" style="color:'+GREEN+'">Current</div>' : ''}
+            `;
+            row.addEventListener('click', () => {
+              state.currentId = acc.id;
+              localStorage.setItem('currentAccountId', String(acc.id));
+              applyHeader(acc);
+              closeAccountsSheet();
+            });
+            sheetList.appendChild(row);
+          };
+      
+          if (!accs.length) {
+            // If server truly returns none, we still show one "Standard" using header code
+            renderRow({
+              display_name: 'Standard Account',
+              account_code: (elCode.textContent || '').replace(/^#?/,'#'),
+              balance_cents: 0,
+              id: state.currentId || 0
+            }, true);
+            return;
+          }
+      
+          accs.forEach(acc => renderRow(acc, acc.id === state.currentId));
+        }
+      
+        // --- sheet open/close ---
+        async function openAccountsSheet(){
+          state.accounts = await fetchAccounts();
+          const saved = Number(localStorage.getItem('currentAccountId') || 0);
+          const curr = state.accounts.find(a => a.id === saved) || state.accounts[0] || null;
+          if (curr) { state.currentId = curr.id; applyHeader(curr); }
+      
+          renderAccountList();
+      
+          sheetModal.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            sheetBg.classList.add('opacity-100');
+            sheetPanel.classList.remove('translate-y-full');
+          });
+        }
+        function closeAccountsSheet(){
+          sheetBg.classList.remove('opacity-100');
+          sheetPanel.classList.add('translate-y-full');
+          setTimeout(() => sheetModal.classList.add('hidden'), 220);
+        }
+      
+
+        // --- new sheet open  ---
+        function openNewSheet(){
+          newModal.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            newBg.classList.add('opacity-100');
+            newPanel.classList.remove('translate-y-full'); // slide up only
+          });
+        }
+
+        function closeNewSheet(){
+          newBg.classList.remove('opacity-100');
+          newPanel.classList.add('translate-y-full'); // slide down only
+          setTimeout(() => newModal.classList.add('hidden'), 220);
+        }
+      
+        // --- drag to close (both sheets) ---
+        function attachDragClose(handleEl, modalEl, panelEl, onClose){
+          let startY = 0, currentY = 0, dragging = false;
+      
+          const onDown = (e) => {
+            dragging = true;
+            startY = (e.touches ? e.touches[0].clientY : e.clientY);
+            panelEl.style.transition = 'none';
+          };
+          const onMove = (e) => {
+            if (!dragging) return;
+            currentY = (e.touches ? e.touches[0].clientY : e.clientY);
+            const dy = Math.max(0, currentY - startY);
+            panelEl.style.transform = `translateY(${dy}px)`;
+          };
+          const onUp = () => {
+            if (!dragging) return;
+            dragging = false;
+            panelEl.style.transition = '';
+            const dy = Math.max(0, currentY - startY);
+            if (dy > 70) onClose();
+            else panelEl.style.transform = ''; // snap back (Tailwind class handles baseline)
+          };
+      
+          handleEl.addEventListener('mousedown', onDown);
+          handleEl.addEventListener('touchstart', onDown, { passive: true });
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('touchmove', onMove, { passive: true });
+          window.addEventListener('mouseup', onUp);
+          window.addEventListener('touchend', onUp);
+        }
+      
+        // --- tier selection (custom green) ---
+        function setSelectedTier(tier){
+          state.selectedTier = tier;
+          document.querySelectorAll('.tier-card').forEach(el => {
+            const on = el.dataset.tier === tier;
+            el.style.borderColor = on ? GREEN : 'rgba(255,255,255,0.1)';
+            el.style.boxShadow   = on ? '0 0 0 2px '+GREEN+'33 inset' : 'none';
+            el.style.background  = on ? 'rgba(0,210,177,0.08)' : 'rgba(255,255,255,0.05)';
+          });
+        }
+      
+        // --- events ---
+        openBtn?.addEventListener('click', openAccountsSheet);
+        sheetBg.addEventListener('click', closeAccountsSheet);
+        createBtn.addEventListener('click', () => { closeAccountsSheet(); openNewSheet(); });
+      
+        newBg.addEventListener('click', closeNewSheet);
+        newBackBtn.addEventListener('click', () => { closeNewSheet(); openAccountsSheet(); });
+      
+        // attach drag close
+        attachDragClose(sheetHandle, sheetModal, sheetPanel, closeAccountsSheet);
+        attachDragClose(newHandle, newModal, newPanel, closeNewSheet);
+      
+        // tier card clicks
+        tierOptions.addEventListener('click', (e) => {
+          const btn = e.target.closest('.tier-card');
+          if (!btn) return;
+          setSelectedTier(btn.dataset.tier);
+        });
+        setSelectedTier('standard');
+      
+        // create account
+        newCreate.addEventListener('click', async ()=>{
+          const tier = state.selectedTier || 'standard';
+          const r = await fetch('/accounts', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+            body: JSON.stringify({ tier })
+          });
+          if (!r.ok) { alert('Failed to create account'); return; }
+          closeNewSheet();
+      
+          // refresh header & selection
+          state.accounts = await fetchAccounts();
+          const newest = state.accounts[state.accounts.length - 1];
+          if (newest) {
+            state.currentId = newest.id;
+            localStorage.setItem('currentAccountId', String(newest.id));
+            applyHeader(newest);
+          }
+        });
+      
+        // initial header sync
+        (async () => {
+          const accs = await fetchAccounts();
+          if (!accs.length) return;
+          const saved = Number(localStorage.getItem('currentAccountId') || 0);
+          const curr = accs.find(a => a.id === saved) || accs[0];
+          state.currentId = curr.id;
+          applyHeader(curr);
+        })();
+      })();
+      </script>
+      
+      
 
     <!-- Earn tab -->
     <section id="tab-earn" class="tab-section hidden py-6">
@@ -444,34 +796,110 @@
         <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
           <i class="fa-solid fa-xmark"></i>
         </button>
+    
         <h2 class="text-2xl font-bold mb-2">Deposit Funds</h2>
         <p class="text-sm text-white/70 mb-4">
-          Select a cryptocurrency and follow the instructions to fund your account.
+          Fund your account using card/bank or crypto.
           <span class="font-semibold text-[#00D2B1]">Minimum: $20</span>
         </p>
     
-        <div class="space-y-4">
-          <label class="block text-sm font-semibold">Choose Coin</label>
-          <select class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none">
-            <option>USDT (TRC20)</option>
-            <option>USDT (ERC20)</option>
-            <option>Bitcoin (BTC)</option>
-            <option>Ethereum (ETH)</option>
-          </select>
+        <!-- Method Tabs -->
+        <div class="flex gap-6 mb-4">
+          <button id="dep-tab-fiat" class="flex-1 py-2 px-4 rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20" data-method="fiat">
+            Fiat
+          </button>
+          <button id="dep-tab-crypto" class="flex-1 py-2 px-4 rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10" data-method="crypto">
+            Crypto
+          </button>
+        </div>
     
-          <div class="bg-white/10 p-4 rounded-lg border border-white/20 mt-4">
-            <p class="text-sm text-white/60 mb-2">Send payment to:</p>
-            <p class="text-md font-mono text-[#00D2B1] select-all">TYx9r...dF82</p>
-            <canvas id="qr-code" class="w-32 h-32 mt-4"></canvas>
-            <p class="text-xs text-white/50 mt-2">Your wallet address is unique. Deposit only the selected coin.</p>
+        <!-- Shared amount / currency -->
+        <div class="space-y-3 mb-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Amount</label>
+            <!-- ID expected by script -->
+            <input id="deposit-amount" type="number" min="20" value="50"
+                   class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
+                   placeholder="Enter amount (min $20)"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Currency</label>
+            <select id="dep-currency" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none">
+              <option value="usd" selected>USD</option>
+              <option value="ngn">NGN</option>
+              <option value="usdc">USDC</option>
+            </select>
+          </div>
+        </div>
+    
+        <!-- FIAT PANEL -->
+        <div id="fiat-panel" class="space-y-4">
+          <div class="bg-white/10 p-4 rounded-lg border border-white/20">
+            <p class="text-sm text-white/80">
+              Pay securely with card/bank. You’ll be redirected to our payment partner.
+            </p>
+          </div>
+          <!-- ID expected by script -->
+          <button id="deposit-fiat-btn"
+                  class="w-full bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+            Continue to Checkout
+          </button>
+          <p id="fiat-status" class="text-xs text-white/50 text-center hidden"></p>
+        </div>
+    
+        <!-- CRYPTO PANEL -->
+        <div id="crypto-panel" class="space-y-4 hidden">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Choose Coin</label>
+            <!-- ID expected by script -->
+            <select id="deposit-coin" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none">
+              <option value="USDT">USDT</option>
+              <option value="BTC">Bitcoin (BTC)</option>
+              <option value="ETH">Ethereum (ETH)</option>
+              <option value="USDC">USDC</option>
+            </select>
           </div>
     
-          <button class="w-full mt-6 bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
-            Mark as Paid
-          </button>
+          <div class="bg-white/10 p-4 rounded-lg border border-white/20" id="crypto-details">
+            <p class="text-sm text-white/60 mb-2">Send payment to:</p>
+    
+            <!-- Address + Copy -->
+            <div class="flex items-center gap-2">
+              <input id="crypto-address" type="text" readonly
+                     class="flex-1 rounded bg-black/40 text-[#00D2B1] font-mono px-3 py-2 border border-white/20"
+                     value="" placeholder="Address will appear after you create a charge"/>
+              <button id="btn-copy-address" class="px-3 py-2 rounded bg-white/10 border border-white/20 hover:bg-white/20">Copy</button>
+            </div>
+    
+            <!-- QR -->
+            <div class="flex items-center gap-3 mt-3">
+              <canvas id="qr-code" class="w-28 h-28 bg-black/40 rounded border border-white/10"></canvas>
+              <div class="text-xs text-white/60">
+                <p><span class="text-white/80">Amount:</span> <span id="crypto-amount">—</span></p>
+                <p><span class="text-white/80">Asset:</span> <span id="crypto-asset">—</span></p>
+                <p class="mt-1">Use only the selected asset. Network fees apply.</p>
+              </div>
+            </div>
+    
+            <p class="text-xs text-white/50 mt-3">A hosted payment page will open in a new tab as well.</p>
+          </div>
+    
+          <div class="grid grid-cols-1 gap-3">
+            <!-- ID expected by script -->
+            <button id="deposit-crypto-btn" class="w-full bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+              Create Crypto Charge
+            </button>
+            <a id="crypto-hosted-url" href="#" target="_blank" rel="noopener"
+               class="w-full text-center bg-white/10 text-white font-semibold py-2 rounded-lg border border-white/20 hover:bg-white/20 transition-all hidden">
+              Open Hosted Checkout
+            </a>
+          </div>
+    
+          <p id="crypto-status" class="text-xs text-white/50 text-center hidden"></p>
         </div>
       </div>
     </section>
+    
 
     <!-- Withdraw Tab -->
     <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
@@ -484,30 +912,36 @@
           Enter wallet address and withdrawal amount.
           <span class="font-semibold text-[#00D2B1]">Minimum: $20</span>
         </p>
-    
+
         <div class="space-y-4">
-          <label class="block text-sm font-semibold">Choose Coin</label>
-          <select class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none">
-            <option>USDT (TRC20)</option>
-            <option>USDT (ERC20)</option>
-            <option>Bitcoin (BTC)</option>
-            <option>Ethereum (ETH)</option>
-          </select>
-    
-          <label class="block text-sm font-semibold">Wallet Address</label>
-          <input type="text" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none" placeholder="Enter recipient address">
-    
-          <label class="block text-sm font-semibold">Amount ($)</label>
-          <input type="number" min="20" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none" placeholder="Minimum $20">
-    
-          <button class="w-full mt-6 bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+          <div>
+            <label class="block text-sm font-semibold">Choose Coin</label>
+            <select id="wd-coin" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none">
+              <option value="USDT">USDT (TRC20/ERC20)</option>
+              <option value="BTC">Bitcoin (BTC)</option>
+              <option value="ETH">Ethereum (ETH)</option>
+              <option value="USDC">USDC</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold">Wallet Address</label>
+            <input id="wd-address" type="text" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none" placeholder="Enter recipient address">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold">Amount ($)</label>
+            <input id="wd-amount" type="number" min="20" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none" placeholder="Minimum $20">
+          </div>
+
+          <button id="btn-withdraw" class="w-full mt-2 bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
             Withdraw
           </button>
+          <p id="wd-status" class="text-xs text-white/50 text-center hidden"></p>
         </div>
       </div>
     </section>
 
-    
     <!-- Transactions Tab -->
     <section id="tab-transactions" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
       <div class="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-xl p-6 shadow-xl relative">
@@ -515,12 +949,13 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
-    
+
         <table class="min-w-full text-left text-sm">
           <thead class="bg-white/10 text-white/60 text-xs uppercase">
             <tr>
               <th class="px-2 py-2">Type</th>
               <th class="px-2 py-2">Amount</th>
+              <th class="px-2 py-2">Currency</th>
               <th class="px-2 py-2">Status</th>
               <th class="px-2 py-2">Date</th>
             </tr>
@@ -531,6 +966,7 @@
         </table>
       </div>
     </section>
+
     
     
   </main>
@@ -564,7 +1000,8 @@
     console.log('Token:', localStorage.getItem('token'));
   </script> -->
   
-
+<script src="https://js.stripe.com/v3"></script>
+<script src="deposit.js"></script>
 <script src="global.js"></script>
 <script src="dashboard.js"></script>
 <script src="earn.js"></script>
