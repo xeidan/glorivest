@@ -85,6 +85,10 @@
       z-index: 100;
     }
     </style>
+    <style>
+      :root { --bottom-nav-h: 64px; } /* set to your bottom-nav height */
+      :root { --sheet-h: 46vh; }
+    </style>
     
 </head>
 <body class="bg-black text-gray-300 min-h-screen">
@@ -124,9 +128,9 @@
           <div>
             <div class="flex justify-between items-center">
               <h1 id="current-account-tier" class="text-3xl font-bold">Standard</h1>
-              <button id="open-account-sheet-btn" class="px-3 hover:bg-white/10" title="Accounts">
+              <button id="btn-open-accounts" class="px-3 hover:bg-white/10" title="Accounts">
                 <i class="fa-solid fa-chevron-down text-[#00D2B1]"></i>
-              </button>
+              </button>              
             </div>
           
             <!-- content-width badge (not full width, independent of the title) -->
@@ -163,62 +167,59 @@
       </div>
       
 
-      <!-- Accounts Bottom Sheet -->
-      <div id="account-sheet-modal" class="fixed inset-0 z-40 hidden">
-        <div id="account-sheet-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+      <!-- ===================== Accounts Bottom Sheet ===================== -->
+      <div id="sheet-accounts" class="fixed inset-0 z-[60] hidden">
+        <div id="sheet-accounts-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
 
-        <div id="account-sheet-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300">
-          <div class="mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl" style="height:52vh;">
+        <div id="sheet-accounts-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: var(--bottom-nav-h, 64px);">
+          <div class="mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
             <!-- Handle -->
-            <div id="account-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none">
+            <div id="sheet-accounts-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
               <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
             </div>
 
             <!-- Header -->
-            <div class="grid grid-cols-3 items-center px-4 pb-2">
+            <div class="grid grid-cols-3 items-center px-4 pb-2 shrink-0">
               <div></div>
               <h3 class="text-xl font-semibold text-white text-center">Accounts</h3>
               <div class="justify-self-end">
-                <button id="account-create-btn" class="p-2 rounded-lg hover:bg-white/10" title="Create New Account" aria-label="Create New Account">
+                <button id="btn-accounts-create" class="p-2 rounded-lg hover:bg-white/10" title="Create New Account" aria-label="Create New Account">
                   <i class="fa-solid fa-plus text-[#00D2B1]"></i>
                 </button>
               </div>
-            </div>            
+            </div>
 
             <!-- List (centers if 1, scrolls if many) -->
-            <div id="account-sheet-list" class="px-4 py-4 h-[calc(52vh-72px)] overflow-y-auto flex flex-col gap-2">
+            <div id="list-accounts" class="px-4 py-4 h-[calc(52vh-72px)] overflow-y-auto flex flex-col gap-2">
               <!-- rows injected by JS -->
             </div>
           </div>
         </div>
       </div>
 
+      <!-- ===================== New Account Bottom Sheet ===================== -->
+      <div id="sheet-new" class="fixed inset-0 z-[70] hidden">
+        <div id="sheet-new-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
 
-      <!-- New Account Bottom Sheet -->
-      <div id="new-account-sheet" class="fixed inset-0 z-50 hidden">
-        <div id="new-sheet-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
-
-        <div id="new-sheet-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300">
-          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height:52vh;">
-            <!-- Slide container for right-to-left animation -->
-            <div id="new-sheet-slide" class="absolute inset-0 transition-transform duration-300">
+        <div id="sheet-new-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: var(--bottom-nav-h, 64px);">
+          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
+            <div class="relative h-full flex flex-col">
               <!-- Handle -->
-              <div id="new-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none">
+              <div id="sheet-new-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
                 <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
               </div>
 
-              <!-- Header: back chevron on left, centered title -->
-              <div class="px-4 py-2 flex items-center relative">
-                <button id="new-back-btn" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
+              <!-- Header -->
+              <div class="px-4 py-2 flex items-center relative shrink-0">
+                <button id="btn-new-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
                   <i class="fa-solid fa-chevron-left text-white/80"></i>
                 </button>
                 <h3 class="text-xl font-semibold text-white mx-auto">Create New Account</h3>
               </div>
 
-              <!-- Options -->
-              <div class="px-4 pt-8 h-[calc(52vh-120px)] overflow-y-auto">
-                <div class="grid gap-6" id="tier-options">
-                  <!-- Custom selectable cards (no blue radios) -->
+              <!-- Tiers (scrolls) -->
+              <div class="px-4 pt-8 flex-1 min-h-0 overflow-y-auto">
+                <div id="list-tiers" class="grid gap-3">
                   <button data-tier="standard" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
                     <div class="flex items-center justify-between">
                       <div class="font-medium">Standard</div>
@@ -245,16 +246,52 @@
                 </div>
               </div>
 
-              <!-- Actions -->
-              <div class="px-4 py-3 flex justify-end">
-                <button id="new-sheet-create" class="px-4 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">Create</button>
+              <!-- Footer (pinned) -->
+              <div class="px-4 py-3 flex justify-center shrink-0" style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
+                <button id="btn-new-create" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">
+                  Create
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-        
+      <!-- ===================== Review / Details Bottom Sheet ===================== -->
+      <div id="sheet-review" class="fixed inset-0 z-[80] hidden">
+        <div id="sheet-review-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="sheet-review-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: var(--bottom-nav-h, 64px);">
+          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
+            <div class="relative h-full flex flex-col">
+              <!-- Handle -->
+              <div id="sheet-review-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
+                <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+              </div>
+
+              <!-- Header -->
+              <div class="px-4 py-2 flex items-center relative shrink-0">
+                <button id="btn-review-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
+                  <i class="fa-solid fa-chevron-left text-white/80"></i>
+                </button>
+                <h3 id="review-title" class="text-xl font-semibold text-white mx-auto">Review Account</h3>
+              </div>
+
+              <!-- Body (scrolls) -->
+              <div id="review-body" class="px-4   pt-6 flex-1 min-h-0 overflow-y-auto"></div>
+
+              <!-- Confirm -->
+              <div class="px-4 pb-3 flex justify-center shrink-0" style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
+                <button id="btn-review-confirm" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-black font-semibold">
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
 
       <!-- Action Buttons -->
       <div class="flex justify-around py-10">
@@ -306,46 +343,61 @@
     <script>
       (function(){
         const token = localStorage.getItem('token');
+        const GREEN = '#00D2B1';
       
-        // header fields
+        // Header fields in your dashboard
         const elTier  = document.getElementById('current-account-tier');
         const elCode  = document.getElementById('current-account-code');
         const elTotal = document.getElementById('total-balance');
         const elAvail = document.getElementById('available-balance');
       
-        // open button (support either id)
-        const openBtn = document.querySelector('#open-account-sheet-btn, #account-sheet');
+        // Header chevron must have id="btn-open-accounts"
+        const btnOpenAccounts = document.getElementById('btn-open-accounts');
       
-        // accounts sheet
-        const sheetModal  = document.getElementById('account-sheet-modal');
-        const sheetBg     = document.getElementById('account-sheet-backdrop');
-        const sheetPanel  = document.getElementById('account-sheet-panel');
-        const sheetList   = document.getElementById('account-sheet-list');
-        const sheetHandle = document.getElementById('account-handle');
-        const createBtn   = document.getElementById('account-create-btn');
+        // ===== Accounts sheet =====
+        const aModal  = document.getElementById('sheet-accounts');
+        const aBg     = document.getElementById('sheet-accounts-backdrop');
+        const aPanel  = document.getElementById('sheet-accounts-panel');
+        const aHandle = document.getElementById('sheet-accounts-handle');
+        const aList   = document.getElementById('list-accounts');
+        const btnAccountsCreate = document.getElementById('btn-accounts-create');
       
-        // new account sheet
-        const newModal    = document.getElementById('new-account-sheet');
-        const newBg       = document.getElementById('new-sheet-backdrop');
-        const newPanel    = document.getElementById('new-sheet-panel');
-        const newSlide    = document.getElementById('new-sheet-slide');
-        const newHandle   = document.getElementById('new-handle');
-        const newBackBtn  = document.getElementById('new-back-btn');
-        const newCreate   = document.getElementById('new-sheet-create');
-        const tierOptions = document.getElementById('tier-options');
+        // ===== New sheet =====
+        const nModal  = document.getElementById('sheet-new');
+        const nBg     = document.getElementById('sheet-new-backdrop');
+        const nPanel  = document.getElementById('sheet-new-panel');
+        const nHandle = document.getElementById('sheet-new-handle');
+        const btnNewBack   = document.getElementById('btn-new-back');
+        const btnNewCreate = document.getElementById('btn-new-create');
+        const listTiers    = document.getElementById('list-tiers');
       
-        const GREEN = '#00D2B1';
+        // ===== Review sheet =====
+        const rModal  = document.getElementById('sheet-review');
+        const rBg     = document.getElementById('sheet-review-backdrop');
+        const rPanel  = document.getElementById('sheet-review-panel');
+        const rHandle = document.getElementById('sheet-review-handle');
+        const btnReviewBack    = document.getElementById('btn-review-back');
+        const btnReviewConfirm = document.getElementById('btn-review-confirm');
+        const reviewBody       = document.getElementById('review-body');
+        const reviewTitle      = document.getElementById('review-title'); // add id to your <h3> in review header
+      
+        const TIER_META = {
+          standard: { name:'Standard', feeLabel:'Free', fee_cents:0,     return_pct:15, min_cents:  2000 },
+          pro:      { name:'Pro',      feeLabel:'$20',  fee_cents:2000,  return_pct:20, min_cents: 20000 },
+          elite:    { name:'Elite',    feeLabel:'$50',  fee_cents:5000,  return_pct:25, min_cents:100000 },
+        };
       
         const state = { accounts: [], currentId: null, selectedTier: 'standard' };
       
-        function fmtUSD(cents = 0) {
-          const n = Number(cents || 0) / 100;
-          return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+        // ---------- utils
+        function fmtUSD(cents = 0){
+          const n = Number(cents||0)/100;
+          return `${n.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} USD`;
         }
       
-        async function fetchAccounts() {
+        async function fetchAccounts(){
           try {
-            const r = await fetch('/accounts', { headers: { Authorization: `Bearer ${token}` } });
+            const r = await fetch('/accounts', { headers:{ Authorization:`Bearer ${token}` }});
             if (!r.ok) return [];
             return await r.json();
           } catch { return []; }
@@ -357,199 +409,216 @@
           const rawCode  = (acc.account_code || '').trim();
           const codeText = rawCode.startsWith('#') ? rawCode : `#${rawCode || '—'}`;
       
-          elTier.textContent = tierText;
-          elCode.textContent = codeText;
+          elTier && (elTier.textContent = tierText);
+          elCode && (elCode.textContent = codeText);
       
           const bal = Number(acc.balance_cents || 0);
           const fmt = `$${(bal/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`;
-          elTotal.textContent = fmt;
-          elAvail.textContent = fmt;
+          elTotal && (elTotal.textContent = fmt);
+          elAvail && (elAvail.textContent = fmt);
         }
       
-        function renderAccountList(){
-          sheetList.innerHTML = '';
+        function renderAccounts(){
+          aList.innerHTML = '';
           const accs = state.accounts;
       
-          // center if exactly one account
-          if (accs.length === 1) {
-            sheetList.classList.add('justify-center');
-            sheetList.classList.add('items-center');
-            sheetList.classList.add('flex');
-          } else {
-            sheetList.classList.remove('justify-center','items-center','flex');
-            sheetList.classList.add('flex');
-          }
+          aList.classList.remove('justify-center','items-center','flex');
+          aList.classList.add('flex','flex-col','gap-2');
+          if (accs.length === 1) aList.classList.add('justify-center','items-center');
       
-          // guarantee at least one visible row (Standard) – uses server data
-          const renderRow = (acc, markCurrent=false) => {
-            const row = document.createElement('button');
-            row.className = 'w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 mb-2';
-            row.innerHTML = `
+          const row = (acc, current=false) => {
+            const el = document.createElement('button');
+            el.className = 'w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3';
+            el.innerHTML = `
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-lg font-semibold text-white">${(acc.display_name || acc.tier || 'Standard').replace(/\s*Account$/i,'')}</div>
+                  <div class="text-lg font-semibold text-white">${(acc.display_name||acc.tier||'Standard').replace(/\s*Account$/i,'')}</div>
                   <div class="mt-1 flex items-center gap-2 text-xs text-white/70">
-                    <span class="px-1 rounded-md bg-white/10 border border-white/10">${(acc.account_code && acc.account_code.startsWith('#')) ? acc.account_code : '#'+(acc.account_code||'—')}</span>
+                    <span class="px-1 rounded-md bg-white/10 border border-white/10">
+                      ${(acc.account_code && acc.account_code.startsWith('#')) ? acc.account_code : '#'+(acc.account_code||'—')}
+                    </span>
                   </div>
                 </div>
                 <div class="text-sm font-semibold text-white/90">${fmtUSD(acc.balance_cents)}</div>
               </div>
-              ${markCurrent ? '<div class="mt-2 text-[11px]" style="color:'+GREEN+'">Current</div>' : ''}
+              ${current ? '<div class="mt-2 text-[11px]" style="color:'+GREEN+'">Current</div>' : ''}
             `;
-            row.addEventListener('click', () => {
+            el.addEventListener('click', ()=>{
               state.currentId = acc.id;
               localStorage.setItem('currentAccountId', String(acc.id));
               applyHeader(acc);
-              closeAccountsSheet();
+              closeAccounts();
             });
-            sheetList.appendChild(row);
+            aList.appendChild(el);
           };
       
           if (!accs.length) {
-            // If server truly returns none, we still show one "Standard" using header code
-            renderRow({
-              display_name: 'Standard Account',
-              account_code: (elCode.textContent || '').replace(/^#?/,'#'),
-              balance_cents: 0,
-              id: state.currentId || 0
-            }, true);
+            row({ display_name:'Standard Account', account_code:(elCode?.textContent||'').replace(/^#?/,'#'), balance_cents:0, id: state.currentId||0 }, true);
             return;
           }
-      
-          accs.forEach(acc => renderRow(acc, acc.id === state.currentId));
+          accs.forEach(a => row(a, a.id === state.currentId));
         }
       
-        // --- sheet open/close ---
-        async function openAccountsSheet(){
-          state.accounts = await fetchAccounts();
-          const saved = Number(localStorage.getItem('currentAccountId') || 0);
-          const curr = state.accounts.find(a => a.id === saved) || state.accounts[0] || null;
-          if (curr) { state.currentId = curr.id; applyHeader(curr); }
+        function renderReview(){
+          const t = TIER_META[state.selectedTier] || TIER_META.standard;
       
-          renderAccountList();
+          // Header title becomes the selected tier in custom green
+          const titleEl = document.getElementById('review-title');
+          if (titleEl) {
+            titleEl.textContent = t.name;
+            titleEl.style.color = '#00D2B1'; // custom green
+            titleEl.style.fontWeight = 600;
+          }
       
-          sheetModal.classList.remove('hidden');
-          requestAnimationFrame(() => {
-            sheetBg.classList.add('opacity-100');
-            sheetPanel.classList.remove('translate-y-full');
-          });
-        }
-        function closeAccountsSheet(){
-          sheetBg.classList.remove('opacity-100');
-          sheetPanel.classList.add('translate-y-full');
-          setTimeout(() => sheetModal.classList.add('hidden'), 220);
-        }
+          // Rich body (NO "Tier" row)
+          reviewBody.innerHTML = `
+            <div class="space-y-4">
+              <div class="text-sm text-white/70">
+                You’re creating a <span class="text-white font-semibold">${t.name}</span> account.
+              </div>
       
-
-        // --- new sheet open  ---
-        function openNewSheet(){
-          newModal.classList.remove('hidden');
-          requestAnimationFrame(() => {
-            newBg.classList.add('opacity-100');
-            newPanel.classList.remove('translate-y-full'); // slide up only
-          });
-        }
-
-        function closeNewSheet(){
-          newBg.classList.remove('opacity-100');
-          newPanel.classList.add('translate-y-full'); // slide down only
-          setTimeout(() => newModal.classList.add('hidden'), 220);
-        }
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-white/60">Return</span>
+                  <span class="font-semibold text-white">${t.return_pct}%</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-white/60">Min Deposit</span>
+                  <span class="font-semibold text-white">$${(t.min_cents/100).toLocaleString()}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-white/60">Network</span>
+                  <span class="font-semibold text-white">USDT-TRC20 (TRON)</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-white/60">One-time Fee</span>
+                  <span class="font-semibold text-white">${t.feeLabel}</span>
+                </div>
+              </div>
       
-        // --- drag to close (both sheets) ---
-        function attachDragClose(handleEl, modalEl, panelEl, onClose){
-          let startY = 0, currentY = 0, dragging = false;
-      
-          const onDown = (e) => {
-            dragging = true;
-            startY = (e.touches ? e.touches[0].clientY : e.clientY);
-            panelEl.style.transition = 'none';
-          };
-          const onMove = (e) => {
-            if (!dragging) return;
-            currentY = (e.touches ? e.touches[0].clientY : e.clientY);
-            const dy = Math.max(0, currentY - startY);
-            panelEl.style.transform = `translateY(${dy}px)`;
-          };
-          const onUp = () => {
-            if (!dragging) return;
-            dragging = false;
-            panelEl.style.transition = '';
-            const dy = Math.max(0, currentY - startY);
-            if (dy > 70) onClose();
-            else panelEl.style.transform = ''; // snap back (Tailwind class handles baseline)
-          };
-      
-          handleEl.addEventListener('mousedown', onDown);
-          handleEl.addEventListener('touchstart', onDown, { passive: true });
-          window.addEventListener('mousemove', onMove);
-          window.addEventListener('touchmove', onMove, { passive: true });
-          window.addEventListener('mouseup', onUp);
-          window.addEventListener('touchend', onUp);
+              <div class="space-y-2 text-xs text-white/60 text-center pt-8">
+                <p>Send only <span class="text-white">USDT-TRC20 (TRON)</span> to the generated wallet.</p>
+                <p>Deposits below the minimum may not activate earnings for this account.</p>
+               
+              </div>
+            </div>
+          `;
         }
       
-        // --- tier selection (custom green) ---
         function setSelectedTier(tier){
           state.selectedTier = tier;
-          document.querySelectorAll('.tier-card').forEach(el => {
-            const on = el.dataset.tier === tier;
-            el.style.borderColor = on ? GREEN : 'rgba(255,255,255,0.1)';
-            el.style.boxShadow   = on ? '0 0 0 2px '+GREEN+'33 inset' : 'none';
-            el.style.background  = on ? 'rgba(0,210,177,0.08)' : 'rgba(255,255,255,0.05)';
+          document.querySelectorAll('.tier-card').forEach(card=>{
+            const on = card.dataset.tier === tier;
+            card.style.borderColor = on ? GREEN : 'rgba(255,255,255,0.1)';
+            card.style.boxShadow   = on ? '0 0 0 2px '+GREEN+'33 inset' : 'none';
+            card.style.background  = on ? 'rgba(0,210,177,0.08)' : 'rgba(255,255,255,0.05)';
           });
+      
+          // Optional nicety: live-update Review screen if it's open
+          if (!rModal.classList.contains('hidden')) renderReview();
         }
       
-        // --- events ---
-        openBtn?.addEventListener('click', openAccountsSheet);
-        sheetBg.addEventListener('click', closeAccountsSheet);
-        createBtn.addEventListener('click', () => { closeAccountsSheet(); openNewSheet(); });
+        // ---------- sheet open/close
+        function openAccounts(){ aModal.classList.remove('hidden'); requestAnimationFrame(()=>{ aBg.classList.add('opacity-100'); aPanel.classList.remove('translate-y-full'); }); }
+        function closeAccounts(){ aBg.classList.remove('opacity-100'); aPanel.classList.add('translate-y-full'); setTimeout(()=>aModal.classList.add('hidden'),220); }
+        function openNew(){ nModal.classList.remove('hidden'); requestAnimationFrame(()=>{ nBg.classList.add('opacity-100'); nPanel.classList.remove('translate-y-full'); }); }
+        function closeNew(){ nBg.classList.remove('opacity-100'); nPanel.classList.add('translate-y-full'); setTimeout(()=>nModal.classList.add('hidden'),220); }
+        function openReview(){ renderReview(); rModal.classList.remove('hidden'); requestAnimationFrame(()=>{ rBg.classList.add('opacity-100'); rPanel.classList.remove('translate-y-full'); }); }
+        function closeReview(){ rBg.classList.remove('opacity-100'); rPanel.classList.add('translate-y-full'); setTimeout(()=>rModal.classList.add('hidden'),220); }
       
-        newBg.addEventListener('click', closeNewSheet);
-        newBackBtn.addEventListener('click', () => { closeNewSheet(); openAccountsSheet(); });
+        function attachDragClose(handle, closeFn, panel){
+          let startY=0, currentY=0, dragging=false;
+          const down = e => { dragging=true; startY=(e.touches?e.touches[0].clientY:e.clientY); panel.style.transition='none'; };
+          const move = e => { if(!dragging) return; currentY=(e.touches?e.touches[0].clientY:e.clientY); const dy=Math.max(0,currentY-startY); panel.style.transform=`translateY(${dy}px)`; };
+          const up   = () => { if(!dragging) return; dragging=false; panel.style.transition=''; const dy=Math.max(0,currentY-startY); if(dy>70) closeFn(); else panel.style.transform=''; };
+          handle.addEventListener('mousedown',down); handle.addEventListener('touchstart',down,{passive:true});
+          window.addEventListener('mousemove',move); window.addEventListener('touchmove',move,{passive:true});
+          window.addEventListener('mouseup',up);     window.addEventListener('touchend',up);
+        }
       
-        // attach drag close
-        attachDragClose(sheetHandle, sheetModal, sheetPanel, closeAccountsSheet);
-        attachDragClose(newHandle, newModal, newPanel, closeNewSheet);
+        // ---------- events (flow: Accounts → New → Review)
+        btnOpenAccounts?.addEventListener('click', async ()=>{
+          state.accounts = await fetchAccounts();
+          const saved = Number(localStorage.getItem('currentAccountId')||0);
+          const curr = state.accounts.find(a=>a.id===saved) || state.accounts[0] || null;
+          if (curr){ state.currentId = curr.id; applyHeader(curr); }
+          renderAccounts();
+          openAccounts();
+        });
       
-        // tier card clicks
-        tierOptions.addEventListener('click', (e) => {
+        aBg.addEventListener('click', closeAccounts);
+        nBg.addEventListener('click', closeNew);
+        rBg.addEventListener('click', closeReview);
+      
+        btnAccountsCreate.addEventListener('click', ()=>{ closeAccounts(); openNew(); });
+        btnNewBack.addEventListener('click', ()=>{ closeNew(); openAccounts(); });
+        btnNewCreate.addEventListener('click', ()=>{ closeNew(); openReview(); });
+        btnReviewBack.addEventListener('click', ()=>{ closeReview(); openNew(); });
+      
+        listTiers.addEventListener('click', e=>{
           const btn = e.target.closest('.tier-card');
           if (!btn) return;
           setSelectedTier(btn.dataset.tier);
         });
         setSelectedTier('standard');
       
-        // create account
-        newCreate.addEventListener('click', async ()=>{
+        btnReviewConfirm.addEventListener('click', async ()=>{
           const tier = state.selectedTier || 'standard';
+          btnReviewConfirm.disabled = true;
+          const txt = btnReviewConfirm.textContent;
+          btnReviewConfirm.textContent = 'Creating…';
+      
           const r = await fetch('/accounts', {
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
             body: JSON.stringify({ tier })
           });
-          if (!r.ok) { alert('Failed to create account'); return; }
-          closeNewSheet();
       
-          // refresh header & selection
-          state.accounts = await fetchAccounts();
-          const newest = state.accounts[state.accounts.length - 1];
-          if (newest) {
-            state.currentId = newest.id;
-            localStorage.setItem('currentAccountId', String(newest.id));
-            applyHeader(newest);
+          if (!r.ok){
+            btnReviewConfirm.disabled = false;
+            btnReviewConfirm.textContent = txt;
+            alert('Failed to create account');
+            return;
           }
+      
+          closeReview();
+      
+          state.accounts = await fetchAccounts();
+          const newest = state.accounts[state.accounts.length-1];
+          if (newest){ state.currentId = newest.id; localStorage.setItem('currentAccountId', String(newest.id)); applyHeader(newest); }
+      
+          renderAccounts();
+          openAccounts();
+      
+          btnReviewConfirm.disabled = false;
+          btnReviewConfirm.textContent = txt;
         });
       
-        // initial header sync
-        (async () => {
+        attachDragClose(aHandle, closeAccounts, aPanel);
+        attachDragClose(nHandle, closeNew, nPanel);
+        attachDragClose(rHandle, closeReview, rPanel);
+      
+        // Initial header sync
+        (async ()=>{
           const accs = await fetchAccounts();
           if (!accs.length) return;
-          const saved = Number(localStorage.getItem('currentAccountId') || 0);
-          const curr = accs.find(a => a.id === saved) || accs[0];
-          state.currentId = curr.id;
-          applyHeader(curr);
+          const saved = Number(localStorage.getItem('currentAccountId')||0);
+          const curr = accs.find(a=>a.id===saved) || accs[0];
+          state.currentId = curr.id; applyHeader(curr);
         })();
       })();
+      </script>
+      
+      
+      
+      
+      <script>
+        (function(){
+          const nav = document.getElementById('bottom-nav'); // give your nav this id
+          if (nav) {
+            document.documentElement.style.setProperty('--bottom-nav-h', nav.offsetHeight + 'px');
+          }
+        })();
       </script>
       
       
@@ -972,7 +1041,7 @@
   </main>
 
   <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 left-0 w-full flex justify-around py-4 text-sm nav-glow bg-black z-50">
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around py-4 text-sm nav-glow bg-black z-50">
     <button data-tab="dashboard" class="tab-btn active-tab">
       <i class="fas fa-home mb-2"></i>
       <span class="text-xs font-light">Dashboard</span>
