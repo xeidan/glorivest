@@ -1,7 +1,58 @@
+// ==== global.js (load first on every page) ====
+window.API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+
+window.getToken = () => localStorage.getItem('token');
+window.setToken = (t) => localStorage.setItem('token', t);
+window.clearToken = () => localStorage.removeItem('token');
+
+// Generic fetch wrapper that auto-attaches Authorization
+window.apiFetch = async (path, opts = {}) => {
+  const token = getToken();
+  const headers = { ...(opts.headers || {}) };
+  if (!('Content-Type' in headers) && opts.body) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const err = new Error(`HTTP ${res.status} ${res.statusText}`);
+    err.status = res.status; err.body = body;
+    throw err;
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+};
+
+// Make sure a default account exists (creates 'standard' if none)
+window.ensureDefaultAccount = async () => {
+  if (!getToken()) return null;
+  const accounts = await apiFetch('/accounts', { method: 'GET' });
+  if (Array.isArray(accounts) && accounts.length) return accounts[0];
+
+  // <-- this is exactly where your snippet goes -->
+  return await apiFetch('/accounts', {
+    method: 'POST',
+    body: JSON.stringify({ tier: 'standard' })
+  });
+};
+
+// Fetch /account/me and paint a couple fields (optional helper)
+window.loadMe = async () => {
+  if (!getToken()) return null;
+  const me = await apiFetch('/account/me', { method: 'GET' });
+
+  // Example UI hooks (use data-* attributes anywhere you want these values)
+  document.querySelectorAll('[data-me="email"]').forEach(el => el.textContent = me.email ?? '');
+  document.querySelectorAll('[data-me="account-id"]').forEach(el => el.textContent = me.default_account_id ?? '—');
+
+  return me;
+};
+
+
+
 // ===============================
 // 1. Main Tab Navigation (Bottom Nav)
 // ===============================
-
 document.addEventListener("DOMContentLoaded", () => {
   const tabButtons = document.querySelectorAll(".tab-btn");
   const tabSections = document.querySelectorAll(".tab-section");

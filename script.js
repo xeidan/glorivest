@@ -1,5 +1,59 @@
 const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
 
+// === API helpers (add right below BASE_URL) ===
+const API_BASE = BASE_URL;                     // alias
+const getToken = () => localStorage.getItem('token');
+const setToken = (t) => localStorage.setItem('token', t);
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {})
+    },
+    ...options
+  });
+  if (!res.ok) {
+    let msg = 'Request failed';
+    try { const j = await res.json(); msg = j.message || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+// Ensure a default account exists (server also does this after verify, this is a safe client-side backup)
+async function ensureDefaultAccount() {
+  if (!getToken()) return;
+  try {
+    const accounts = await apiFetch('/accounts');
+    if (!accounts || !accounts.length) {
+      await apiFetch('/accounts', {
+        method: 'POST',
+        body: JSON.stringify({ tier: 'standard' })
+      });
+    }
+  } catch (e) {
+    console.warn('ensureDefaultAccount:', e.message);
+  }
+}
+
+// Load /account/me and optionally fill DOM
+async function loadMe() {
+  try {
+    const me = await apiFetch('/account/me');
+    localStorage.setItem('me', JSON.stringify(me));
+
+    // Optional: auto-fill UI elements if present
+    document.querySelectorAll('[data-me="email"]').forEach(el => el.textContent = me.email || '');
+    document.querySelectorAll('[data-me="account-id"]').forEach(el => el.textContent = me.default_account_id ?? '');
+  } catch (e) {
+    console.warn('loadMe:', e.message);
+  }
+}
+
+
+
 // === Back to Top Button Logic ===
     const backToTopBtn = document.getElementById('backToTopBtn');
     let hideTimeout;
@@ -25,34 +79,34 @@ const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
     document.addEventListener('DOMContentLoaded', () => {
       const faqButtons = document.querySelectorAll('.backdrop-blur-md button');
       faqButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const answer = button.nextElementSibling;
-    if (!answer) return; // 🛡️ Prevent error if null
+        button.addEventListener('click', () => {
+          const answer = button.nextElementSibling;
+          if (!answer) return; // 🛡️ Prevent error if null
 
-    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-    const icon = button.querySelector('svg');
+          const isExpanded = button.getAttribute('aria-expanded') === 'true';
+          const icon = button.querySelector('svg');
 
-    if (isExpanded) {
-      answer.style.maxHeight = '0';
-      button.setAttribute('aria-expanded', 'false');
-      icon?.classList.remove('rotate-180');
-    } else {
-      faqButtons.forEach(otherButton => {
-        const otherAnswer = otherButton.nextElementSibling;
-        if (otherButton !== button && otherButton.getAttribute('aria-expanded') === 'true' && otherAnswer) {
-          otherAnswer.style.maxHeight = '0';
-          otherButton.setAttribute('aria-expanded', 'false');
-          otherButton.querySelector('svg')?.classList.remove('rotate-180');
-        }
+          if (isExpanded) {
+            answer.style.maxHeight = '0';
+            button.setAttribute('aria-expanded', 'false');
+            icon?.classList.remove('rotate-180');
+          } else {
+            faqButtons.forEach(otherButton => {
+              const otherAnswer = otherButton.nextElementSibling;
+              if (otherButton !== button && otherButton.getAttribute('aria-expanded') === 'true' && otherAnswer) {
+                otherAnswer.style.maxHeight = '0';
+                otherButton.setAttribute('aria-expanded', 'false');
+                otherButton.querySelector('svg')?.classList.remove('rotate-180');
+              }
+            });
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            button.setAttribute('aria-expanded', 'true');
+            icon?.classList.add('rotate-180');
+          }
+        });
       });
-      answer.style.maxHeight = answer.scrollHeight + 'px';
-      button.setAttribute('aria-expanded', 'true');
-      icon?.classList.add('rotate-180');
-    }
-  });
-});
-
     });
+
   
     // === Star Rating Logic ===
     document.addEventListener("DOMContentLoaded", () => {
@@ -244,17 +298,23 @@ if (loginForm) {
       const data = await res.json();
 
       if (res.ok) {
+        setToken(data.token);
+        // make sure there is at least one account, then cache /account/me
+        await ensureDefaultAccount();
+        await loadMe();
+      
         alert('Login successful');
-        localStorage.setItem('token', data.token);
-        window.location.href = 'app.html'; // or dashboard
+        window.location.href = 'app.html';
       } else {
         alert(data.message || 'Login failed');
       }
+      
     } catch (err) {
       alert('Something went wrong. Try again.');
     }
   });
 }
+
 
 // ======== FORGOT PASSWORD ========
 function forgotPassword(link) {
@@ -274,7 +334,7 @@ async function resetPassword() {
     }
 
     try {
-      const res = await fetch('https://glorivest-api-a16f75b6b330.herokuapp.com/reset-password', {
+      const res = await fetch(`${BASE_URL}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, newPassword })
@@ -322,12 +382,17 @@ if (otpForm) {
       const data = await res.json();
 
       if (res.ok) {
+        // You still have the signup token in localStorage from the register step
+        await ensureDefaultAccount();  // create default account if missing
+        await loadMe();                // cache profile including default_account_id
+      
         alert('OTP verified. You can now log in.');
         localStorage.removeItem('otpEmail');
         window.location.href = 'index.html';
       } else {
         alert(data.message || 'OTP verification failed');
       }
+      
     } catch (err) {
       alert('Something went wrong. Try again.');
     }
