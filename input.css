@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@keyframes gradient-slow {
+    0% { transform: translateX(0) rotate(0deg); }
+    50% { transform: translateX(-25%) rotate(180deg); }
+    100% { transform: translateX(0) rotate(360deg); }
+  }
+  
+  .animate-gradient-slow {
+    animation: gradient-slow 20s ease infinite;
+  }
+  
+
+  #tradingview-markets-widget iframe {
+    height: 100% !important;
+  }
+

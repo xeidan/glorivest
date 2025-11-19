@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referral Dashboard</title>
+  <link href="output.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+</head>
+<body class="min-h-screen bg-black text-white px-4 py-6 font-sans">
+
+  <!-- Logo -->
+  <div class="mb-6 flex justify-center">
+    <img src="logo.svg" alt="Glorivest Logo" class="h-10" />
+  </div>
+
+  <h1 class="text-2xl font-bold mb-4 text-center">Your Referral Stats</h1>
+
+  <div id="referral-info" class="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+    <p class="mb-2">Referral Code: <span id="referral-code" class="font-mono text-cyan-400"></span></p>
+    
+    <p class="mb-2 flex items-center space-x-2">
+      Referral Link:
+      <span id="referral-link" class="font-mono text-cyan-400 text-sm truncate"></span>
+      <button id="copy-btn" class="text-white/70 hover:text-white text-xs border border-white/20 px-2 py-1 rounded">
+        Copy
+      </button>
+    </p>
+
+    <p id="copy-status" class="text-green-400 text-sm mt-1 hidden">Copied!</p>
+
+    <p>Total Referrals: <span id="referral-count" class="font-semibold text-white/80">0</span></p>
+    <p>Referral Earnings: <span id="referral-earnings" class="font-semibold text-green-400">$0.00</span></p>
+  </div>
+
+  <h2 class="text-xl font-bold mb-3">Top Referrers</h2>
+  <ul id="leaderboard" class="space-y-3"></ul>
+
+  <script type="module">
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+
+      if (!user || !token) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Show user's referral info
+      const referralCode = user.referral_code || `Glorivest${user.id}`;
+      const referralLink = `https://Glorivest.com/signup.html?ref=${referralCode}`;
+
+      document.getElementById("referral-code").textContent = referralCode;
+      document.getElementById("referral-link").textContent = referralLink;
+
+      const copyBtn = document.getElementById("copy-btn");
+      const copyStatus = document.getElementById("copy-status");
+
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(referralLink)
+          .then(() => {
+            copyStatus.classList.remove("hidden");
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => {
+              copyStatus.classList.add("hidden");
+              copyBtn.textContent = "Copy";
+            }, 2000);
+          })
+          .catch(() => alert("Failed to copy"));
+      });
+
+      try {
+        const res = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/referral/stats', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("referral-count").textContent = data.total_referrals || 0;
+          document.getElementById("referral-earnings").textContent = `$${(data.total_earned || 0).toFixed(2)}`;
+        } else {
+          console.error("Failed to fetch referral stats");
+        }
+
+        const lb = await fetch('https://Glorivest-backend-0c5eddaec35e.herokuapp.com/referral/leaderboard');
+        if (lb.ok) {
+          const topUsers = await lb.json();
+          const list = document.getElementById("leaderboard");
+
+          topUsers.forEach((user, index) => {
+            const li = document.createElement("li");
+            li.className = "bg-white/5 border border-white/10 rounded-lg p-3";
+            li.innerHTML = `
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="text-sm font-bold text-white/90">#${index + 1} - ${user.email}</p>
+                  <p class="text-xs text-white/60">${user.total_referrals} referrals</p>
+                </div>
+                <span class="text-green-400 font-semibold text-sm">$${(user.total_earned || 0).toFixed(2)}</span>
+              </div>
+            `;
+            list.appendChild(li);
+          });
+        }
+
+      } catch (err) {
+        console.error("Error loading referral data:", err);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,902 @@
+21<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <!-- Primary Meta Tags -->
+<title>Glorivest – Simple, Secure Digital Finance</title>
+<meta name="title" content="Glorivest – Simple, Secure Digital Finance">
+<meta name="description" content="Glorivest helps you save, send, and manage money online with ease. Secure deposits, withdrawals, wallet balances, and referral rewards — all in one platform.">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://glorivest.com/">
+<meta property="og:title" content="Glorivest – Simple, Secure Digital Finance">
+<meta property="og:description" content="Glorivest helps you save, send, and manage money online with ease. Secure deposits, withdrawals, wallet balances, and referral rewards — all in one platform.">
+<meta property="og:image" content="https://glorivest.com/assets/glorivest-preview.png">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://glorivest.com/">
+<meta name="twitter:title" content="Glorivest – Simple, Secure Digital Finance">
+<meta name="twitter:description" content="Glorivest helps you save, send, and manage money online with ease. Secure deposits, withdrawals, wallet balances, and referral rewards — all in one platform.">
+<meta name="twitter:image" content="https://glorivest.com/assets/glorivest-preview.png">
+
+
+  <title>Glorivest Investment</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link href="output.css" rel="stylesheet" />
+  <style>
+    /* Global smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+            font-family: 'Inter', sans-serif;
+        }
+    /* Initial hidden state for animated elements */
+    [data-animate] {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+
+    /* State when element is visible */
+    [data-animate].animate-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Base styling for testimonial cards */
+    .testimonial-card {
+            min-width: 280px; /* Minimum width for the card */
+            max-width: 320px; /* Slightly increased max-width for better content display */
+            background-color: #ffffff; /* White background for cards */
+            border-radius: 1.5rem; /* More rounded corners */
+            padding: 2rem; /* Increased padding */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Stronger, softer shadow */
+            flex-shrink: 0; /* Prevent cards from shrinking */
+            border: 1px solid #e5e7eb; /* Subtle border */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px); /* Slight lift on hover */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12); /* Enhanced shadow on hover */
+        }
+
+        /* Keyframe animation for continuous marquee scroll to the left */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); } /* Scrolls half of the content width */
+        }
+
+        /* Keyframe animation for continuous marquee scroll to the right (reverse) */
+        @keyframes marquee-reverse {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(50%); } /* Scrolls half of the content width */
+        }
+
+        /* Apply marquee animation to the top row */
+        .animate-marquee {
+            animation: marquee 60s linear infinite; /* Adjusted duration for smoother, slower scroll */
+        }
+
+        /* Apply reverse marquee animation to the bottom row */
+        .animate-marquee-reverse {
+            animation: marquee-reverse 60s linear infinite; /* Adjusted duration for smoother, slower scroll */
+        }
+
+        /* Styles for the blur overlay */
+        .scroll-blur-container {
+            position: relative;
+            overflow: hidden; /* Crucial to hide content outside the container */
+        }
+
+        /* Left blur effect */
+        .scroll-blur-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10%; /* Width of the blur area */
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)); /* Gradient from white to transparent */
+            z-index: 10; /* Ensure it's above the cards */
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+
+        /* Right blur effect */
+        .scroll-blur-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10%; /* Width of the blur area */
+            height: 100%;
+            background: linear-gradient(to left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)); /* Gradient from white to transparent */
+            z-index: 10; /* Ensure it's above the cards */
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+
+        /* Responsive adjustments for blur width on smaller screens */
+        @media (max-width: 768px) {
+            .scroll-blur-container::before,
+            .scroll-blur-container::after {
+                width: 15%; /* Increase blur width on smaller screens */
+            }
+        }
+  </style>
+</head>
+<body class="font-sans min-h-screen bg-gradient-to-br from-[#1C1C1C] via-[#000000] to-[#1C1C1C] text-white">
+  <!-- Navbar -->
+<nav style="background-color: #1C1C1C;" class="w-full flex justify-between items-center py-6 px-6 fixed top-0 z-40">
+  <!-- Logo -->
+  <img class="w-36" src="glorivest-logo.png" alt="Glorivest Logo">
+
+  <!-- Desktop Nav Links -->
+  <div class="hidden md:flex space-x-6 items-center text-sm text-white font-medium">
+    <a href="#how" class="hover:text-[#00D2B1] transition">How it Works</a>
+    <a href="#faq" class="hover:text-[#00D2B1] transition">FAQ</a>
+    <a href="#testimonials" class="hover:text-[#00D2B1] transition">Testimonials</a>
+    <a href="#about" class="hover:text-[#00D2B1] transition">About Us</a>
+  </div>
+
+  <!-- Hamburger Menu Button (Mobile) -->
+  <button class="md:hidden text-white focus:outline-none" onclick="toggleMobileMenu()">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+</nav>
+
+<!-- Mobile Slide-in Modal -->
+<div id="mobileMenu" class="fixed inset-0 z-50 bg-black bg-opacity-50 hidden" onclick="toggleMobileMenu()">
+  <div class="fixed top-0 right-0 h-full w-3/4 max-w-sm bg-[#1C1C1C] text-white p-6 transform translate-x-full transition-transform duration-300 ease-in-out" id="mobileMenuPanel" onclick="event.stopPropagation()">
+    <div class="flex justify-end mb-8">
+      <button onclick="toggleMobileMenu()" class="text-white text-4xl">&times;</button>
+    </div>
+    <nav class="flex flex-col space-y-12 text-md font-medium">
+      <a href="#" class="transition" onclick="handleMenuClick(this, '#how')">How it Works</a>
+      <a href="#faq" class="transition" onclick="handleMenuClick(this, '#faq')">FAQ</a>
+      <a href="#testimonials" class="transition" onclick="handleMenuClick(this, '#testimonials')">Testimonials</a>
+      <a href="#about" class="transition" onclick="handleMenuClick(this, '#about')">About Us</a>
+    </nav>
+  </div>
+</div>
+
+
+  <!-- HERO SECTION -->
+  <section class="relative pt-32 pb-20 px-6 z-10 text-left md:text-center" id="hero">
+    <div class="absolute inset-0 -z-10 flex justify-center items-start md:items-center pointer-events-none mt-24">
+      <div class="absolute w-[200px] h-[200px] md:w-[400px] md:h-[400px] mt-32 rounded-full bg-gradient-to-tr from-cyan-500 to-green-500 blur-3xl opacity-50"></div>
+      <img src="globe.svg" alt="Globe Background" class="relative w-[600px] sm:w-[700px] md:w-[900px]" />
+    </div>
+  
+    <!-- Desktop-only centering -->
+    <div class="z-10 max-w-2xl mt-64 md:mt-32 md:mx-auto md:flex md:flex-col md:items-center md:justify-center">
+      <h1 class="text-6xl md:text-8xl lg:text-7xl font-semibold whitespace-nowrap mb-4">
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="200">Smart.</span><br>
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="300">Secure.</span><br>
+        <span class="text-gray-200 bg-clip-text" data-animate="fade-in-up" data-delay="400">AI-Powered.</span>
+      </h1>
+      <p class="text-md md:text-lg text-gray-w00 pb-6">
+        Grow your assets with intelligent automation and precision. Experience trading with confidence.
+      </p>
+      <a href="#" onclick="toggleAuthPanel()" class="block w-full md:w-72 text-center px-10 py-3 rounded-md bg-[#00C8B3] hover:bg-[#00a895] text-white font-semibold transition">
+        Start Now
+      </a>
+    </div>
+  </section>
+  
+
+  <!-- HOW IT WORKS SECTION -->
+  <section id="how" class="bg-white text-[#1C1C1C] py-20 px-6">
+    <div class="max-w-5xl mx-auto text-center mb-12">
+      <h2 class="text-4xl md:text-5xl font-extrabold mb-4">How It Works</h2>
+      <p class="text-gray-600 max-w-xl mx-auto">Simple steps to start growing your assets securely with AI-driven tools.</p>
+    </div>
+  
+    <div class="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto text-left">
+      <!-- Step 1 -->
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="200">
+        <div class="text-[#00C8B3] text-3xl mb-4">1</div>
+        <h3 class="font-semibold text-xl mb-2">Create an Account</h3>
+        <p class="text-gray-500">Sign up in seconds with your email and verify your account instantly.</p>
+      </div>
+  
+      <!-- Step 2 -->
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="300">
+        <div class="text-[#00C8B3] text-3xl mb-4">2</div>
+        <h3 class="font-semibold text-xl mb-2">Fund Your Wallet</h3>
+        <p class="text-gray-500">Deposit securely via crypto or fiat to activate your trading journey.</p>
+      </div>
+  
+      <!-- Step 3 -->
+      <div class="bg-[#F9F9F9] p-6 rounded-xl shadow-sm hover:shadow-md transition" data-animate="fade-in-up" data-delay="400">
+        <div class="text-[#00C8B3] text-3xl mb-4">3</div>
+        <h3 class="font-semibold text-xl mb-2">Start Earning Daily</h3>
+        <p class="text-gray-500">Our smart trading engine works for you — profit builds automatically.</p>
+      </div>
+    </div>
+  </section>
+  
+
+  <div class="bg-gradient-to-br from-[#1C1C1C] via-[#000000] to-[#1C1C1C]">
+
+
+  <!-- WHY CHOOSE US -->
+  <section id="why" class="text-white py-20 px-6">
+    <div class="max-w-5xl mx-auto text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Why Choose Us</h2>
+      <p class="text-gray-400 max-w-2xl mx-auto">We combine smart automation, security, and user empowerment — so you can grow your assets with ease and confidence.</p>
+    </div>
+  
+    <div class="grid gap-10 md:grid-cols-3 max-w-6xl mx-auto">
+      <!-- Feature 1 -->
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="200">
+        <div class="text-4xl mb-4 text-[#00D2B1]">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">AI-Powered Trading</h3>
+        <p class="text-gray-400 text-sm">Our engine uses smart algorithms to trade with unmatched precision, so you don’t have to.</p>
+      </div>
+  
+      <!-- Feature 2 -->
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="300">
+        <div class="text-4xl mb-4 text-[#00D2B1]">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Secure & Transparent</h3>
+        <p class="text-gray-400 text-sm">Top-grade encryption, clear reporting, and a system designed with your security in mind.</p>
+      </div>
+  
+      <!-- Feature 3 -->
+      <div class="bg-white/5 p-6 rounded-xl border border-white/10 hover:border-[#00D2B1]/30 transition" data-animate="fade-in-up" data-delay="400">
+        <div class="text-4xl mb-4 text-[#00D2B1]">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Built for You</h3>
+        <p class="text-gray-400 text-sm">From onboarding to cashout, the entire experience is designed around your financial growth.</p>
+      </div>
+    </div>
+  </section>
+  
+
+  <!-- CHARTS -->
+  <section class="py-20" id="charts">
+    <div class="relative w-full max-w-6xl mx-auto px-6 md:grid md:grid-cols-2 md:gap-12 md:items-center">
+      
+      <!-- Left Text -->
+      <div class="md:text-left text-center">
+        <h1 class="text-4xl md:text-5xl font-semibold mb-4 bg-gradient-to-r from-[#00D2B1] to-white text-transparent bg-clip-text py-4" data-animate="fade-in-up" data-delay="200">
+          Real-Time Smart Charts
+        </h1>
+        <p class="text-gray-300 text-md leading-relaxed" data-animate="fade-in-up" data-delay="300">
+          Our custom charts are designed for speed, precision, and clarity. Powered by AI and real data simulation, you can track market movements in real-time, analyze trends, and make confident trading decisions — all in one sleek interface.
+        </p>
+      </div>
+  
+      <!-- Right Card -->
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 shadow-xl rounded-2xl p-6 mt-12 md:mt-0 max-w-md w-full mx-auto text-white md:max-w-none md:mx-0" data-animate="fade-in-up" data-delay="400">
+        <h2 class="text-xl font-semibold mb-4 text-center">Explore Our Live Chart Engine</h2>
+        <div class="py-4">
+          <img class="w-full rounded-xl" src="charts.jpg" alt="Glorivest Chart Preview" />
+        </div>
+        <p class="text-gray-400 text-sm font-light text-center mb-6">
+          No clutter. No confusion. Just beautifully responsive, data-rich visuals built for performance and ease.
+        </p>
+        <div class="text-center">
+          <button type="button" onclick="toggleAuthPanel()" class="w-full px-6 py-3 rounded-md bg-[#00C8B3] hover:bg-[#00a896] transition text-white font-semibold">
+            Start Trading
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>   
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials" class="bg-white py-20 overflow-hidden">
+    <h2 class="text-4xl md:text-5xl font-extrabold text-center text-gray-900 mb-12">
+        What People Are Saying
+    </h2>
+
+    <!-- Top Row - Scrolls to the Right -->
+    <div class="scroll-blur-container">
+        <div class="flex gap-6 animate-marquee">
+            <!-- Duplicate content for seamless loop -->
+            <div class="flex gap-6">
+                <!-- Testimonial Items (x6) -->
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Absolutely game-changing. I made my first $200 on this platform within days!</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=DA" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Daniel A.</span>
+                            <p class="text-sm text-gray-500">Entrepreneur</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Fast deposits. Beautiful interface. Real earnings. This is my go-to app now.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=CE" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Chisom Eze</span>
+                            <p class="text-sm text-gray-500">Trader</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Referral earnings drop instantly. Most honest platform I’ve seen this year.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=FB" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Fatima B.</span>
+                            <p class="text-sm text-gray-500">Investor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">I love how simple the platform is. No stress. Just earning.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=TG" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Tolu G.</span>
+                            <p class="text-sm text-gray-500">Freelancer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">From ₦0 to ₦150k in 2 weeks from trading profit. I’m shocked.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=EO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Emeka O.</span>
+                            <p class="text-sm text-gray-500">Student</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">The AI bot really delivers. 30 days locked profit makes sense now.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=AM" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Abdullahi M.</span>
+                            <p class="text-sm text-gray-500">Analyst</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duplicate the entire set of cards for seamless looping -->
+            <div class="flex gap-6">
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Absolutely game-changing. I made my first $200 on this platform within days!</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=DA" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Daniel A.</span>
+                            <p class="text-sm text-gray-500">Entrepreneur</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Fast deposits. Beautiful interface. Real earnings. This is my go-to app now.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=CE" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Chisom Eze</span>
+                            <p class="text-sm text-gray-500">Trader</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Referral earnings drop instantly. Most honest platform I’ve seen this year.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=FB" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Fatima B.</span>
+                            <p class="text-sm text-gray-500">Investor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">I love how simple the platform is. No stress. Just earning.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=TG" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Tolu G.</span>
+                            <p class="text-sm text-gray-500">Freelancer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">From ₦0 to ₦150k in 2 weeks from trading profit. I’m shocked.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=EO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Emeka O.</span>
+                            <p class="text-sm text-gray-500">Student</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">The AI bot really delivers. 30 days locked profit makes sense now.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=AM" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Abdullahi M.</span>
+                            <p class="text-sm text-gray-500">Analyst</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row (Reverse Scroll) -->
+    <div class="scroll-blur-container mt-10">
+        <div class="flex gap-6 animate-marquee-reverse">
+            <!-- Duplicate content for seamless loop -->
+            <div class="flex gap-6">
+                <!-- Testimonial Items (x6) - Different content for variety -->
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">This platform transformed my side hustle into a full-time income. Highly recommend!</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=SK" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Sola K.</span>
+                            <p class="text-sm text-gray-500">Entrepreneur</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">The support team is incredible. Quick responses and genuinely helpful advice.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=AO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Amara O.</span>
+                            <p class="text-sm text-gray-500">Business Owner</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">I was skeptical at first, but the results speak for themselves. Truly reliable.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=IK" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Ibrahim K.</span>
+                            <p class="text-sm text-gray-500">Consultant</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Seamless experience from start to finish. My earnings have never been this consistent.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=NU" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Ngozi U.</span>
+                            <p class="text-sm text-gray-500">Analyst</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Finally, a platform that understands what users need. Intuitive and powerful.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=CO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Chinedu O.</span>
+                            <p class="text-sm text-gray-500">Developer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">My investments are growing steadily. This is the best decision I've made this year.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=RM" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Rukayat M.</span>
+                            <p class="text-sm text-gray-500">Accountant</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duplicate the entire set of cards for seamless looping -->
+            <div class="flex gap-6">
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">This platform transformed my side hustle into a full-time income. Highly recommend!</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=SK" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Sola K.</span>
+                            <p class="text-sm text-gray-500">Entrepreneur</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">The support team is incredible. Quick responses and genuinely helpful advice.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=AO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Amara O.</span>
+                            <p class="text-sm text-gray-500">Business Owner</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">I was skeptical at first, but the results speak for themselves. Truly reliable.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=IK" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Ibrahim K.</span>
+                            <p class="text-sm text-gray-500">Consultant</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Seamless experience from start to finish. My earnings have never been this consistent.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=NU" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Ngozi U.</span>
+                            <p class="text-sm text-gray-500">Analyst</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">Finally, a platform that understands what users need. Intuitive and powerful.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=CO" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Chinedu O.</span>
+                            <p class="text-sm text-gray-500">Developer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <span class="text-5xl text-[#00D2B1] font-bold leading-none block mb-2">“</span>
+                    <p class="text-gray-800 text-base leading-relaxed">My investments are growing steadily. This is the best decision I've made this year.</p>
+                    <div class="mt-6 flex items-center gap-3">
+                        <img src="https://placehold.co/40x40/E0F2F7/000?text=RM" class="w-10 h-10 rounded-full object-cover border-2 border-[#00D2B1]" alt="User Avatar">
+                        <div>
+                            <span class="text-base font-semibold text-gray-800">Rukayat M.</span>
+                            <p class="text-sm text-gray-500">Accountant</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </section>
+
+  
+<!-- JOIN OUR COMMUNITY -->
+<section id="community" class="relative overflow-hidden py-20 px-6 md:grid md:grid-cols-2 md:gap-12 md:items-center mx-auto max-w-7xl">
+  <!-- Left Text Section -->
+  <div class="md:text-left text-center" data-animate="fade-in-up" data-delay="200">
+    <h2 class="text-4xl md:text-5xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#00D2B1] to-white mb-6">
+      Join Our Community
+    </h2>
+    <p class="text-white/80 font-light text-base md:text-lg max-w-md mx-auto md:mx-0">
+      Follow us on social media to get the latest updates, exclusive insights, and join discussions about the future of investing.
+    </p>
+  </div>
+
+  <!-- Right Card Section -->
+  <div class="mt-10 md:mt-0 bg-white/5 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-6 text-white text-center relative" data-animate="fade-in-up" data-delay="400">
+    <!-- Background Glow -->
+    <div class="absolute inset-0 flex items-center justify-center z-0">
+      <div class="w-64 h-64 md:w-96 md:h-96 bg-gradient-to-tr from-cyan-500 to-green-500 blur-3xl opacity-20 rounded-full"></div>
+    </div>
+
+    <!-- Avatar -->
+    <img src="community.jpg" alt="woman avatar" class="w-full md:w-96 mx-auto rounded-xl relative z-10 mb-4" />
+
+    <!-- Text -->
+    <h3 class="text-xl font-bold relative z-10 mb-2">Stay Updated</h3>
+    <p class="text-white/70 text-sm md:text-base font-light relative z-10">
+      Be the first to know about new features and updates by joining us online.
+    </p>
+
+    <!-- Social Icons -->
+    <div class="flex justify-center items-center space-x-4 mt-6 relative z-10">
+      <div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg hover:bg-cyan-400/30 transition">
+        <!-- X Icon -->
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.6 3H4.4C3.63 3 3 3.63 3 4.4v15.2C3 20.37 3.63 21 4.4 21h15.2c.77 0 1.4-.63 1.4-1.4V4.4c0-.77-.63-1.4-1.4-1.4zM17.88 17H15l-3.1-4.14L8.52 17H6l4.32-5.52L6.4 7h3.06l2.86 3.7L15.34 7h2.9l-4.26 5.24L17.88 17z"/>
+        </svg>
+      </div>
+      <!-- Instagram -->
+      <div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg hover:bg-cyan-400/30 transition">
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5ZM12 7a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7Zm5.25-.88a.75.75 0 1 1 0 1.5a.75.75 0 0 1 0-1.5Z"/>
+        </svg>
+      </div>
+      <!-- Facebook -->
+      <div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg hover:bg-cyan-400/30 transition">
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M22 12.07C22 6.477 17.523 2 12 2S2 6.477 2 12.07C2 17.08 5.656 21.192 10.438 22v-7.004H7.898v-2.926h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.465h-1.26c-1.243 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.926h-2.33V22C18.344 21.192 22 17.08 22 12.07Z"/>
+        </svg>
+      </div>
+      <!-- Telegram -->
+      <div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg hover:bg-cyan-400/30 transition">
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.477 2 2 6.484 2 12.016 2 17.533 6.468 22 11.985 22c5.532 0 10.015-4.467 10.015-9.984C22 6.484 17.533 2 12 2Zm4.65 7.78-1.662 7.83c-.124.547-.453.678-.917.423l-2.538-1.873-1.223 1.178c-.135.132-.248.243-.51.243l.183-2.59 4.723-4.27c.205-.182-.045-.283-.317-.1l-5.838 3.66-2.513-.785c-.547-.17-.558-.547.114-.807l9.82-3.79c.46-.17.862.11.715.796Z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- FAQS -->
+  <section class="relative overflow-hidden py-20 px-6 text-white" id="faq">
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-12 text-white bg-clip-text text-center z-10 relative" data-animate="fade-in-up" data-delay="200">
+      FAQs
+    </h1>
+    <div class="max-w-3xl mx-auto space-y-6">
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="300">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq1-answer">
+          <h3 class="text-xl font-semibold">What is Glorivest?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq1-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            Glorivest is a platform that leverages artificial intelligence to automatically trade financial markets and grow your capital securely and efficiently.
+          </p>
+        </div>
+      </div>
+  
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="400">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq2-answer">
+          <h3 class="text-xl font-semibold">How does the AI work?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq2-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            Our proprietary AI analyzes market data in real time, detects trading opportunities, and executes trades based on tested strategies — eliminating human error and emotion.
+          </p>
+        </div>
+      </div>
+  
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="500">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq3-answer">
+          <h3 class="text-xl font-semibold">Is Glorivest safe?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq3-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            Yes. Glorivest uses secure systems, audited algorithms, and risk management to protect your capital. Your funds are never locked or exposed to hidden risks.
+          </p>
+        </div>
+      </div>
+  
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="600">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq4-answer">
+          <h3 class="text-xl font-semibold">How do I earn?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq4-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            You earn by funding your account and letting the AI trade for you. You can also earn Glorivest coins through referrals, and redeem them for cash, airtime, or bonuses.
+          </p>
+        </div>
+      </div>
+  
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="700">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq5-answer">
+          <h3 class="text-xl font-semibold">Can I withdraw anytime?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq5-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            Yes, you can request a withdrawal at any time. Your earnings and capital are always accessible through your dashboard.
+          </p>
+        </div>
+      </div>
+  
+      <div class="backdrop-blur-md bg-white/5 border border-white/20 rounded-2xl p-5 shadow-lg" data-animate="fade-in-up" data-delay="800">
+        <button class="flex justify-between items-center w-full text-left focus:outline-none" aria-expanded="false" aria-controls="faq6-answer">
+          <h3 class="text-xl font-semibold">How much money do I need to start trading?</h3>
+          <svg class="w-6 h-6 transition-transform duration-300 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="faq6-answer" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+          <p class="text-gray-300 font-thin text-sm pt-2">
+            You can test the robot in demo mode without funding your account. To trade live, a minimum $50 deposit is required to fully access its features and manage real-market risks effectively.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- FOOTER -->
+  <footer class="mt-20 backdrop-blur-md bg-white/5 border-t border-white/10 text-white py-10 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+      
+      <div class="flex items-center space-x-4">
+        <img src="glorivest-logo.png" alt="Glorivest Logo" class="w-28">
+        <span class="text-sm text-white/60">© 2025 Glorivest. All rights reserved.</span>
+      </div>
+  
+      <div class="flex space-x-6 text-sm text-white/80">
+        <a href="#hero" class="hover:text-white transition">Home</a>
+        <a href="#faq" class="hover:text-white transition">FAQ</a>
+        <a href="#community" class="hover:text-white transition">Community</a>
+        <a href="#" class="hover:text-white transition">Terms</a>
+      </div>
+  
+      <div class="flex space-x-4">
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-white/80" viewBox="0 0 24 24">
+            <path d="M22 12.07C22 6.477 17.523 2 12 2S2 6.477 2 12.07C2 17.08 5.656 21.192 10.438 22v-7.004H7.898v-2.926h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.465h-1.26c-1.243 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.926h-2.33V22C18.344 21.192 22 17.08 22 12.07Z"/>
+          </svg>
+        </a>
+  
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-white/80" viewBox="0 0 24 24">
+            <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5ZM12 7a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7Zm5.25-.88a.75.75 0 1 1 0 1.5a.75.75 0 0 1 0-1.5Z"/>
+          </svg>
+        </a>
+  
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-white/80" viewBox="0 0 24 24">
+            <path d="M12 2C6.477 2 2 6.484 2 12.016 2 17.533 6.468 22 11.985 22c5.532 0 10.015-4.467 10.015-9.984C22 6.484 17.533 2 12 2Zm4.65 7.78-1.662 7.83c-.124.547-.453.678-.917.423l-2.538-1.873-1.223 1.178c-.135.132-.248.243-.51.243l.183-2.59 4.723-4.27c.205-.182-.045-.283-.317-.1l-5.838 3.66-2.513-.785c-.547-.17-.558-.547.114-.807l9.82-3.79c.46-.17.862.11.715.796Z"/>
+          </svg>
+        </a>
+  
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5 text-white/80" viewBox="0 0 24 24">
+            <path d="M19.6 3H4.4C3.63 3 3 3.63 3 4.4v15.2C3 20.37 3.63 21 4.4 21h15.2c.77 0 1.4-.63 1.4-1.4V4.4c0-.77-.63-1.4-1.4-1.4zM17.88 17H15l-3.1-4.14L8.52 17H6l4.32-5.52L6.4 7h3.06l2.86 3.7L15.34 7h2.9l-4.26 5.24L17.88 17z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- BACK TO TOP BTN -->
+<button id="backToTopBtn"
+  onclick="scrollToTop()"
+  class="hidden fixed bottom-6 right-6 z-50 bg-[#00C8B3] backdrop-blur-md border border-white/20 text-white p-3 rounded-full shadow-md hover:bg-white/20 transition duration-300">
+  ↑
+</button>
+
+<!-- Backdrop -->
+<div id="authBackdrop" onclick="closeOnBackdrop(event)" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex justify-center items-center px-4">
+
+<!-- AUTH MODAL -->
+<div id="authModal" class="w-full max-w-md bg-white/5 border border-white/20 text-white backdrop-blur-md rounded-2xl p-6 shadow-xl transform transition-all duration-500 opacity-0 translate-y-10 scale-95">
+
+  <!-- Tabs -->
+  <div class="relative mb-6">
+    <div class="flex justify-between">
+      <button id="tabRegister" onclick="showRegister()" class="w-1/2 text-center text-white font-semibold py-2 z-10 relative">Register</button>
+      <button id="tabLogin" onclick="showLogin()" class="w-1/2 text-center text-gray-400 py-2 z-10 relative">Login</button>
+    </div>
+    <!-- Underline Slider -->
+    <div id="tabSlider" class="absolute bottom-0 left-0 w-1/2 h-0.5 bg-[#00C8B3] transition-all duration-300"></div>
+  </div>
+
+  <!-- Register Form -->
+  <form id="register-form" class="space-y-4">
+    <input
+      id="registerEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+
+    <div class="relative">
+      <input
+        id="registerPassword"
+        type="password"
+        placeholder="Password"
+        class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+      <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('registerPassword', this)"></i>
+    </div>
+
+    <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
+      Register
+    </button>
+  </form>
+
+  <!-- Login Form -->
+  <form id="login-form" class="space-y-4 hidden">
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+
+    <div class="relative">
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+      <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('loginPassword', this)"></i>
+    </div>
+
+    <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
+      Login
+    </button>
+
+    <div class="flex justify-between items-center text-sm mt-2">
+      <p class="text-right text-gray-400 hover:underline">
+        <a href="forgot-password.html" onclick="return forgotPassword(this)">Forgot password?</a>
+      </p>
+    </div>    
+  </form>
+
+  <p class="text-xs text-gray-400 mt-4 text-center">
+    By continuing, you agree to our
+    <a href="#" class="text-[#00C8B3] underline">Terms</a> and
+    <a href="#" class="text-[#00C8B3] underline">Privacy Policy</a>.
+  </p>
+
+  <!-- Close Button -->
+  <button onclick="toggleAuthPanel()" class="absolute top-4 right-4 text-white/60 text-xl">✕</button>
+</div>
+
+  
+<script src="script.js"></script>
+
+</body>
+</html>

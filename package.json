@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.8"
+  },
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx tailwindcss -i ./input.css -o ./output.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xeidan/Glorivest.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xeidan/Glorivest/issues"
+  },
+  "homepage": "https://github.com/xeidan/Glorivest#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.5",
+    "tailwindcss": "^4.1.10"
+  },
+  "description": ""
+}

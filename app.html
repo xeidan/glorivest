@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glorivest App</title>
+  <link href="output.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
+
+  <style>
+    .active-tab {
+      color: #00D2B1;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .tab-btn i, .tab-btn span {
+      transition: color 0.3s ease;
+    }
+    .tab-btn.active-tab i, .tab-btn.active-tab span {
+      color: #00D2B1;
+    }
+    .nav-glow {
+      box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
+    }
+    /* Dashboard card styling */
+    .dashboard-card {
+        background: rgba(255, 255, 255, 0.03); /* Subtle glass background for cards */
+        border: 1px solid rgba(255, 255, 255, 0.08); /* Slightly more prominent border */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Deeper shadow */
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px); /* Lift effect on hover */
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+    }
+  </style>
+  <style>
+    /* General tab button layout */
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: white;
+      transition: color 0.3s ease;
+    }
+    
+    /* Active tab highlights */
+    .tab-btn.active-tab {
+      color: #00D2B1;
+    }
+    
+    .tab-btn.active-tab i,
+    .tab-btn.active-tab span {
+      color: #00D2B1;
+    }
+    
+    .tab-btn i,
+    .tab-btn span {
+      transition: color 0.3s ease;
+    }
+    
+    /* Optional: tab content layout */
+    .tab-section {
+      display: none;
+    }
+    
+    .tab-section:not(.hidden) {
+      display: block;
+    }
+    
+    /* Nav styling */
+    .nav-glow {
+      box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
+      z-index: 100;
+    }
+    </style>
+    <style>
+      :root { --bottom-nav-h: 64px; 
+              --sheet-offset: 16px;
+              --sheet-h: 46vh;
+            } 
+    </style>
+    
+</head>
+<body class="bg-black text-gray-300 min-h-screen">
+
+  <!-- Top Nav -->
+  <!-- Header -->
+<header class="w-full px-4 py-3 sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-black">
+  <div class="flex items-center gap-4">
+    <!-- Initials Avatar -->
+    <div id="user-initials" class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold border-[0.5px] border-[#00D2B1] bg-black">
+      GV
+    </div>
+
+    <!-- User Info -->
+    <div class="leading-tight">
+      <p class="text-sm font-semibold">Hello <span id="user-email">user@example.com</span></p>
+      <p class="text-xs text-gray-400">ID: <span id="glorivest-id">GV000000</span></p>
+    </div>
+  </div>
+  <div class="flex items-center gap-4 text-lg">
+    <button class="header-icon" id="notification-btn"><i class="fas fa-bell"></i></button>
+    <button class="header-icon" id="guide-btn"><i class="fas fa-circle-question"></i></button>
+  </div>
+</header>
+    
+  
+
+  <!-- Tabs -->
+  <main id="main-content" class="p-4 space-y-6">
+
+    <!-- Dashboard Tab -->
+    <section id="tab-dashboard" class="tab-section">
+      <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
+        <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      
+          <!-- Header Row -->
+          <div>
+            <div class="flex justify-between items-center">
+              <h1 id="current-account-tier" class="text-3xl font-bold">Standard</h1>
+              <button id="btn-open-accounts" class="px-3 hover:bg-white/10" title="Accounts">
+                <i class="fa-solid fa-chevron-down text-[#00D2B1]"></i>
+              </button>              
+            </div>
+          
+            <!-- content-width badge (not full width, independent of the title) -->
+            <p id="current-account-code" style="display:inline-block; white-space:nowrap;" class="text-xs font-medium text-white/70 bg-white/10 rounded-md border border-white/10 px-1">#GV000000-00</p>
+          </div>
+      
+          <!-- Total Balance -->
+          <div class="flex items-center">
+            <div>
+              <p class="text-xs font-light text-white/60">Total Balance</p>
+              <h3 id="total-balance" class="text-2xl font-bold text-white mt-1">$0.00</h3>
+            </div>
+          </div>
+      
+          <!-- Profit Section -->
+          <div class="flex items-center space-x-4 text-[#00D2B1] text-xs font-normal">
+            <div id="percentage-increase"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
+            <div id="profit-increase">+$0.00</div>
+          </div>
+      
+          <!-- Available Balance Card -->
+          <div>
+            <p class="text-xs font-light text-white/60">Available Balance</p>
+            <h3 id="available-balance" class="text-xl font-bold text-white mt-1">$0.00</h3>
+          </div>
+      
+          <!-- Referral Earnings Card -->
+          <div>
+            <p class="text-xs font-light text-white/60">Referral Earnings</p>
+            <h3 id="referral-earnings" class="text-xl font-bold text-white mt-1">$0.00</h3>
+          </div>
+      
+        </div>
+      </div>
+      
+
+      <!-- ===================== Accounts Bottom Sheet ===================== -->
+      <div id="sheet-accounts" class="fixed inset-0 z-[60] hidden">
+        <div id="sheet-accounts-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="sheet-accounts-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
+          <div class="mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
+            <!-- Handle -->
+            <div id="sheet-accounts-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
+              <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="grid grid-cols-3 items-center px-4 pb-2 shrink-0">
+              <div></div>
+              <h3 class="text-xl font-semibold text-white text-center">Accounts</h3>
+              <div class="justify-self-end">
+                <button id="btn-accounts-create" class="p-2 rounded-lg hover:bg-white/10" title="Create New Account" aria-label="Create New Account">
+                  <i class="fa-solid fa-plus text-[#00D2B1]"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- List (centers if 1, scrolls if many) -->
+            <div id="list-accounts" class="px-4 py-4 h-[calc(52vh-72px)] overflow-y-auto flex flex-col gap-2">
+              <!-- rows injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== New Account Bottom Sheet ===================== -->
+      <div id="sheet-new" class="fixed inset-0 z-[70] hidden">
+        <div id="sheet-new-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="sheet-new-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
+          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
+            <div class="relative h-full flex flex-col">
+              <!-- Handle -->
+              <div id="sheet-new-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
+                <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+              </div>
+
+              <!-- Header -->
+              <div class="px-4 py-2 flex items-center relative shrink-0">
+                <button id="btn-new-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
+                  <i class="fa-solid fa-chevron-left text-white/80"></i>
+                </button>
+                <h3 class="text-xl font-semibold text-white mx-auto">Create New Account</h3>
+              </div>
+
+              <!-- Tiers (scrolls) -->
+              <div class="px-4 pt-8 flex-1 min-h-0 overflow-y-auto">
+                <div id="list-tiers" class="grid gap-3">
+                  <button data-tier="standard" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Standard</div>
+                      <div class="text-xs text-white/70">Fee: Free</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 15% • Min $20 • USDT-TRC20</div>
+                  </button>
+
+                  <button data-tier="pro" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Pro</div>
+                      <div class="text-xs text-white/70">Fee: $20</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 20% • Min $200 • USDT-TRC20</div>
+                  </button>
+
+                  <button data-tier="elite" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
+                    <div class="flex items-center justify-between">
+                      <div class="font-medium">Elite</div>
+                      <div class="text-xs text-white/70">Fee: $50</div>
+                    </div>
+                    <div class="text-xs text-white/60 mt-1">Earn 25% • Min $1000 • USDT-TRC20</div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Footer (pinned) -->
+              <div class="px-4 py-3 flex justify-center shrink-0" style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
+                <button id="btn-new-create" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-black font-semibold">
+                  Create
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== Review / Details Bottom Sheet ===================== -->
+      <div id="sheet-review" class="fixed inset-0 z-[80] hidden">
+        <div id="sheet-review-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
+
+        <div id="sheet-review-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
+          <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
+            <div class="relative h-full flex flex-col">
+              <!-- Handle -->
+              <div id="sheet-review-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
+                <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
+              </div>
+
+              <!-- Header -->
+              <div class="px-4 py-2 flex items-center relative shrink-0">
+                <button id="btn-review-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
+                  <i class="fa-solid fa-chevron-left text-white/80"></i>
+                </button>
+                <h3 id="review-title" class="text-xl font-semibold text-white mx-auto">Review Account</h3>
+              </div>
+
+              <!-- Body (scrolls) -->
+              <div id="review-body" class="px-4   pt-6 flex-1 min-h-0 overflow-y-auto"></div>
+
+              <!-- Confirm -->
+              <div class="px-4 pb-3 flex justify-center shrink-0" style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
+                <button id="btn-review-confirm" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-black font-semibold">
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Action Buttons -->
+      <div class="flex justify-around py-10">
+        <!-- Deposit -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('deposit')" class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Deposit</p>
+        </div>
+
+        <!-- Withdraw -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+            <i class="fa-solid fa-minus"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Withdraw</p>
+        </div>
+
+        <!-- Transactions -->
+        <div class="flex flex-col items-center">
+          <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Transactions</p>
+        </div>
+      </div>
+
+
+  
+      <!-- Refer and Earn Promo -->
+      <hr class="border-white/10">
+      <div class="pb-24">
+      <div class="bg-gradient-to-br from-[#007f73] to-black border border-[#00D2B1] rounded-xl px-4 py-10 text-center">
+        <h3 class="text-xl font-bold mb-2">Refer a Friend, Earn Big!</h3>
+        <p class="text-sm text-green-100 mb-4">
+          Get <span class="font-bold text-green-200">5% of their first deposit</span> when they register and fund their account.
+        </p>
+        <button onclick="showTab('earn')" class="bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
+          Refer Now
+        </button>
+            </div>
+          </div>
+        </div>
+    </section>
+    
+
+      
+
+    <!-- Earn tab -->
+    <section id="tab-earn" class="tab-section hidden py-6">
+      <h1 class="text-2xl font-bold mb-4 text-center text-white">Your Referral Stats</h1>
+    
+      <div id="referral-info" class="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 space-y-3 text-white text-sm">
+        <p>Referral Code: <span id="referral-code" class="font-mono text-[#00D2B1] text-base"></span></p>
+    
+        <div class="flex flex-wrap items-center gap-2">
+          <p>Referral Link:</p>
+          <span id="referral-link" class="font-mono text-[#00D2B1] text-sm truncate max-w-[200px]"></span>
+          <button id="copy-btn" class="text-white/70 hover:text-white text-xs border border-white/20 px-2 py-1 rounded">Copy</button>
+        </div>
+        <p id="copy-status" class="text-[#00D2B1] text-xs font-medium hidden">Copied to clipboard!</p>
+        
+    
+        <div class="pt-4 space-y-2">
+          <p>Total Referrals: <span id="referral-count" class="font-semibold text-white/90">0</span></p>
+          <p>Referral Earnings: <span id="account-referral-earnings" class="font-bold text-[#00D2B1]">$0.00</span></p>
+        </div>
+      </div>
+    
+      <h2 class="text-xl font-bold mb-3 text-white">Leaderboard</h2>
+      <ul id="leaderboard" class="space-y-3 text-white text-sm pb-12"></ul>
+    </section>
+    
+    
+    <!-- Trade tab -->
+    <section id="tab-trade" class="tab-section hidden py-6 text-white space-y-6">
+
+      <!-- AI Bot Summary Card -->
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+        <h2 class="text-xl font-bold mb-2">AI Auto Trader</h2>
+    
+        <div class="text-sm text-white/70 flex justify-between">
+          <span>Capital:</span><span id="bot-capital">$0.00</span>
+        </div>
+        <div class="text-sm text-white/70 flex justify-between">
+          <span>Days Active:</span><span id="bot-days">0</span>
+        </div>
+        <div class="text-sm text-white/70 flex justify-between">
+          <span>Projected Profit (20%):</span><span id="bot-profit">$0.00</span>
+        </div>
+    
+        <div class="mt-4">
+          <p class="text-xs text-white/50 mb-1">Progress to 20% Goal</p>
+          <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
+            <div id="bot-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1] transition-all duration-500 ease-out" style="width: 0%"></div>
+          </div>
+          <p id="bot-progress-label" class="text-xs text-white/70 text-right mt-1">0%</p>
+        </div>
+      </div>
+    
+      <!-- VIX75 Live Chart -->
+      <div class="bg-gradient-to-br from-black to-[#0b2f29] border border-white/10 rounded-xl p-4 shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold">VIX75 Live Chart</h2>
+          <div class="flex items-center gap-2 text-sm">
+            <span id="vix75-price-trade" class="font-bold text-[#00D2B1]">$0.00</span>
+            <span id="vix75-arrow-trade" class="text-xs"></span>
+          </div>
+        </div>
+        <div id="vix-chart-wrap" class="relative w-full aspect-square border border-white/10 rounded-xl overflow-hidden">
+          <canvas id="vix75-sparkline" class="absolute inset-0 w-full h-full block"></canvas>
+        </div>
+      </div>
+
+    
+      <!-- Bot Action Section -->
+      <!-- Progress block: let it shrink nicely -->
+      <div class="flex-grow min-w-0">
+        <p id="bot-action-label" class="text-sm text-white/70 mb-1">Ready to Trade</p>
+        <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
+          <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Buttons: grouped, no-wrap -->
+      <div class="flex items-center gap-6 shrink-0 justify-center">
+        <button id="start-bot" class="py-2 px-4 bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
+          <i class="fas fa-play"></i> <span>Start Bot</span>
+        </button>
+
+        <button id="stop-bot" class="py-2 px-4 hidden bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
+          <i class="fas fa-stop"></i> <span>Stop Bot</span>
+        </button>
+      </div>
+
+    
+      <p class="text-xs text-white/50 text-center pt-4">
+        Bot executes trades every 20 seconds and grows your capital by 20% in 30 days.
+      </p>
+    
+      <!-- Stop Confirmation Modal -->
+      <div id="stop-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
+        <div class="bg-white text-black rounded-xl p-6 max-w-sm text-center shadow-lg">
+          <h3 class="text-lg font-bold mb-2">Stop Bot?</h3>
+          <p class="text-sm text-gray-700 mb-4">You’ll lose all progress and profit if you stop the bot now. Are you sure?</p>
+          <div class="flex justify-center gap-4">
+            <button id="cancel-stop" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+            <button id="confirm-stop" class="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white">Stop Bot</button>
+          </div>
+        </div>
+      </div>
+    
+    </section>
+    
+    
+
+    <!-- Positions tab -->
+    <section id="tab-positions" class="tab-section hidden py-6 mb-20 text-white">
+      <div class="max-w-6xl mx-auto space-y-6">
+
+        <!-- Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-white/5 text-white/70">
+                <tr>
+                  <th class="text-left p-3">Time</th>
+                  <th class="text-left p-3">Symbol</th>
+                  <th class="text-left p-3">Side</th>
+                  <th class="text-right p-3">Qty</th>
+                  <th class="text-right p-3">Entry</th>
+                  <th class="text-right p-3">Exit</th>
+                  <th class="text-left p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="pos-tbody"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between p-3 text-xs bg-black/40 border-t border-white/10">
+            <div id="pos-pagination-info">Page 1 of 1</div>
+            <div class="flex gap-2">
+              <button id="pos-prev" class="px-3 py-1 bg-white/10 rounded">Prev</button>
+              <button id="pos-next" class="px-3 py-1 bg-white/10 rounded">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    
+    <!-- Account tab -->
+    <section id="tab-account" class="tab-section hidden py-6">
+      <div class="max-w-md mx-auto text-white space-y-6">
+    
+        <!-- Account Actions -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10 shadow-lg">
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="telegram">
+            <span>Join Telegram</span>
+            <i class="fa-brands fa-telegram text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="install">
+            <span>Install Web App</span>
+            <i class="fa-solid fa-download text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="profile">
+            <span>Edit Profile</span>
+            <i class="fa-solid fa-user-pen text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="kyc">
+            <span>KYC Verification</span>
+            <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded font-semibold">Pending</span>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="security">
+            <span>Security Settings</span>
+            <i class="fa-solid fa-shield-halved text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="notifications">
+            <span>Notification Preferences</span>
+            <i class="fa-solid fa-bell text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="support">
+            <span>Contact Support</span>
+            <i class="fa-solid fa-headset text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="terms">
+            <span>Terms & Policies</span>
+            <i class="fa-solid fa-file-contract text-[#00D2B1] text-lg"></i>
+          </div>
+    
+          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="logout">
+            <span class="text-red-500 font-bold">Log Out</span>
+            <i class="fa-solid fa-arrow-right-from-bracket text-red-500 text-lg"></i>
+          </div>
+        </div>
+    
+        <!-- Logo -->
+        <div class="flex flex-col items-center space-y-2 pt-4">
+          <img class="w-48" src="glorivest-logo.png" alt="Glorivest Logo">
+        </div>
+    
+        <!-- App Info -->
+        <div class="text-xs text-white/50 text-center pb-10">
+          Glorivest v1.0.0 • Last updated: Aug 2025<br>
+          Invest smarter. Powered by AI.
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-90 text-white flex flex-col hidden z-40 h-full">
+      <div class="flex-grow flex flex-col justify-center items-center text-center">
+        <i class="fa-solid fa-bell text-4xl text-[#00D2B1] mb-4"></i>
+        <h3 class="text-xl font-bold mb-1">No Notifications</h3>
+        <p class="text-sm text-white/60">You have yet to receive any notifications.</p>
+      </div>
+      <button onclick="closeModal('notification-modal')" class="mb-12 self-center text-white/70 text-3xl font-bold z-40">&times;</button>
+    </div>
+
+
+    <!-- Guide Modal -->
+    <div id="guide-modal" class="fixed inset-0 bg-black bg-opacity-90  flex flex-col p-6 hidden z-40 h-full">
+      <div class="flex-grow flex flex-col justify-center items-center text-center">
+        <div class="bg-white/5 text-white border border-white/10 rounded-xl p-6 w-full max-w-md">
+          <div class="aspect-video bg-black/20 border border-white/10 rounded-lg mb-4 flex items-center justify-center text-white/30">
+            <span>Video Placeholder</span>
+          </div>
+          <p class="text-sm text-white/70 mb-4">
+            Welcome to the platform. Here you can trade assets, monitor your positions, and earn by referring others. Use the tabs below to navigate through the app.
+          </p>
+        </div>
+      </div>
+      <button onclick="closeModal('guide-modal')" class="mb-6 self-center text-white/70 text-3xl font-bold z-40">&times;</button>
+    </div>
+
+
+    <!-- Deposit Tab -->
+    <section id="tab-deposit" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+      <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#0b2f29] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+    
+        <h2 class="text-2xl font-bold mb-2">Deposit Funds</h2>
+        <p class="text-sm text-white/70 mb-4">
+          Fund your account using card/bank or crypto.
+          <span class="font-semibold text-[#00D2B1]">Minimum: $20</span>
+        </p>
+    
+        <!-- Method Tabs -->
+        <div class="flex gap-6 mb-4">
+          <button id="dep-tab-fiat" class="flex-1 py-2 px-4 rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20" data-method="fiat">
+            Fiat
+          </button>
+          <button id="dep-tab-crypto" class="flex-1 py-2 px-4 rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10" data-method="crypto">
+            Crypto (USDT-TRC20)
+          </button>
+        </div>
+    
+        <!-- Shared amount (currency fixed to USD via hidden input) -->
+        <div class="space-y-3 mb-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Amount</label>
+            <input id="deposit-amount" type="number" min="20" value="50"
+                   class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
+                   placeholder="Enter amount (min $20)"/>
+          </div>
+          <!-- Keep JS compatibility without showing a dropdown -->
+          <input type="hidden" id="dep-currency" value="usd" />
+        </div>
+    
+        <!-- FIAT PANEL -->
+        <div id="fiat-panel" class="space-y-4">
+          <div class="bg-white/10 p-4 rounded-lg border border-white/20">
+            <p class="text-sm text-white/80">
+              Pay securely with card/bank. You’ll be redirected to our payment partner.
+            </p>
+          </div>
+          <button id="deposit-fiat-btn"
+                  class="w-full bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+            Continue to Checkout
+          </button>
+          <p id="fiat-status" class="text-xs text-white/50 text-center hidden"></p>
+        </div>
+    
+        <!-- CRYPTO PANEL (USDT-TRC20 ONLY) -->
+        <div id="crypto-panel" class="space-y-4 hidden">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Asset</label>
+            <!-- Non-interactive display -->
+            <div class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20">
+              USDT (TRC20 on TRON)
+            </div>
+            <input type="hidden" id="deposit-coin" value="USDT" />
+            <p class="text-xs text-white/60 mt-1">Crypto deposits are fixed to USDT on the TRON network (TRC20).</p>
+          </div>
+    
+          <div class="bg-white/10 p-4 rounded-lg border border-white/20" id="crypto-details">
+            <p class="text-sm text-white/60 mb-2">Send payment to:</p>
+    
+            <!-- Address + Copy -->
+            <div class="flex items-center gap-2">
+              <input id="crypto-address" type="text" readonly
+                     class="flex-1 rounded bg-black/40 text-[#00D2B1] font-mono px-3 py-2 border border-white/20"
+                     value="" placeholder="Address will appear after you generate it"/>
+              <button id="btn-copy-address" class="px-3 py-2 rounded bg-white/10 border border-white/20 hover:bg-white/20">Copy</button>
+            </div>
+    
+            <!-- QR -->
+            <div class="flex items-center gap-3 mt-3">
+              <canvas id="qr-code" class="w-28 h-28 bg-black/40 rounded border border-white/10"></canvas>
+              <div class="text-xs text-white/60">
+                <p><span class="text-white/80">Amount:</span> <span id="crypto-amount">—</span></p>
+                <p><span class="text-white/80">Asset:</span> <span id="crypto-asset">USDT (TRC20)</span></p>
+                <p class="mt-1">Use only <span class="text-white">USDT on TRON (TRC20)</span>. Other networks will be lost.</p>
+              </div>
+            </div>
+          </div>
+    
+          <div class="grid grid-cols-1 gap-3">
+            <button id="deposit-crypto-btn" class="w-full bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+              Generate USDT (TRC20) Address
+            </button>
+            <a id="crypto-hosted-url" href="#" target="_blank" rel="noopener"
+               class="w-full text-center bg-white/10 text-white font-semibold py-2 rounded-lg border border-white/20 hover:bg-white/20 transition-all hidden">
+              Open Hosted Checkout
+            </a>
+          </div>
+    
+          <p id="crypto-status" class="text-xs text-white/50 text-center hidden"></p>
+        </div>
+      </div>
+    </section>
+    
+
+    
+
+    <!-- Withdraw Tab -->
+    <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+      <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#0b2f29] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h2 class="text-2xl font-bold mb-2">Withdraw Funds</h2>
+        <p class="text-sm text-white/70 mb-4">
+          Withdraw only to a TRON (TRC20) USDT wallet address.
+          <span class="font-semibold text-[#00D2B1]">Minimum: $20</span>
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold">Asset</label>
+          
+            <!-- Static, non-interactive display -->
+            <div class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20">
+              USDT (TRC20 on TRON)
+            </div>
+          
+            <!-- Keep the expected id/value for your JS -->
+            <input type="hidden" id="wd-coin" value="USDT" />
+          
+            <p class="text-xs text-white/60 mt-1">Only USDT on the TRON network is supported.</p>
+          </div>
+          
+
+          <div>
+            <label class="block text-sm font-semibold">Wallet Address (TRON)</label>
+            <input id="wd-address" type="text"
+                  class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
+                  placeholder="Enter TRON (TRC20) address only">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold">Amount ($)</label>
+            <input id="wd-amount" type="number" min="20"
+                  class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
+                  placeholder="Minimum $20">
+          </div>
+
+          <button id="btn-withdraw" class="w-full mt-2 bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
+            Withdraw USDT (TRC20)
+          </button>
+          <p id="wd-status" class="text-xs text-white/50 text-center hidden"></p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Transactions Tab -->
+    <section id="tab-transactions" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+      <div class="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-xl p-6 shadow-xl relative">
+        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
+
+        <table class="min-w-full text-left">
+          <thead class="bg-white/10 text-white/60 text-xs uppercase">
+            <tr>
+              <th class="px-2 py-2 w-1/4">Type</th>
+              <th class="px-2 py-2 w-1/4">Amount</th>
+              <th class="px-2 py-2 w-1/4">Status</th>
+              <th class="px-2 py-2 w-1/4">Date</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-history" class="text-white/80 text-xs pr-2">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>        
+      </div>
+    </section>
+
+    
+    
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around py-4 text-sm nav-glow bg-black z-50">
+    <button data-tab="dashboard" class="tab-btn active-tab">
+      <i class="fas fa-home mb-2"></i>
+      <span class="text-xs font-light">Dashboard</span>
+    </button>
+    <button data-tab="earn" class="tab-btn">
+      <i class="fas fa-wallet mb-2"></i>
+      <span class="text-xs font-light">Earn</span>
+    </button>
+    <button data-tab="trade" class="tab-btn">
+      <i class="fas fa-arrow-trend-up mb-2"></i>
+      <span class="text-xs font-light">Trade</span>
+    </button>
+    <button data-tab="positions" class="tab-btn">
+      <i class="fas fa-briefcase mb-2"></i>
+      <span class="text-xs font-light">Positions</span>
+    </button>
+    <button data-tab="account" class="tab-btn">
+      <i class="fas fa-user mb-2"></i>
+      <span class="text-xs font-light">Account</span>
+    </button>
+  </nav>
+  
+
+  <span data-me="email"></span>
+  <span data-me="account-id"></span>
+  
+  
+<script src="global.js"></script>
+<script src="dashboard.js"></script>
+<script src="earn.js"></script>
+<script src="trade.js"></script>
+<script src="positions.js"></script>
+<script src="account.js"></script>
+<script src="funding.js"></script>
+</body>
+</html>
