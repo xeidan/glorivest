@@ -8,7 +8,7 @@ async function sendOtp() {
   }
 
   try {
-    const res = await fetch("https://glorivest-api-a16f75b6b330.herokuapp.com/reset-password-request", {
+    const res = await fetch("https://glorivest-api-a16f75b6b330.herokuapp.com/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
