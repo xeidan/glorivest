@@ -1,20 +1,20 @@
-// otp.js
+// otp-reset.js
 const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
 
-// Get saved email from register step
-const email = localStorage.getItem('otpEmail');
+// email we stored earlier during "forgot password"
+const email = localStorage.getItem('resetEmail');
 if (!email) {
-  alert('No email found. Please register again.');
-  window.location.href = 'index.html';
+  alert('No email found. Start the reset process again.');
+  window.location.href = 'forgot-password.html';
 }
 
-// ---- Verify OTP ----
-async function verifyOTP() {
+// ---- Verify OTP for password reset ----
+async function verifyResetOTP() {
   const code = document.getElementById('otp').value.trim();
   const statusEl = document.getElementById('status');
 
   if (!code || code.length !== 6) {
-    statusEl.textContent = 'Enter a valid 6-digit code.';
+    statusEl.textContent = 'Enter a valid 6-digit OTP.';
     return;
   }
 
@@ -25,30 +25,25 @@ async function verifyOTP() {
       body: JSON.stringify({
         email,
         code,
-        purpose: 'verify'
+        purpose: 'reset'
       })
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      statusEl.textContent = data.message || 'Invalid code';
+      statusEl.textContent = data.message || 'Invalid or expired OTP';
       return;
     }
 
-    // Backend returns a token for purpose=verify
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      localStorage.removeItem('otpEmail');
-    }
-
+    // If success → move to password reset page
     statusEl.classList.remove('text-red-500');
     statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'Verified! Redirecting…';
+    statusEl.textContent = 'OTP verified. Redirecting…';
 
     setTimeout(() => {
-      window.location.href = 'app.html';
-    }, 800);
+      window.location.href = 'reset-password.html';
+    }, 600);
 
   } catch (err) {
     console.error(err);
@@ -56,8 +51,8 @@ async function verifyOTP() {
   }
 }
 
-// ---- Resend OTP ----
-async function resendOTP() {
+// ---- Resend OTP for password reset ----
+async function resendResetOTP() {
   const statusEl = document.getElementById('status');
 
   try {
@@ -66,9 +61,10 @@ async function resendOTP() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        purpose: 'verify'
+        purpose: 'reset'
       })
     });
+
     const data = await res.json();
 
     if (!res.ok) {
@@ -78,10 +74,10 @@ async function resendOTP() {
 
     statusEl.classList.remove('text-red-500');
     statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'Code resent to your email.';
+    statusEl.textContent = 'A new OTP has been sent to your email.';
 
   } catch (err) {
     console.error(err);
-    statusEl.textContent = 'Error resending code.';
+    statusEl.textContent = 'Network error. Try again.';
   }
 }

@@ -1,36 +1,67 @@
+// reset-password.js
+const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get("email"); // email passed from previous screen
+const email = localStorage.getItem('resetEmail');
+const resetCode = localStorage.getItem('resetCode'); // saved after OTP verify
 
-    async function resetPassword() {
-      const otp = document.getElementById('otp').value.trim();
-      const newPassword = document.getElementById('new-password').value.trim();
-      const status = document.getElementById('status');
-      const loginBtn = document.getElementById('login-btn');
+if (!email || !resetCode) {
+  alert('Invalid reset session. Start again.');
+  window.location.href = 'forgot-password.html';
+}
 
-      if (!otp || !newPassword) {
-        status.textContent = 'OTP and new password are required.';
-        return;
-      }
+// ---- Toggle Password Visibility ----
+document.getElementById('toggle-password').addEventListener('click', () => {
+  const input = document.getElementById('password');
+  const icon = document.getElementById('eye-icon');
+  const isHidden = input.type === 'password';
 
-      try {
-        const res = await fetch('https://glorivest-api-a16f75b6b330.herokuapp.com/verify-reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, otp, newPassword })
-        });
+  input.type = isHidden ? 'text' : 'password';
+  icon.classList.toggle('fa-eye');
+  icon.classList.toggle('fa-eye-slash');
+});
 
-        const data = await res.json();
+// ---- Submit New Password ----
+async function resetPassword() {
+  const newPassword = document.getElementById('password').value.trim();
+  const statusEl = document.getElementById('status');
+  const loginLink = document.getElementById('login-link');
 
-        if (res.ok) {
-          status.textContent = 'Password reset successful. You can now log in.';
-          status.classList.remove('text-red-500');
-          status.classList.add('text-green-600');
-          loginBtn.classList.remove('hidden');
-        } else {
-          status.textContent = data.message || 'Reset failed.';
-        }
-      } catch (err) {
-        status.textContent = 'Something went wrong.';
-      }
+  if (!newPassword) {
+    statusEl.textContent = 'Password cannot be empty.';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        code: resetCode,
+        newPassword
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = data.message || 'Reset failed.';
+      return;
     }
+
+    // Success
+    statusEl.classList.remove('text-red-500');
+    statusEl.classList.add('text-green-600');
+    statusEl.textContent = 'Password updated successfully.';
+
+    loginLink.classList.remove('hidden');
+
+    // clean session
+    localStorage.removeItem('resetEmail');
+    localStorage.removeItem('resetCode');
+
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Network error. Try again.';
+  }
+}
