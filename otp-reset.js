@@ -1,7 +1,7 @@
 // otp-reset.js
 const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
 
-// email we stored earlier during "forgot password"
+// email stored earlier
 const email = localStorage.getItem('resetEmail');
 if (!email) {
   alert('No email found. Start the reset process again.');
@@ -36,7 +36,9 @@ async function verifyResetOTP() {
       return;
     }
 
-    // If success → move to password reset page
+    // 🔥 THE MISSING LINE
+    localStorage.setItem('resetCode', code);
+
     statusEl.classList.remove('text-red-500');
     statusEl.classList.add('text-green-600');
     statusEl.textContent = 'OTP verified. Redirecting…';

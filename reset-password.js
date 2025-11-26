@@ -65,3 +65,7 @@ async function resetPassword() {
     statusEl.textContent = 'Network error. Try again.';
   }
 }
+
+
+console.log("Reset Email:", email);
+console.log("Reset Code:", resetCode);

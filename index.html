@@ -828,8 +828,8 @@
   <!-- Tabs -->
   <div class="relative mb-6">
     <div class="flex justify-between">
-      <button id="tabRegister" onclick="showRegister()" class="w-1/2 text-center text-white font-semibold py-2 z-10 relative">Register</button>
-      <button id="tabLogin" onclick="showLogin()" class="w-1/2 text-center text-gray-400 py-2 z-10 relative">Login</button>
+      <button id="tabRegister" onclick="showRegister()" class="w-1/2 text-center text-white font-semibold py-2 z-10 relative">Sign Up</button>
+      <button id="tabLogin" onclick="showLogin()" class="w-1/2 text-center text-gray-400 font-semibold py-2 z-10 relative">Login</button>
     </div>
     <!-- Underline Slider -->
     <div id="tabSlider" class="absolute bottom-0 left-0 w-1/2 h-0.5 bg-[#00C8B3] transition-all duration-300"></div>
@@ -837,25 +837,33 @@
 
   <!-- Register Form -->
   <form id="register-form" class="space-y-4">
+  <input
+    id="registerEmail"
+    type="email"
+    placeholder="Email"
+    class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+
+  <div class="relative">
     <input
-      id="registerEmail"
-      type="email"
-      placeholder="Email"
-      class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+      id="registerPassword"
+      type="password"
+      placeholder="Password"
+      class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+    <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('registerPassword', this)"></i>
+  </div>
 
-    <div class="relative">
-      <input
-        id="registerPassword"
-        type="password"
-        placeholder="Password"
-        class="w-full px-4 py-3 pr-12 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
-      <i class="fa-solid fa-eye-slash absolute py-3 right-4 text-white/60 cursor-pointer" onclick="togglePassword('registerPassword', this)"></i>
-    </div>
+  <!-- NEW FIELD -->
+  <input
+    id="registerReferral"
+    type="text"
+    placeholder="Referral Code (optional)"
+    class="w-full px-4 py-3 rounded bg-white/10 text-sm placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
 
-    <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
-      Register
-    </button>
-  </form>
+  <button type="submit" class="w-full py-3 bg-[#00C8B3] hover:bg-[#00a895] text-white font-medium rounded">
+    Sign Up
+  </button>
+</form>
+
 
   <!-- Login Form -->
   <form id="login-form" class="space-y-4 hidden">

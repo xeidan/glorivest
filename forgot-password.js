@@ -27,8 +27,9 @@ async function requestReset() {
       return;
     }
 
-    // Save email for the OTP screen
+    // SAVE EMAIL HERE
     localStorage.setItem('resetEmail', email);
+    console.log("DEBUG: saved resetEmail =", localStorage.getItem('resetEmail'));
 
     statusEl.classList.remove('text-red-500');
     statusEl.classList.add('text-green-600');
