@@ -348,189 +348,241 @@ window.state = state;
 
   // Render accounts into the accounts list
   async function renderAccountsList() {
-    const listEl = S(SHEETS.accounts.listId);
-    if (!listEl) return;
+  const listEl = S(SHEETS.accounts.listId);
+  if (!listEl) return;
 
-    // show loading state
-    listEl.innerHTML = `<div class="text-sm text-white/60 p-4">Loading accounts…</div>`;
+  // loading
+  listEl.innerHTML = `<div class="text-sm text-white/60 p-4">Loading accounts…</div>`;
 
-    let accounts = [];
-    try {
-      accounts = await fetchAccountsForSheet(); // existing function in dashboard.js
-    } catch (e) {
-      console.warn('renderAccountsList: fetch error', e);
-      listEl.innerHTML = `<div class="text-sm text-red-400 p-4">Failed to load accounts</div>`;
-      return;
+  let accounts = [];
+  try {
+    accounts = await fetchAccountsForSheet();
+    // ENFORCE ACCOUNT LIMIT (max 5)
+    const createBtn = S(SHEETS.accounts.btnCreateId);
+    if (accounts.length >= 5) {
+      if (createBtn) {
+        createBtn.classList.add("opacity-40", "pointer-events-none");
+      }
+    } else {
+      if (createBtn) {
+        createBtn.classList.remove("opacity-40", "pointer-events-none");
+      }
     }
 
-    if (!accounts || accounts.length === 0) {
-      listEl.innerHTML = `<div class="text-sm text-white/60 p-4">No accounts yet</div>`;
-      return;
-    }
-
-    // build rows
-    listEl.innerHTML = '';
-    accounts.forEach(acc => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'w-full p-3 rounded-xl bg-white/5 border border-white/10 text-left flex items-center justify-between hover:bg-white/6';
-      row.innerHTML = `
-        <div>
-          <div class="font-medium">${acc.account_name || acc.account_code || `Account ${acc.id}`}</div>
-          <div class="text-xs text-white/60 mt-1">${acc.tier_name || acc.tier || 'Standard'}</div>
-        </div>
-        <div class="text-sm font-semibold">${fmtUSD(acc.balance_cents)}</div>
-      `;
-      // attach click: select account + close sheet + update header + render dashboard
-      row.addEventListener('click', () => {
-        // mark selection
-        try {
-          state.currentAccount = acc;
-          if (acc?.id) localStorage.setItem('currentAccountId', String(acc.id));
-          applyHeader(acc);
-          computeAndRender(state.user, acc);
-        } catch (e) { console.warn(e); }
-
-        // review details in the review sheet
-        const reviewBody = S(SHEETS.review.bodyId);
-        const reviewTitle = S(SHEETS.review.titleId);
-        if (reviewBody) {
-          reviewTitle && (reviewTitle.textContent = 'Account Details');
-          reviewBody.innerHTML = `
-            <div class="space-y-2">
-              <div><span class="text-xs text-white/60">Account Code</span><div class="font-semibold">${acc.account_code || '—'}</div></div>
-              <div><span class="text-xs text-white/60">Tier</span><div class="font-semibold">${acc.tier_name || acc.tier || 'Standard'}</div></div>
-              <div><span class="text-xs text-white/60">Balance</span><div class="font-semibold">${fmtUSD(acc.balance_cents)}</div></div>
-              <div><span class="text-xs text-white/60">Status</span><div class="font-semibold text-[#00D2B1]">${(acc.status || 'active').replace(/^\w/, c => c.toUpperCase())}</div></div>
-            </div>
-          `;
-        }
-
-        closeAccSheetById(SHEETS.accounts.modalId);
-        // open review sheet
-        openAccSheetById(SHEETS.review.modalId);
-      });
-
-      listEl.appendChild(row);
-    });
-  }
-
-  // Setup event handlers for the account sheets
-  function setupAccountSheetHandlers() {
-    // Open accounts sheet button
-    const btnOpen = S(SHEETS.accounts.btnOpenId);
-    if (btnOpen) {
-      btnOpen.addEventListener('click', async () => {
-        await renderAccountsList();
-        openAccSheetById(SHEETS.accounts.modalId);
-      });
-    }
-
-    // Create new button inside accounts header
-    const btnCreate = S(SHEETS.accounts.btnCreateId);
-    if (btnCreate) {
-      btnCreate.addEventListener('click', () => {
-        // open new account sheet
-        openAccSheetById(SHEETS.new.modalId);
-      });
-    }
-
-    // Backdrop clicks to close
-    const accBackdrop = S(SHEETS.accounts.backdropId);
-    accBackdrop?.addEventListener('click', () => closeAccSheetById(SHEETS.accounts.modalId));
-
-    const newBackdrop = S(SHEETS.new.backdropId);
-    newBackdrop?.addEventListener('click', () => closeAccSheetById(SHEETS.new.modalId));
-
-    const reviewBackdrop = S(SHEETS.review.backdropId);
-    reviewBackdrop?.addEventListener('click', () => closeAccSheetById(SHEETS.review.modalId));
-
-    // Attach drag handlers for panels
-    const accPanel = S(SHEETS.accounts.panelId);
-    const newPanel = S(SHEETS.new.panelId);
-    const reviewPanel = S(SHEETS.review.panelId);
-
-    if (accPanel) attachAccDrag(accPanel, () => closeAccSheetById(SHEETS.accounts.modalId));
-    if (newPanel) attachAccDrag(newPanel, () => closeAccSheetById(SHEETS.new.modalId));
-    if (reviewPanel) attachAccDrag(reviewPanel, () => closeAccSheetById(SHEETS.review.modalId));
-
-    // New-sheet back button
-    const newBack = S(SHEETS.new.backBtnId);
-    newBack?.addEventListener('click', () => {
-      closeAccSheetById(SHEETS.new.modalId);
-      openAccSheetById(SHEETS.accounts.modalId);
-    });
-
-    // Review-sheet back button
-    const reviewBack = S(SHEETS.review.backBtnId);
-    reviewBack?.addEventListener('click', () => {
-      closeAccSheetById(SHEETS.review.modalId);
-      openAccSheetById(SHEETS.accounts.modalId);
-    });
-
-    // Confirm review (placeholder)
-    const confirmBtn = S(SHEETS.review.confirmBtnId);
-    if (confirmBtn) confirmBtn.textContent = "Close";
-
-    confirmBtn?.addEventListener('click', () => {
-      closeAccSheetById(SHEETS.review.modalId);
-    });
-
-
-    // New create button (finalize creation) - uses selected tier in new sheet
-    const newCreate = S(SHEETS.new.btnCreateId);
-    if (newCreate) {
-      newCreate.addEventListener('click', async () => {
-  const selectedTierBtn = (S(SHEETS.new.tiersListId) || document)
-    .querySelector('.tier-card.dep-active');
-
-  const tier = selectedTierBtn ? selectedTierBtn.dataset?.tier : null;
-  if (!tier) {
-    showToast && showToast('Please choose a tier');
+  } catch (e) {
+    console.warn('renderAccountsList: fetch error', e);
+    listEl.innerHTML = `<div class="text-sm text-red-400 p-4">Failed to load accounts</div>`;
     return;
   }
 
-  try {
-    newCreate.disabled = true;
-    newCreate.textContent = 'Creating...';
+  if (!accounts || accounts.length === 0) {
+    listEl.innerHTML = `<div class="text-sm text-white/60 p-4">No accounts yet</div>`;
+    return;
+  }
 
-    const payload = { tier_code: tier.toLowerCase() };
+  listEl.innerHTML = '';
 
-    const res = await APIFETCH('/accounts', {
-      method: 'POST',
-      body: JSON.stringify(payload)
+  accounts.forEach(acc => {
+    const isSelected = state.currentAccount?.id === acc.id;
+
+    const row = document.createElement('button');
+    row.type = 'button';
+
+    row.className =
+      "w-full p-3 rounded-xl border text-left flex items-center justify-between transition " +
+      (isSelected
+        ? "bg-[#00D2B1]/20 border-[#00D2B1]"
+        : "bg-white/5 border-white/10 hover:bg-white/10");
+
+    row.innerHTML = `
+      <div>
+        <div class="font-medium">${acc.account_name || acc.account_code || `Account ${acc.id}`}</div>
+        <div class="text-xs text-white/60 mt-1">${acc.tier_name || acc.tier || 'Standard'}</div>
+      </div>
+      <div class="text-sm font-semibold">${fmtUSD(acc.balance_cents)}</div>
+    `;
+
+    row.addEventListener('click', async () => {
+      // update selected account
+      state.currentAccount = acc;
+      if (acc?.id) localStorage.setItem('currentAccountId', String(acc.id));
+
+      applyHeader(acc);
+      computeAndRender(state.user, acc);
+
+      // refresh list so highlight updates immediately
+      await renderAccountsList();
+
+      // populate review sheet
+      const reviewBody = S(SHEETS.review.bodyId);
+      const reviewTitle = S(SHEETS.review.titleId);
+
+      if (reviewBody) {
+        reviewTitle.textContent = "Account Details";
+        reviewBody.innerHTML = `
+          <div class="space-y-2">
+            <div><span class="text-xs text-white/60">Account Code</span><div class="font-semibold">${acc.account_code || '—'}</div></div>
+            <div><span class="text-xs text-white/60">Tier</span><div class="font-semibold">${acc.tier_name || acc.tier || 'Standard'}</div></div>
+            <div><span class="text-xs text-white/60">Balance</span><div class="font-semibold">${fmtUSD(acc.balance_cents)}</div></div>
+            <div><span class="text-xs text-white/60">Status</span>
+              <div class="text-xs font-semibold text-[#00D2B1]">
+                ${(acc.status || "Active")}
+              </div>
+
+            </div>
+          </div>`;
+      }
+
+      // open review sheet
+      closeAccSheetById(SHEETS.accounts.modalId);
+      openAccSheetById(SHEETS.review.modalId);
     });
 
-    await renderAccountsList();
-    showToast && showToast('Account created');
+    listEl.appendChild(row);
+  });
+}
 
+
+ function setupAccountSheetHandlers() {
+  // Open accounts sheet
+  const btnOpen = S(SHEETS.accounts.btnOpenId);
+  if (btnOpen) {
+    btnOpen.addEventListener('click', async () => {
+      await renderAccountsList();
+      openAccSheetById(SHEETS.accounts.modalId);
+    });
+  }
+
+  // "Create Account" button inside Accounts sheet
+  const btnCreate = S(SHEETS.accounts.btnCreateId);
+  if (btnCreate) {
+    btnCreate.addEventListener('click', () => {
+      if (state.accounts.length >= 5) {
+        showToast && showToast("Maximum of 5 accounts allowed");
+        return;
+      }
+      openAccSheetById(SHEETS.new.modalId);
+    });
+  }
+
+  // Backdrops
+  S(SHEETS.accounts.backdropId)?.addEventListener('click', () =>
+    closeAccSheetById(SHEETS.accounts.modalId)
+  );
+
+  S(SHEETS.new.backdropId)?.addEventListener('click', () =>
+    closeAccSheetById(SHEETS.new.modalId)
+  );
+
+  S(SHEETS.review.backdropId)?.addEventListener('click', () =>
+    closeAccSheetById(SHEETS.review.modalId)
+  );
+
+  // Drag handlers
+  const accPanel = S(SHEETS.accounts.panelId);
+  const newPanel = S(SHEETS.new.panelId);
+  const reviewPanel = S(SHEETS.review.panelId);
+
+  if (accPanel) attachAccDrag(accPanel, () => closeAccSheetById(SHEETS.accounts.modalId));
+  if (newPanel) attachAccDrag(newPanel, () => closeAccSheetById(SHEETS.new.modalId));
+  if (reviewPanel) attachAccDrag(reviewPanel, () => closeAccSheetById(SHEETS.review.modalId));
+
+  // Back button (NEW ➜ ACCOUNTS)
+  S(SHEETS.new.backBtnId)?.addEventListener('click', () => {
     closeAccSheetById(SHEETS.new.modalId);
     openAccSheetById(SHEETS.accounts.modalId);
+  });
 
-    await loadBalances();
+  // Back button (REVIEW ➜ ACCOUNTS)
+  S(SHEETS.review.backBtnId)?.addEventListener('click', () => {
+    closeAccSheetById(SHEETS.review.modalId);
+    openAccSheetById(SHEETS.accounts.modalId);
+  });
 
-  } catch (e) {
-    console.error('Create account failed', e);
-    showToast && showToast('Failed to create account');
-  } finally {
-    newCreate.disabled = false;
-    newCreate.textContent = 'Create';
+  // In review sheet, "Confirm" acts as Close
+  const confirmBtn = S(SHEETS.review.confirmBtnId);
+  if (confirmBtn) {
+    confirmBtn.textContent = "Close";
+    confirmBtn.addEventListener('click', () => {
+      closeAccSheetById(SHEETS.review.modalId);
+    });
   }
-});
 
+  // NEW ACCOUNT — Create button
+  const newCreate = S(SHEETS.new.btnCreateId);
+
+  function updateCreateLimitState() {
+    if (!newCreate) return;
+
+    if (state.accounts.length >= 5) {
+      newCreate.disabled = true;
+      newCreate.classList.add("opacity-40", "pointer-events-none");
+    } else {
+      newCreate.disabled = false;
+      newCreate.classList.remove("opacity-40", "pointer-events-none");
     }
+  }
 
-    // Tier card selection inside new sheet
-    const tierContainer = S(SHEETS.new.tiersListId);
-    if (tierContainer) {
-      tierContainer.querySelectorAll('.tier-card').forEach(btn => {
-        btn.addEventListener('click', () => {
-          tierContainer.querySelectorAll('.tier-card').forEach(x => x.classList.remove('dep-active'));
-          btn.classList.add('dep-active');
+  updateCreateLimitState();
+
+  if (newCreate) {
+    newCreate.addEventListener("click", async () => {
+      // Hard enforcement
+      if (state.accounts.length >= 5) {
+        showToast && showToast("Maximum of 5 accounts allowed");
+        return;
+      }
+
+      const tierContainer = S(SHEETS.new.tiersListId);
+      const selectedTierBtn = tierContainer?.querySelector(".tier-card.dep-active");
+      const tier = selectedTierBtn?.dataset?.tier;
+
+      if (!tier) {
+        showToast && showToast("Please choose a tier");
+        return;
+      }
+
+      try {
+        newCreate.disabled = true;
+        newCreate.textContent = "Creating...";
+
+        const payload = { tier_code: tier.toLowerCase() };
+
+        await APIFETCH("/accounts", {
+          method: "POST",
+          body: JSON.stringify(payload),
         });
-      });
-    }
+
+        showToast && showToast("Account created");
+
+        closeAccSheetById(SHEETS.new.modalId);
+
+        await renderAccountsList();
+        await loadBalances();
+
+      } catch (err) {
+        console.error("Create account failed", err);
+        showToast && showToast("Failed to create account");
+      } finally {
+        newCreate.textContent = "Create";
+        updateCreateLimitState();
+      }
+    });
   }
+
+  // Tier card selection
+  const tierContainer = S(SHEETS.new.tiersListId);
+  if (tierContainer) {
+    tierContainer.querySelectorAll(".tier-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tierContainer.querySelectorAll(".tier-card")
+          .forEach((x) => x.classList.remove("dep-active"));
+        btn.classList.add("dep-active");
+      });
+    });
+  }
+}
+
 
   // init on DOM ready
   document.addEventListener('DOMContentLoaded', () => {
