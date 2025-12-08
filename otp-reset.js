@@ -1,5 +1,5 @@
 // otp-reset.js
-const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+const API_BASE = 'https://glorivest-api.herokuapp.com';
 
 // email stored earlier
 const email = localStorage.getItem('resetEmail');

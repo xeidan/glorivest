@@ -1,133 +1,148 @@
 // ======================================================================
-// DASHBOARD.JS — FRONTEND LOGIC FOR DASHBOARD PAGE
+// DASHBOARD.JS — CLEAN, FULL REWRITE (Option A)
+// - Supports only two account types: "demo" and "live"
+// - Removes tier logic (std/pro/elite)
+// - Demo/Live toggle in header
+// - Account sheet rendering updated
+// - Exposes safe window hooks for other pages
 // ======================================================================
 
 (function () {
   'use strict';
 
-  // ============================================================
-  // SECTION 1 — SMALL HELPER UTILITIES
-  // ============================================================
-
-
+  // ---------------------------
+  // Helpers & API bootstrap
+  // ---------------------------
+  // rawFetch fallback (used only if global apiFetch isn't present)
   async function rawFetch(path, opts = {}) {
-    const base = ''; // if your front-end proxies API, otherwise use full host in apiFetch
-    const headers = Object.assign({ 'Content-Type': 'application/json' }, tokenHeader(), opts.headers || {});
+    const base = '';
+    const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
     const res = await fetch((path.startsWith('http') ? path : base + path), Object.assign({}, opts, { headers }));
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
       let json = null;
-      try { json = JSON.parse(txt); } catch(e){}
+      try { json = JSON.parse(txt); } catch (e) {}
       const err = new Error((json && json.message) || res.statusText || 'HTTP error');
       err.status = res.status;
       err.body = json || txt;
       throw err;
     }
-    return res.json().catch(()=>null);
+    const ct = res.headers && res.headers.get ? res.headers.get('content-type') || '' : '';
+    return ct.includes('application/json') ? res.json() : res.text();
   }
 
-  // If apiFetch exists, use it, otherwise fallback
   const APIFETCH = (typeof apiFetch === 'function') ? apiFetch : rawFetch;
   window.APIFETCH = APIFETCH;
 
-  // ============================================================
-  // SECTION 2 — MONEY + NUMBER FORMATTING
-  // ============================================================
+  // Use global qs if available (defined in global.js), otherwise fallback
+  const qs = (typeof window.qs === 'function') ? window.qs : (id) => document.getElementById(id);
+
+  // ---------------------------
+  // Formatting utilities
+  // ---------------------------
   function centsToNumber(cents) {
     if (cents === null || cents === undefined) return 0;
     return Number(cents || 0) / 100;
   }
   function money(n) {
-    return `$${Number(n||0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
+  function fmtUSD(cents) {
+    return `$${(Number(cents || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  window.fmtUSD = fmtUSD;
 
-
-  // ============================================================
-  // SECTION 3 — TAB SWITCHING + NAV HIGHLIGHT LOGIC
-  // ============================================================
-
-
-  // Close modal/tab → return to dashboard
-  window.closeTab = function (btn) {
-    const modal = btn.closest('.modal-overlay');
-    if (modal) {
-      modal.classList.add('hidden');
-      return;
-    }
-
-    const dashNav = document.querySelector('[data-tab="dashboard"]');
-    document.querySelectorAll('[data-tab]').forEach(n => n.classList.remove('active-tab'));
-    if (dashNav) dashNav.classList.add('active-tab');
-
-    const tab = btn.closest('.tab-content');
-    if (tab) tab.classList.add('hidden');
-
-    const dash = document.getElementById('tab-dashboard');
-    if (dash) dash.classList.remove('hidden');
+  // ---------------------------
+  // Application state
+  // ---------------------------
+  const state = {
+    user: null,
+    accounts: [],
+    currentAccount: null
   };
+  window.state = state;
 
-
- 
-
-
-  // ============================================================
-  // SECTION 5 — LOAD USER + ACCOUNTS + RENDER INTO UI
-  // ============================================================
-  const state = { user: null, accounts: [], currentAccount: null };
-
+  // ---------------------------
+  // Load user + accounts
+  // ---------------------------
   async function loadFullUser() {
     try {
       const user = await APIFETCH('/auth/me');
-      const accounts = await APIFETCH('/accounts');
+      const accs = await APIFETCH('/accounts');
 
       state.user = user || null;
-      state.accounts = Array.isArray(accounts) ? accounts : [];
+      state.accounts = Array.isArray(accs) ? accs : [];
 
+      // Restore selected account from localStorage or use default
       const saved = Number(localStorage.getItem('currentAccountId') || 0);
+      let account = null;
 
-      let account = saved
-        ? state.accounts.find(a => a.id === saved)
-        : (user && user.default_account_id
-            ? state.accounts.find(a => a.id === user.default_account_id)
-            : state.accounts[0]);
+      if (saved) {
+        account = state.accounts.find(a => a.id === saved) || null;
+      }
+
+      if (!account && user && user.default_account_id) {
+        account = state.accounts.find(a => a.id === user.default_account_id) || null;
+      }
+
+      if (!account) account = state.accounts[0] || null;
 
       state.currentAccount = account;
+      if (account && account.id) localStorage.setItem('currentAccountId', String(account.id));
+
       return { user: state.user, account: state.currentAccount };
     } catch (err) {
       console.warn('loadFullUser error', err);
+      state.user = null;
+      state.accounts = [];
+      state.currentAccount = null;
       return { user: null, account: null };
     }
+  }
+  window.loadFullUser = loadFullUser;
+
+  // ---------------------------
+  // Render / compute UI
+  // ---------------------------
+  function cleanAccountCode(raw = '') {
+    // remove trailing suffixes like -std, -pro, -elite if present,
+    // and ensure it doesn't duplicate leading '#'
+    let code = String(raw || '').trim();
+    code = code.replace(/-(std|pro|elite)$/i, '');
+    if (!code) return '—';
+    return code.startsWith('#') ? code : `#${code}`;
   }
 
   function computeAndRender(user, account) {
     if (!user || !account) return;
 
+    // balances
     const total = centsToNumber(account.balance_cents);
     const botProfit = centsToNumber(account.profit_cents);
     const referral = Number(user.referral_earnings || user.reward_balance || 0);
-
     const available = Math.max(0, total + referral - botProfit);
-    const percentage = total > 0
-      ? ((botProfit / (total || 1)) * 100)
-      : (botProfit > 0 ? 100 : 0);
 
-    const percentageStr = `${percentage >= 0 ? '+' : ''}${Number(percentage).toFixed(1)}%`;
+    // profit display
+    const percentage = total > 0 ? (botProfit / total) * 100 : 0;
+    const percentageStr = `${percentage >= 0 ? '+' : ''}${percentage.toFixed(1)}%`;
     const profitStr = `${botProfit >= 0 ? '+' : '-'}${money(Math.abs(botProfit))}`;
 
-    const glorivestId = user.glorivest_id || `GV${150000 + user.id}`;
-    const email = user.email || '';
-    const tier = account.tier_name || account.tier || 'Standard';
-    const code = account.account_code || glorivestId;
+    // account type
+    const accType = (String(account.account_type || '').toLowerCase() === 'demo') ? 'Demo' : 'Live';
 
+    // UI target elements
+    const tierEl = qs('current-account-tier');
+    const codeEl = qs('current-account-code');
     const totalEl = qs('total-balance');
     const availEl = qs('available-balance');
     const refEl = qs('referral-earnings');
-    const percEl = qs('percentage-increase');
     const profitEl = qs('profit-increase');
-    const idEl = qs('glorivest-id');
+    const percEl = qs('percentage-increase');
     const emailEl = qs('user-email');
-    const tierEl = qs('current-account-tier');
-    const codeEl = qs('current-account-code');
+    const idEl = qs('glorivest-id');
+
+    if (tierEl) tierEl.textContent = accType;
+    if (codeEl) codeEl.textContent = cleanAccountCode(account.account_code || user.glorivest_id || (`GV${150000 + (user?.id || 0)}`));
 
     if (totalEl) { totalEl.textContent = money(total); totalEl.dataset.value = money(total); }
     if (availEl)  { availEl.textContent = money(available); availEl.dataset.value = money(available); }
@@ -135,181 +150,154 @@
     if (profitEl) { profitEl.textContent = profitStr; profitEl.dataset.value = profitStr; }
     if (percEl)   { percEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${percentageStr}`; percEl.dataset.value = `<i class="fa-solid fa-arrow-up"></i> ${percentageStr}`; }
 
-    if (idEl) idEl.textContent = glorivestId;
-    if (emailEl) emailEl.textContent = email;
-    if (tierEl) tierEl.textContent = tier;
-    if (codeEl) codeEl.textContent = code.startsWith('#') ? code : `#${code}`;
+    if (emailEl) emailEl.textContent = user.email || '';
+    if (idEl) idEl.textContent = user.glorivest_id || `GV${String(user.id || 0).padStart(6, '0')}`;
 
+    // persist
     state.user = user;
     state.currentAccount = account;
     if (account?.id) localStorage.setItem('currentAccountId', String(account.id));
   }
+  window.computeAndRender = computeAndRender;
 
   async function loadBalances() {
     const { user, account } = await loadFullUser();
     if (!user || !account) return;
     computeAndRender(user, account);
+    // ensure toggle UI reflects selected account
+    syncToggleWithCurrent(account);
   }
+  window.loadBalances = loadBalances;
+  
 
-  document.addEventListener('DOMContentLoaded', () => {
-    loadBalances();
-    document.addEventListener('balances:refresh', loadBalances);
-  });
-
-
-  // ============================================================
-  // SECTION 6 — ACCOUNT SELECTION SHEET (HEADER SYNC)
-  // ============================================================
+  // ---------------------------
+  // Account Sheet: fetching + rendering
+  // ---------------------------
   async function fetchAccountsForSheet() {
     try {
       const accs = await APIFETCH('/accounts');
       state.accounts = Array.isArray(accs) ? accs : [];
       return state.accounts;
     } catch (e) {
-      console.warn('fetchAccounts error', e);
+      console.warn('fetchAccountsForSheet error', e);
+      state.accounts = [];
       return [];
     }
   }
-window.fetchAccountsForSheet = fetchAccountsForSheet;
+  window.fetchAccountsForSheet = fetchAccountsForSheet;
 
-  function fmtUSD(cents) {
-    return `$${(Number(cents||0)/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`;
+  function renderAccountsListFactory(listEl) {
+    return function renderAccountsList() {
+      if (!listEl) return;
+      // loading
+      listEl.innerHTML = `<div class="text-sm text-white/60 p-4">Loading accounts…</div>`;
+
+      fetchAccountsForSheet().then(accounts => {
+        if (!accounts || accounts.length === 0) {
+          listEl.innerHTML = `<div class="text-sm text-white/60 p-4">No accounts yet</div>`;
+          return;
+        }
+
+        // manage create button state (max 5)
+        const createBtn = qs('btn-accounts-create');
+        if (createBtn) {
+          if (accounts.length >= 5) createBtn.classList.add('opacity-40', 'pointer-events-none');
+          else createBtn.classList.remove('opacity-40', 'pointer-events-none');
+        }
+
+        listEl.innerHTML = '';
+        accounts.forEach(acc => {
+          const isSelected = state.currentAccount?.id === acc.id;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = "w-full p-3 rounded-xl border text-left flex items-center justify-between transition " +
+            (isSelected ? "bg-[#00D2B1]/20 border-[#00D2B1]" : "bg-white/5 border-white/10 hover:bg-white/10");
+
+          const displayName = (acc.account_name || acc.account_code || `Account ${acc.id}`).toString().replace(/-(std|pro|elite)$/i, '');
+          const accTypeLabel = (String(acc.account_type || '').toLowerCase() === 'demo') ? 'Demo' : 'Live';
+
+          btn.innerHTML = `
+            <div>
+              <div class="font-medium">${escapeHtml(displayName)}</div>
+              <div class="text-xs text-white/60 mt-1">${escapeHtml(accTypeLabel)}</div>
+            </div>
+            <div class="text-sm font-semibold">${fmtUSD(acc.balance_cents)}</div>
+          `;
+
+          btn.addEventListener('click', async () => {
+            state.currentAccount = acc;
+            if (acc?.id) localStorage.setItem('currentAccountId', String(acc.id));
+            computeAndRender(state.user, acc);
+
+            // refresh list highlight
+            renderAccountsList();
+
+            // populate review sheet
+            const reviewBody = qs('review-body');
+            const reviewTitle = qs('review-title');
+            if (reviewBody) {
+              reviewTitle && (reviewTitle.textContent = 'Account Details');
+              reviewBody.innerHTML = `
+                <div class="space-y-2">
+                  <div><span class="text-xs text-white/60">Account Code</span><div class="font-semibold">${escapeHtml(acc.account_code || '—')}</div></div>
+                  <div><span class="text-xs text-white/60">Type</span><div class="font-semibold">${escapeHtml(accTypeLabel)}</div></div>
+                  <div><span class="text-xs text-white/60">Balance</span><div class="font-semibold">${fmtUSD(acc.balance_cents)}</div></div>
+                  <div><span class="text-xs text-white/60">Status</span><div class="text-xs font-semibold text-[#00D2B1]">${escapeHtml(acc.status || 'Active')}</div></div>
+                </div>`;
+            }
+
+            closeAccSheetById('sheet-accounts');
+            openAccSheetById('sheet-review');
+            // update toggle UI
+            syncToggleWithCurrent(acc);
+          });
+
+          listEl.appendChild(btn);
+        });
+      }).catch(err => {
+        console.warn('renderAccountsList failed', err);
+        listEl.innerHTML = `<div class="text-sm text-red-400 p-4">Failed to load accounts</div>`;
+      });
+    };
   }
-window.fmtUSD = fmtUSD;
 
-  function applyHeader(acc) {
-    if (!acc) return;
-    const tierText = acc.tier_name || acc.tier || 'Standard';
-    const rawCode = (acc.account_code || '').trim();
-
-    qs('current-account-tier') && (qs('current-account-tier').textContent = tierText);
-    qs('current-account-code') && (qs('current-account-code').textContent = rawCode.startsWith('#') ? rawCode : `#${rawCode || '—'}`);
-
-    const bal = Number(acc.balance_cents || 0);
-    const fmt = `$${(bal/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`;
-    qs('total-balance') && (qs('total-balance').textContent = fmt);
-    qs('available-balance') && (qs('available-balance').textContent = fmt);
-  }
-  window.applyHeader = applyHeader;
-window.computeAndRender = computeAndRender;
-window.state = state;
-
-
-  // ============================================================
-  // SECTION 7 — REFER-NOW BUTTON → JUMP TO EARN TAB
-  // ============================================================
-  const referBtn = document.querySelector('[data-refer-now]');
-  if (referBtn) {
-    referBtn.addEventListener('click', () => {
-      showTab('earn');
-      const earnNav = document.querySelector('[data-tab="earn"]');
-      if (earnNav) {
-        document.querySelectorAll('[data-tab]').forEach(n => n.classList.remove('active-tab'));
-        earnNav.classList.add('active-tab');
-      }
-    });
+  // small safe-escape helper for text inserted as HTML
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
-
-  // ============================================================
-  // SECTION 8 — INLINE STYLE SAFETY (ENSURE ACTIVE TAB COLOR)
-  // ============================================================
-  (function ensureStyles(){
-    const styleId = 'dashboard-js-inline-styles';
-    if (qs(styleId)) return;
-    const s = document.createElement('style');
-    s.id = styleId;
-    s.innerHTML = `
-      .active-tab { color: #00D2B1 !important; }
-      .nav-item.text-green-400 { color: #00D2B1 !important; }
-    `;
-    document.head.appendChild(s);
-  })();
-
-  // expose loaders
-  window.loadFullUser = loadFullUser;
-  window.loadBalances = loadBalances;
-
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(loadBalances, 0);
-  } else {
-    document.addEventListener('DOMContentLoaded', ()=> setTimeout(loadBalances, 0));
-  }
-
-  document.addEventListener('balances:refresh', loadBalances);
-
-})();  // END DASHBOARD CORE MODULE
-
-
-// ======================================================================
-// ACCOUNT SHEETS MODULE (DASHBOARD-only, System B)
-// Append this to the end of dashboard.js (after the main IIFE)
-// ======================================================================
-(function () {
-  'use strict';
-
-  // Helpers — safe selectors (qs from global.js)
-  const S = (id) => qs(id);
-
-  // Sheet element IDs (match app.html)
-  const SHEETS = {
-    accounts: {
-      modalId: 'sheet-accounts',
-      backdropId: 'sheet-accounts-backdrop',
-      panelId: 'sheet-accounts-panel',
-      listId: 'list-accounts',
-      handleId: 'sheet-accounts-handle',
-      btnOpenId: 'btn-open-accounts',
-      btnCreateId: 'btn-accounts-create'
-    },
-    new: {
-      modalId: 'sheet-new',
-      backdropId: 'sheet-new-backdrop',
-      panelId: 'sheet-new-panel',
-      handleId: 'sheet-new-handle',
-      btnCreateId: 'btn-new-create',
-      backBtnId: 'btn-new-back',
-      tiersListId: 'list-tiers'
-    },
-    review: {
-      modalId: 'sheet-review',
-      backdropId: 'sheet-review-backdrop',
-      panelId: 'sheet-review-panel',
-      handleId: 'sheet-review-handle',
-      backBtnId: 'btn-review-back',
-      confirmBtnId: 'btn-review-confirm',
-      bodyId: 'review-body',
-      titleId: 'review-title'
-    }
-  };
-
-  // Generic open/close for account sheets (uses ids from above)
+  // ---------------------------
+  // Account Sheets open/close + drag (kept simple and robust)
+  // ---------------------------
   function openAccSheetById(modalId) {
-    const modal = S(modalId);
+    const modal = qs(modalId);
     if (!modal) return;
     const backdrop = modal.querySelector('[id$="-backdrop"]') || modal.querySelector('.sheet-backdrop');
     const panel = modal.querySelector('[id$="-panel"]') || modal.querySelector('.sheet-panel');
 
     modal.classList.remove('hidden');
     requestAnimationFrame(() => {
-      if (backdrop) backdrop.classList.add('opacity-100');
-      if (panel) panel.classList.remove('translate-y-full');
+      backdrop && backdrop.classList.add('opacity-100');
+      panel && panel.classList.remove('translate-y-full');
     });
   }
 
   function closeAccSheetById(modalId) {
-    const modal = S(modalId);
+    const modal = qs(modalId);
     if (!modal) return;
     const backdrop = modal.querySelector('[id$="-backdrop"]') || modal.querySelector('.sheet-backdrop');
     const panel = modal.querySelector('[id$="-panel"]') || modal.querySelector('.sheet-panel');
 
-    if (backdrop) backdrop.classList.remove('opacity-100');
-    if (panel) panel.classList.add('translate-y-full');
+    backdrop && backdrop.classList.remove('opacity-100');
+    panel && panel.classList.add('translate-y-full');
 
     setTimeout(() => modal.classList.add('hidden'), 220);
   }
 
-  // Drag-to-close specifically for account panels
   function attachAccDrag(panelEl, closeFn) {
     if (!panelEl) return;
     let startY = 0;
@@ -334,7 +322,8 @@ window.state = state;
     function end() {
       if (!dragging) return;
       dragging = false;
-      const dy = parseFloat(panelEl.style.transform.replace('translateY(', '')) || 0;
+      const trans = panelEl.style.transform || '';
+      const dy = parseFloat(trans.replace('translateY(', '')) || 0;
       panelEl.style.transition = '';
       if (dy > 70) closeFn();
       else panelEl.style.transform = '';
@@ -346,249 +335,437 @@ window.state = state;
     window.addEventListener('touchend', end);
   }
 
-  // Render accounts into the accounts list
-  async function renderAccountsList() {
-  const listEl = S(SHEETS.accounts.listId);
-  if (!listEl) return;
+  // ---------------------------
+  // Setup account sheet handlers & "create account" flow
+  // ---------------------------
+  function setupAccountSheetHandlers() {
+    // create a renderer bound to the list element
+    const listEl = qs('list-accounts');
+    const renderAccountsList = renderAccountsListFactory(listEl);
+    window.renderAccountsList = renderAccountsList;
 
-  // loading
-  listEl.innerHTML = `<div class="text-sm text-white/60 p-4">Loading accounts…</div>`;
-
-  let accounts = [];
-  try {
-    accounts = await fetchAccountsForSheet();
-    // ENFORCE ACCOUNT LIMIT (max 5)
-    const createBtn = S(SHEETS.accounts.btnCreateId);
-    if (accounts.length >= 5) {
-      if (createBtn) {
-        createBtn.classList.add("opacity-40", "pointer-events-none");
-      }
-    } else {
-      if (createBtn) {
-        createBtn.classList.remove("opacity-40", "pointer-events-none");
-      }
+    // open accounts sheet button
+    const btnOpen = qs('btn-open-accounts');
+    if (btnOpen) {
+      btnOpen.addEventListener('click', async () => {
+        renderAccountsList();
+        openAccSheetById('sheet-accounts');
+      });
     }
 
-  } catch (e) {
-    console.warn('renderAccountsList: fetch error', e);
-    listEl.innerHTML = `<div class="text-sm text-red-400 p-4">Failed to load accounts</div>`;
-    return;
+    // create account button
+    const btnCreate = qs('btn-accounts-create');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        if (state.accounts.length >= 5) {
+          showToast && showToast('Maximum of 5 accounts allowed');
+          return;
+        }
+        openAccSheetById('sheet-new');
+      });
+    }
+
+    // backdrops
+    qs('sheet-accounts-backdrop')?.addEventListener('click', () => closeAccSheetById('sheet-accounts'));
+    qs('sheet-new-backdrop')?.addEventListener('click', () => closeAccSheetById('sheet-new'));
+    qs('sheet-review-backdrop')?.addEventListener('click', () => closeAccSheetById('sheet-review'));
+
+    // attach drags
+    attachAccDrag(qs('sheet-accounts-panel'), () => closeAccSheetById('sheet-accounts'));
+    attachAccDrag(qs('sheet-new-panel'), () => closeAccSheetById('sheet-new'));
+    attachAccDrag(qs('sheet-review-panel'), () => closeAccSheetById('sheet-review'));
+
+    // back buttons
+    qs('btn-new-back')?.addEventListener('click', () => {
+      closeAccSheetById('sheet-new');
+      openAccSheetById('sheet-accounts');
+    });
+    qs('btn-review-back')?.addEventListener('click', () => {
+      closeAccSheetById('sheet-review');
+      openAccSheetById('sheet-accounts');
+    });
+
+    // review confirm acts as close
+    const confirmBtn = qs('btn-review-confirm');
+    if (confirmBtn) {
+      confirmBtn.textContent = 'Close';
+      confirmBtn.addEventListener('click', () => closeAccSheetById('sheet-review'));
+    }
+
+    // New account creation flow (expects .tier-card elements with data-tier="demo" or "live")
+    const newCreate = qs('btn-new-create');
+    function updateCreateLimitState() {
+      if (!newCreate) return;
+      if (state.accounts.length >= 5) {
+        newCreate.disabled = true;
+        newCreate.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        newCreate.disabled = false;
+        newCreate.classList.remove('opacity-40', 'pointer-events-none');
+      }
+    }
+    updateCreateLimitState();
+
+    if (newCreate) {
+      newCreate.addEventListener('click', async () => {
+        if (state.accounts.length >= 5) {
+          showToast && showToast('Maximum of 5 accounts allowed');
+          return;
+        }
+
+        const tierContainer = qs('list-tiers');
+        const selected = tierContainer?.querySelector('.tier-card.dep-active');
+        const chosen = selected?.dataset?.tier;
+        if (!chosen) {
+          showToast && showToast('Please choose account type (Demo or Live)');
+          return;
+        }
+
+        try {
+          newCreate.disabled = true;
+          newCreate.textContent = 'Creating...';
+          const payload = { account_type: chosen.toLowerCase() };
+          await APIFETCH('/accounts', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          showToast && showToast('Account created');
+          closeAccSheetById('sheet-new');
+          await renderAccountsList();
+          await loadBalances();
+        } catch (err) {
+          console.error('Create account failed', err);
+          showToast && showToast('Failed to create account');
+        } finally {
+          newCreate.textContent = 'Create';
+          updateCreateLimitState();
+        }
+      });
+    }
+
+    // tier-card selection for new account (works for demo/live)
+    const tierContainer = qs('list-tiers');
+    if (tierContainer) {
+      tierContainer.querySelectorAll('.tier-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tierContainer.querySelectorAll('.tier-card').forEach(x => x.classList.remove('dep-active'));
+          btn.classList.add('dep-active');
+        });
+      });
+    }
   }
 
-  if (!accounts || accounts.length === 0) {
-    listEl.innerHTML = `<div class="text-sm text-white/60 p-4">No accounts yet</div>`;
-    return;
+  // ---------------------------
+  // Toggle (Demo / Live) UI logic
+  // ---------------------------
+  // ========================================================
+//  OPTION B — DEMO & LIVE CARDS LOGIC
+//  Clean, simple, reliable
+// ========================================================
+
+(function () {
+  'use strict';
+
+  const qs = (id) => document.getElementById(id);
+
+  const DEMO_DEFAULT = 10000;           // display value
+  const DEMO_DEFAULT_CENTS = 10000 * 100;  // raw cents
+
+  const state = {
+    user: null,
+    accounts: [],
+    demo: null,
+    live: null
+  };
+
+  // ======================================================
+  // LOAD USER + ACCOUNTS
+  // ======================================================
+  async function loadFullData() {
+    try {
+      const user = await apiFetch("/auth/me");
+      const accounts = await apiFetch("/accounts");
+
+      state.user = user;
+      state.accounts = Array.isArray(accounts) ? accounts : [];
+
+      state.demo = state.accounts.find(a => (a.account_type || "").toLowerCase() === "demo") || null;
+      state.live = state.accounts.find(a =>
+        ["live", "real"].includes((a.account_type || "").toLowerCase())
+      ) || null;
+
+      return true;
+    } catch (e) {
+      console.error("loadFullData failed:", e);
+      return false;
+    }
   }
 
-  listEl.innerHTML = '';
+  // ======================================================
+  // UPDATE CARDS (Demo & Live)
+  // ======================================================
+  function updateDemoCard() {
+    if (!state.demo) return;
 
-  accounts.forEach(acc => {
-    const isSelected = state.currentAccount?.id === acc.id;
+    // enforce default 10,000
+    let bal = Number(state.demo.balance_cents || 0);
+    if (bal <= 0) bal = DEMO_DEFAULT_CENTS;
 
-    const row = document.createElement('button');
-    row.type = 'button';
+    qs("demo-total").textContent = `$${DEMO_DEFAULT.toLocaleString()}.00`;
+    qs("demo-available").textContent = `$${DEMO_DEFAULT.toLocaleString()}.00`;
+    qs("demo-referral").textContent = `$${(state.user.reward_balance || 0).toFixed(2)}`;
+    qs("demo-profit").textContent = "+$0.00";
+    qs("demo-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> +0.0%`;
+  }
 
-    row.className =
-      "w-full p-3 rounded-xl border text-left flex items-center justify-between transition " +
-      (isSelected
-        ? "bg-[#00D2B1]/20 border-[#00D2B1]"
-        : "bg-white/5 border-white/10 hover:bg-white/10");
+  function updateLiveCard() {
+    if (!state.live) return;
 
-    row.innerHTML = `
-      <div>
-        <div class="font-medium">${acc.account_name || acc.account_code || `Account ${acc.id}`}</div>
-        <div class="text-xs text-white/60 mt-1">${acc.tier_name || acc.tier || 'Standard'}</div>
+    const bal = Number(state.live.balance_cents || 0) / 100;
+    const profit = Number(state.live.profit_cents || 0) / 100;
+    const referral = Number(state.user.reward_balance || 0);
+
+    qs("live-total").textContent = `$${bal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    qs("live-available").textContent = `$${(bal + referral - profit).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    qs("live-referral").textContent = `$${referral.toFixed(2)}`;
+    qs("live-profit").textContent = `${profit >= 0 ? '+' : '-'}$${Math.abs(profit).toFixed(2)}`;
+
+    const percent = bal > 0 ? (profit / bal) * 100 : 0;
+    qs("live-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${percent.toFixed(1)}%`;
+  }
+
+  async function renderCards() {
+    const ok = await loadFullData();
+    if (!ok) return;
+
+    updateDemoCard();
+    updateLiveCard();
+
+    // by default → show demo
+    showDemoCard();
+    moveToggle("demo");
+  }
+
+  // ======================================================
+  // CARD VISIBILITY SWITCH
+  // ======================================================
+  function showDemoCard() {
+    qs("demo-card").classList.remove("hidden");
+    qs("live-card").classList.add("hidden");
+  }
+
+  function showLiveCard() {
+    qs("live-card").classList.remove("hidden");
+    qs("demo-card").classList.add("hidden");
+  }
+
+  // ======================================================
+  // TOGGLE ANIMATION / STATE
+  // ======================================================
+  function moveToggle(mode) {
+    const track = qs("toggle-track");
+    const demoBtn = qs("toggle-demo");
+    const liveBtn = qs("toggle-live");
+
+    if (mode === "demo") {
+        track.style.transform = "translateX(0px)";
+        demoBtn.classList.add("active");
+        demoBtn.classList.remove("inactive");
+        liveBtn.classList.add("inactive");
+        liveBtn.classList.remove("active");
+    } else {
+        track.style.transform = "translateX(63px)"; // exactly half width
+        liveBtn.classList.add("active");
+        liveBtn.classList.remove("inactive");
+        demoBtn.classList.add("inactive");
+        demoBtn.classList.remove("active");
+    }
+}
+
+
+  // ======================================================
+  // TOGGLE CLICK HANDLERS
+  // ======================================================
+  function initToggle() {
+    qs("toggle-demo").addEventListener("click", () => {
+      showDemoCard();
+      moveToggle("demo");
+    });
+
+    qs("toggle-live").addEventListener("click", () => {
+      showLiveCard();
+      moveToggle("live");
+    });
+  }
+
+  // ======================================================
+  // DEMO RESET CONFIRMATION
+  // ======================================================
+  function askResetDemo() {
+    const modal = document.createElement("div");
+    modal.id = "demo-reset-modal";
+
+    modal.innerHTML = `
+      <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]" id="demo-reset-backdrop">
+        <div class="bg-white rounded-xl p-6 w-80 text-black" id="demo-reset-card">
+          <h2 class="text-lg font-semibold mb-2">Reset demo balance?</h2>
+          <p class="text-sm mb-4">
+            This will set your Demo balance back to <strong>$10,000</strong>.
+          </p>
+
+          <div class="flex justify-end gap-3">
+            <button id="cancel-reset"
+              class="px-4 py-2 bg-gray-200 rounded-lg text-sm">Cancel</button>
+
+            <button id="confirm-reset"
+              class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm">Reset Balance</button>
+          </div>
+        </div>
       </div>
-      <div class="text-sm font-semibold">${fmtUSD(acc.balance_cents)}</div>
     `;
 
-    row.addEventListener('click', async () => {
-      // update selected account
-      state.currentAccount = acc;
-      if (acc?.id) localStorage.setItem('currentAccountId', String(acc.id));
+    document.body.appendChild(modal);
 
-      applyHeader(acc);
-      computeAndRender(state.user, acc);
+    const backdrop = document.getElementById("demo-reset-backdrop");
+    const card = document.getElementById("demo-reset-card");
 
-      // refresh list so highlight updates immediately
-      await renderAccountsList();
+    // 1. Clicking outside → close
+    backdrop.addEventListener("click", () => modal.remove());
 
-      // populate review sheet
-      const reviewBody = S(SHEETS.review.bodyId);
-      const reviewTitle = S(SHEETS.review.titleId);
+    // 2. Clicking inside modal should NOT close
+    card.addEventListener("click", (e) => e.stopPropagation());
 
-      if (reviewBody) {
-        reviewTitle.textContent = "Account Details";
-        reviewBody.innerHTML = `
-          <div class="space-y-2">
-            <div><span class="text-xs text-white/60">Account Code</span><div class="font-semibold">${acc.account_code || '—'}</div></div>
-            <div><span class="text-xs text-white/60">Tier</span><div class="font-semibold">${acc.tier_name || acc.tier || 'Standard'}</div></div>
-            <div><span class="text-xs text-white/60">Balance</span><div class="font-semibold">${fmtUSD(acc.balance_cents)}</div></div>
-            <div><span class="text-xs text-white/60">Status</span>
-              <div class="text-xs font-semibold text-[#00D2B1]">
-                ${(acc.status || "Active")}
-              </div>
+    // 3. Cancel button
+    document.getElementById("cancel-reset").onclick = () => modal.remove();
 
-            </div>
-          </div>`;
-      }
+    // 4. Confirm reset
+    document.getElementById("confirm-reset").onclick = async () => {
+        modal.remove();
 
-      // open review sheet
-      closeAccSheetById(SHEETS.accounts.modalId);
-      openAccSheetById(SHEETS.review.modalId);
-    });
+        if (state.demo) state.demo.balance_cents = 1000000; // 10k USD
 
-    listEl.appendChild(row);
-  });
+        updateDemoCard();
+        showToast("Demo balance reset to $10,000");
+    };
 }
 
 
- function setupAccountSheetHandlers() {
-  // Open accounts sheet
-  const btnOpen = S(SHEETS.accounts.btnOpenId);
-  if (btnOpen) {
-    btnOpen.addEventListener('click', async () => {
-      await renderAccountsList();
-      openAccSheetById(SHEETS.accounts.modalId);
-    });
+  function initDemoReset() {
+    qs("demo-reset").addEventListener("click", askResetDemo);
   }
 
-  // "Create Account" button inside Accounts sheet
-  const btnCreate = S(SHEETS.accounts.btnCreateId);
-  if (btnCreate) {
-    btnCreate.addEventListener('click', () => {
-      if (state.accounts.length >= 5) {
-        showToast && showToast("Maximum of 5 accounts allowed");
-        return;
-      }
-      openAccSheetById(SHEETS.new.modalId);
-    });
-  }
-
-  // Backdrops
-  S(SHEETS.accounts.backdropId)?.addEventListener('click', () =>
-    closeAccSheetById(SHEETS.accounts.modalId)
-  );
-
-  S(SHEETS.new.backdropId)?.addEventListener('click', () =>
-    closeAccSheetById(SHEETS.new.modalId)
-  );
-
-  S(SHEETS.review.backdropId)?.addEventListener('click', () =>
-    closeAccSheetById(SHEETS.review.modalId)
-  );
-
-  // Drag handlers
-  const accPanel = S(SHEETS.accounts.panelId);
-  const newPanel = S(SHEETS.new.panelId);
-  const reviewPanel = S(SHEETS.review.panelId);
-
-  if (accPanel) attachAccDrag(accPanel, () => closeAccSheetById(SHEETS.accounts.modalId));
-  if (newPanel) attachAccDrag(newPanel, () => closeAccSheetById(SHEETS.new.modalId));
-  if (reviewPanel) attachAccDrag(reviewPanel, () => closeAccSheetById(SHEETS.review.modalId));
-
-  // Back button (NEW ➜ ACCOUNTS)
-  S(SHEETS.new.backBtnId)?.addEventListener('click', () => {
-    closeAccSheetById(SHEETS.new.modalId);
-    openAccSheetById(SHEETS.accounts.modalId);
-  });
-
-  // Back button (REVIEW ➜ ACCOUNTS)
-  S(SHEETS.review.backBtnId)?.addEventListener('click', () => {
-    closeAccSheetById(SHEETS.review.modalId);
-    openAccSheetById(SHEETS.accounts.modalId);
-  });
-
-  // In review sheet, "Confirm" acts as Close
-  const confirmBtn = S(SHEETS.review.confirmBtnId);
-  if (confirmBtn) {
-    confirmBtn.textContent = "Close";
-    confirmBtn.addEventListener('click', () => {
-      closeAccSheetById(SHEETS.review.modalId);
-    });
-  }
-
-  // NEW ACCOUNT — Create button
-  const newCreate = S(SHEETS.new.btnCreateId);
-
-  function updateCreateLimitState() {
-    if (!newCreate) return;
-
-    if (state.accounts.length >= 5) {
-      newCreate.disabled = true;
-      newCreate.classList.add("opacity-40", "pointer-events-none");
-    } else {
-      newCreate.disabled = false;
-      newCreate.classList.remove("opacity-40", "pointer-events-none");
-    }
-  }
-
-  updateCreateLimitState();
-
-  if (newCreate) {
-    newCreate.addEventListener("click", async () => {
-      // Hard enforcement
-      if (state.accounts.length >= 5) {
-        showToast && showToast("Maximum of 5 accounts allowed");
-        return;
-      }
-
-      const tierContainer = S(SHEETS.new.tiersListId);
-      const selectedTierBtn = tierContainer?.querySelector(".tier-card.dep-active");
-      const tier = selectedTierBtn?.dataset?.tier;
-
-      if (!tier) {
-        showToast && showToast("Please choose a tier");
-        return;
-      }
-
-      try {
-        newCreate.disabled = true;
-        newCreate.textContent = "Creating...";
-
-        const payload = { tier_code: tier.toLowerCase() };
-
-        await APIFETCH("/accounts", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-
-        showToast && showToast("Account created");
-
-        closeAccSheetById(SHEETS.new.modalId);
-
-        await renderAccountsList();
-        await loadBalances();
-
-      } catch (err) {
-        console.error("Create account failed", err);
-        showToast && showToast("Failed to create account");
-      } finally {
-        newCreate.textContent = "Create";
-        updateCreateLimitState();
-      }
-    });
-  }
-
-  // Tier card selection
-  const tierContainer = S(SHEETS.new.tiersListId);
-  if (tierContainer) {
-    tierContainer.querySelectorAll(".tier-card").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        tierContainer.querySelectorAll(".tier-card")
-          .forEach((x) => x.classList.remove("dep-active"));
-        btn.classList.add("dep-active");
-      });
-    });
-  }
-}
-
-
-  // init on DOM ready
-  document.addEventListener('DOMContentLoaded', () => {
-    // ensure functions that dashboard expects are available
-    // (fetchAccountsForSheet and applyHeader already defined in dashboard.js)
-    setupAccountSheetHandlers();
+  // ======================================================
+  // INIT
+  // ======================================================
+  document.addEventListener("DOMContentLoaded", async () => {
+    await renderCards();
+    initToggle();
+    initDemoReset();
   });
 
 })();
+
+/////
+function updateDemoResetVisibility(account) {
+    const btn = qs("demo-reset");
+    if (!btn || !account) return;
+
+    const isDemo = account.account_type?.toLowerCase() === "demo";
+    const bal = Number(account.balance_cents || 0);
+
+    // 10,000 USD = 1,000,000 cents
+    const isDefaultAmount = bal === 1000000;
+
+    if (isDemo && !isDefaultAmount) {
+        btn.classList.remove("hidden");
+    } else {
+        btn.classList.add("hidden");
+    }
+}
+
+
+
+  // ---------------------------
+  // Utility: applyHeader (external callers may use)
+  // ---------------------------
+  function applyHeader(acc) {
+    if (!acc) return;
+    const accType = (String(acc.account_type || '').toLowerCase() === 'demo') ? 'Demo' : 'Live';
+    const code = cleanAccountCode(acc.account_code || '');
+    qs('current-account-tier') && (qs('current-account-tier').textContent = accType);
+    qs('current-account-code') && (qs('current-account-code').textContent = code);
+    const bal = centsToNumber(acc.balance_cents);
+    qs('total-balance') && (qs('total-balance').textContent = money(bal));
+    qs('available-balance') && (qs('available-balance').textContent = money(bal));
+  }
+  window.applyHeader = applyHeader;
+
+  // ---------------------------
+  // Boot: DOM ready
+  // ---------------------------
+  document.addEventListener('DOMContentLoaded', async () => {
+    // init account sheet handlers
+    setupAccountSheetHandlers();
+    // attach toggle handlers
+    attachToggleHandlers();
+
+    // load balances and initial render
+    await loadBalances();
+
+    // ensure renderAccountsList is available globally
+    if (typeof window.renderAccountsList === 'function') {
+      // no-op; function is exposed by setupAccountSheetHandlers
+    }
+  });
+
+  // expose loadBalances for external use
+  window.loadBalances = loadBalances;
+
+  // listen for external triggers to refresh balances
+  document.addEventListener('balances:refresh', loadBalances);
+
+})(); // end dashboard.js
+
+// =======================================================
+// CLOSE TAB / MODAL
+// Called by: onclick="closeTab(this)"
+// =======================================================
+window.closeTab = function (btn) {
+    const tabSection = btn.closest(".tab-content");
+    if (!tabSection) return;
+
+    // Hide modal
+    tabSection.classList.add("hidden");
+
+    // Always return user to dashboard after closing modal
+    showTab("dashboard");
+
+    // Fix bottom nav highlight
+    document.querySelectorAll("[data-tab]").forEach(nav => {
+        nav.classList.toggle("active-tab", nav.dataset.tab === "dashboard");
+    });
+
+    // Soft refresh balances
+    document.dispatchEvent(new Event("balances:refresh"));
+};
+
+
+// =======================================================
+//REFER NOW BUTTON IN DASHBOARD
+// =======================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.querySelector("[data-refer-now]");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+        showTab("earn");
+
+        // Fix bottom nav highlight
+        document.querySelectorAll("[data-tab]").forEach(nav => {
+            nav.classList.toggle("active-tab", nav.dataset.tab === "earn");
+        });
+    });
+});
+

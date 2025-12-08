@@ -141,8 +141,111 @@
     #sheet-guide-backdrop {
       background: rgba(0,0,0,0.55) !important;
     }
+</style>
+<style>
+  /* Container for the overall toggle */
+#account-toggle {
+    /* Use a very dark grey to match the dashboard background */
+    background: #000000; 
+    border: 1px solid #333333; 
+    border-radius: 8px !important; 
+    padding: 3px !important; /* Increased padding slightly for better visual separation */
+    width: 132px; 
+    height: 38px;
+    box-sizing: border-box; 
+    overflow: hidden; /* Important */
+}
 
+/* The sliding track (The active pill) */
+#toggle-track {
+    /* Use a medium-dark grey (like the dashboard card) for the active pill */
+    background: #2D2D2D !important; 
+    border-radius: 6px !important;
+    
+    /* Adjusted dimensions to account for 3px padding */
+    width: 60px; 
+    height: 30px; 
+    top: 3px;
+    left: 3px;
 
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Subtle shadow for lift */
+    z-index: 1;
+}
+
+/* Text Buttons (Demo/Live) */
+/* Text Buttons (Demo/Live) - Ultimate Vertical Alignment Fix */
+#toggle-demo, #toggle-live {
+    /* Layout properties */
+    display: flex;
+    align-items: center; /* Enforce vertical centering */
+    justify-content: center; /* Enforce horizontal centering */
+    
+    /* Ensure no unwanted spacing is inherited */
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100%; /* Take full height of the parent area (30px internal) */
+    
+    /* Visual properties (keep unchanged) */
+    font-weight: 400;
+    font-size: 14px;
+    z-index: 2;
+    transition: color 0.3s ease;
+    background: transparent;
+    border: none;
+    text-align: center;
+    min-width: 50%;
+    
+    /* Manual Nudge (If needed after implementing this block) */
+    /* If the text is slightly too high, uncomment and use a positive value: */
+    /* transform: translateY(0.5px); */ 
+}
+
+/* State 1: Active (Text over the dark pill) */
+#toggle-demo.active, 
+#toggle-live.active {
+    color: #ffffff !important; /* Crisp White text */
+}
+
+/* State 2: Inactive (Text over the very dark container) */
+#toggle-live.inactive,
+#toggle-demo.inactive {
+    color: #888888 !important; /* Muted light grey text */
+}
+
+/* Optional: Improve hover feedback */
+#toggle-demo:hover, #toggle-live:hover {
+    color: #ffffff !important;
+}
+</style>
+<style>
+  /* Local modal styles */
+  .dep-active { border: 2px solid #00D2B1 !important; background: rgba(0,210,177,0.08) !important; box-shadow: 0 0 10px rgba(0,210,177,0.3); }
+  .file-thumb { max-width: 100px; max-height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+  
+  /* Modern Spinner Overlay */
+  .spinner-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index:40; border-radius: inherit; }
+  .spinner { width:48px; height:48px; border-radius:999px; border:4px solid rgba(255,255,255,0.15); border-top-color:#00D2B1; animation:spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; box-shadow:0 0 15px rgba(0,210,177,0.4); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast Styling */
+  .center-toast { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:9999; }
+  .center-toast .card { pointer-events:auto; background:#1b3631; color:white; padding:16px 24px; border-radius:12px; box-shadow:0 15px 40px rgba(0,0,0,0.8); max-width:90%; text-align:center; }
+  
+  /* Utility classes */
+  .hidden { display:none !important; }
+  .copy-btn { background: rgba(255,255,255,0.08); border:none; padding:8px 10px; border-radius:6px; color:#fff; transition: background 0.2s; }
+  .copy-btn:hover { background: rgba(255,255,255,0.15); }
+  .small-muted { font-size:12px; color:rgba(255,255,255,0.5); }
+  
+  /* Progress Bar */
+  .progress-line { height:4px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; position:relative; }
+  .progress-line .bar { position:absolute; left:0; top:0; height:100%; width:0%; background: linear-gradient(90deg,#00D2B1,#00bca3); transition:width 400ms ease; }
+  #currency-select {
+    /* Pushes text and chevron away from the right edge */
+    padding-right: 2.5rem !important; /* Forces extra padding (approx. 40px) */
+    background-position: right 1rem center !important; /* Optionally move the chevron icon itself further left */
+}
 </style>
 
 
@@ -199,254 +302,144 @@
   <!-- Tabs -->
   <main id="main-content" class="p-4 space-y-6">
 
-    <!-- Dashboard Tab -->
-    <section id="tab-dashboard" class="tab-section">
-      <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
-        <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-      
-          <!-- Header Row -->
-          <div>
-            <div class="flex justify-between items-center">
-              <h1 id="current-account-tier" class="text-3xl font-bold">Standard</h1>
-              <button id="btn-open-accounts" class="px-3 hover:bg-white/10" title="Accounts">
-                <i class="fa-solid fa-chevron-down text-[#00D2B1]"></i>
-              </button>              
-            </div>
-          
-            <!-- content-width badge (not full width, independent of the title) -->
-            <p id="current-account-code" style="display:inline-block; white-space:nowrap;" class="text-xs font-medium text-white/70 bg-white/10 rounded-md border border-white/10 px-1">#GV000000-00</p>
+
+<!-- Dashboard Tab -->
+<section id="tab-dashboard" class="tab-section">
+
+  <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
+
+      <!-- ========================= -->
+      <!-- ACCOUNT TOGGLE (Shared)   -->
+      <!-- ========================= -->
+      <div class="flex justify-end mb-4">
+    <div id="account-toggle" 
+         class="relative flex w-[132px] h-[36px] bg-white/10 border border-white/20 p-0.5">
+        
+       <div id="toggle-track"class="absolute top-0.5 left-0.5 w-[62px] h-[30px] bg-white rounded-md transition-all duration-300"></div>
+
+        <button id="toggle-demo" class="active">
+            Demo
+        </button>
+
+        <button id="toggle-live" class="inactive">
+            Live
+        </button>
+    </div>
+</div>
+
+
+      <!-- ========================= -->
+      <!-- DEMO CARD                 -->
+      <!-- ========================= -->
+      <div id="demo-card" class="space-y-4">
+
+          <div class="flex justify-between items-center">
+              <h1 class="text-3xl font-bold flex items-center gap-2">
+                  Demo
+                  <button id="demo-reset"
+                          class="text-white/60 hover:text-white transition text-xl"
+                          title="Reset demo balance to $10,000">
+                      <i class="fa-solid fa-rotate-right"></i>
+                  </button>
+              </h1>
           </div>
-      
+
           <!-- Total Balance -->
-          <div class="flex items-center">
-            <div>
+          <div>
               <p class="text-xs font-light text-white/60">Total Balance</p>
-              <h3 id="total-balance" class="text-2xl font-bold text-white mt-1">$0.00</h3>
-            </div>
+              <h3 id="demo-total" class="text-2xl font-bold text-white mt-1">$10,000.00</h3>
           </div>
-      
-          <!-- Profit Section -->
+
+          <!-- Profit -->
+          <div class="flex items-center space-x-4 text-[#00D2B1] text-xs font-normal pb-12">
+              <div id="demo-percentage"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
+              <div id="demo-profit">+$0.00</div>
+          </div>
+      </div>
+
+
+      <!-- ========================= -->
+      <!-- LIVE CARD                 -->
+      <!-- ========================= -->
+      <div id="live-card" class="space-y-4 hidden">
+
+          <div class="flex justify-between items-center">
+              <h1 class="text-3xl font-bold">Live</h1>
+          </div>
+
+          <!-- Total Balance -->
+          <div>
+              <p class="text-xs font-light text-white/60">Total Balance</p>
+              <h3 id="live-total" class="text-2xl font-bold text-white mt-1">$0.00</h3>
+          </div>
+
+          <!-- Profit -->
           <div class="flex items-center space-x-4 text-[#00D2B1] text-xs font-normal">
-            <div id="percentage-increase"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
-            <div id="profit-increase">+$0.00</div>
+              <div id="live-percentage"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
+              <div id="live-profit">+$0.00</div>
           </div>
-      
-          <!-- Available Balance Card -->
+
+          <!-- Available -->
           <div>
-            <p class="text-xs font-light text-white/60">Available Balance</p>
-            <h3 id="available-balance" class="text-xl font-bold text-white mt-1">$0.00</h3>
+              <p class="text-xs font-light text-white/60">Available Balance</p>
+              <h3 id="live-available" class="text-xl font-bold text-white mt-1">$0.00</h3>
           </div>
-      
-          <!-- Referral Earnings Card -->
+
+          <!-- Referral -->
           <div>
-            <p class="text-xs font-light text-white/60">Referral Earnings</p>
-            <h3 id="referral-earnings" class="text-xl font-bold text-white mt-1">$0.00</h3>
+              <p class="text-xs font-light text-white/60">Referral Earnings</p>
+              <h3 id="live-referral" class="text-xl font-bold text-white mt-1">$0.00</h3>
           </div>
-      
-        </div>
-      </div>
-      
 
-      <!-- ===================== Accounts Bottom Sheet ===================== -->
-      <div id="sheet-accounts" class="fixed inset-0 z-[60] hidden">
-        <div id="sheet-accounts-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
-
-        <div id="sheet-accounts-panel" class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300" style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
-          <div class="mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" style="height: var(--sheet-h);">
-            <!-- Handle -->
-            <div id="sheet-accounts-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
-              <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
-            </div>
-
-            <!-- Header -->
-            <div class="grid grid-cols-3 items-center px-4 pb-2 shrink-0">
-              <div></div>
-              <h3 class="text-xl font-semibold text-white text-center">Accounts</h3>
-              <div class="justify-self-end">
-                <button id="btn-accounts-create" class="p-2 rounded-lg hover:bg-white/10" title="Create New Account" aria-label="Create New Account">
-                  <i class="fa-solid fa-plus text-[#00D2B1]"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- List (centers if 1, scrolls if many) -->
-            <div id="list-accounts" class="px-4 py-4 h-[calc(52vh-72px)] overflow-y-auto flex flex-col gap-2">
-              <!-- rows injected by JS -->
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- ===================== New Account Bottom Sheet ===================== -->
-        <div id="sheet-new" class="fixed inset-0 z-[70] hidden">
-          <div id="sheet-new-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
-
-          <div id="sheet-new-panel" 
-              class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300"
-              style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
-
-            <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden" 
-                style="height: var(--sheet-h);">
-
-              <div class="relative h-full flex flex-col">
-
-                <!-- Handle -->
-                <div id="sheet-new-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
-                  <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
-                </div>
-
-                <!-- Header -->
-                <div class="px-4 py-2 flex items-center relative shrink-0">
-                  <button id="btn-new-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
-                    <i class="fa-solid fa-chevron-left text-white/80"></i>
-                  </button>
-                  <h3 class="text-xl font-semibold text-white mx-auto">Create New Account</h3>
-                </div>
-
-                <!-- Tiers (scrolls) -->
-                <div class="px-4 pt-8 flex-1 min-h-0 overflow-y-auto">
-                  <div id="list-tiers" class="grid gap-3">
-                    <button data-tier="standard" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
-                      <div class="flex items-center justify-between">
-                        <div class="font-medium">Standard</div>
-                        <div class="text-xs text-white/70">Fee: Free</div>
-                      </div>
-                      <div class="text-xs text-white/60 mt-1">Earn 15% • Min $20 • USDT-TRC20</div>
-                    </button>
-
-                    <button data-tier="pro" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
-                      <div class="flex items-center justify-between">
-                        <div class="font-medium">Pro</div>
-                        <div class="text-xs text-white/70">Fee: $20</div>
-                      </div>
-                      <div class="text-xs text-white/60 mt-1">Earn 20% • Min $200 • USDT-TRC20</div>
-                    </button>
-
-                    <button data-tier="elite" class="tier-card w-full text-left p-3 rounded-xl border border-white/10 hover:border-[#00D2B1] bg-white/5">
-                      <div class="flex items-center justify-between">
-                        <div class="font-medium">Elite</div>
-                        <div class="text-xs text-white/70">Fee: $50</div>
-                      </div>
-                      <div class="text-xs text-white/60 mt-1">Earn 25% • Min $1000 • USDT-TRC20</div>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="px-4 py-3 flex justify-center shrink-0" 
-                    style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
-                  
-                  <!-- FIX: Correct ID -->
-                  <button id="btn-new-create" 
-                          class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-black font-semibold">
-                    Create
-                  </button>
-
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
+  </div>
 
 
-
-        <!-- ===================== Review / Details Bottom Sheet ===================== -->
-        <div id="sheet-review" class="fixed inset-0 z-[80] hidden">
-          <div id="sheet-review-backdrop" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-200"></div>
-
-          <div id="sheet-review-panel" 
-              class="absolute bottom-0 inset-x-0 translate-y-full transition-transform duration-300"
-              style="bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + var(--sheet-offset, 0px));">
-
-            <div class="relative mx-auto w-full max-w-md bg-black border-t border-white/10 rounded-t-2xl overflow-hidden"
-                style="height: var(--sheet-h);">
-
-              <div class="relative h-full flex flex-col">
-
-                <!-- Handle -->
-                <div id="sheet-review-handle" class="pt-2 cursor-grab active:cursor-grabbing select-none shrink-0">
-                  <div class="h-1.5 w-12 bg-white/20 rounded-full mx-auto mb-2"></div>
-                </div>
-
-                <!-- Header -->
-                <div class="px-4 py-2 flex items-center relative shrink-0">
-                  <button id="btn-review-back" class="p-2 rounded-lg hover:bg-white/10 absolute left-2">
-                    <i class="fa-solid fa-chevron-left text-white/80"></i>
-                  </button>
-                  <h3 id="review-title" class="text-xl font-semibold text-white mx-auto">Review Account</h3>
-                </div>
-
-                <!-- Body -->
-                <div id="review-body" class="px-4 pt-6 flex-1 min-h-0 overflow-y-auto"></div>
-
-                <!-- Confirm -->
-                <div class="px-4 pb-3 flex justify-center shrink-0"
-                    style="padding-bottom: calc(env(safe-area-inset-bottom) + 14px);">
-
-                  <!-- FIX: This one stays as the confirm button -->
-                  <button id="btn-review-confirm" 
-                          class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-black font-semibold">
-                    Confirm
-                  </button>
-
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-
-      <!-- Action Buttons -->
-      <div class="flex justify-around py-10">
-        <!-- Deposit -->
-        <div class="flex flex-col items-center">
+  <!-- ========================= -->
+  <!-- ACTION BUTTONS            -->
+  <!-- ========================= -->
+  <div class="flex justify-around py-10">
+      <div class="flex flex-col items-center">
           <div onclick="showTab('deposit')" class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
-            <i class="fa-solid fa-plus"></i>
+              <i class="fa-solid fa-plus"></i>
           </div>
           <p class="mt-2 text-xs font-light">Deposit</p>
-        </div>
-
-        <!-- Withdraw -->
-        <div class="flex flex-col items-center">
-          <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-            <i class="fa-solid fa-minus"></i>
-          </div>
-          <p class="mt-2 text-xs font-light">Withdraw</p>
-        </div>
-
-        <!-- Transactions -->
-        <div class="flex flex-col items-center">
-          <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-            <i class="fa-solid fa-arrow-right-arrow-left"></i>
-          </div>
-          <p class="mt-2 text-xs font-light">Transactions</p>
-        </div>
       </div>
 
-
-  
-      <!-- Refer and Earn Promo -->
-      <hr class="border-white/10">
-      <div class="pb-24">
-      <div class="bg-gradient-to-br from-[#007f73] to-black border border-[#00D2B1] rounded-xl px-4 py-10 text-center">
-        <h3 class="text-xl font-bold mb-2">Refer a Friend, Earn Big!</h3>
-        <p class="text-sm text-green-100 mb-4">
-          Get <span class="font-bold text-green-200">5% of their first deposit</span> when they register and fund their account.
-        </p>
-        <button data-refer-now class="bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
-          Refer Now
-        </button>
-            </div>
+      <div class="flex flex-col items-center">
+          <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+              <i class="fa-solid fa-minus"></i>
           </div>
-        </div>
-    </section>
-    
+          <p class="mt-2 text-xs font-light">Withdraw</p>
+      </div>
 
+      <div class="flex flex-col items-center">
+          <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </div>
+          <p class="mt-2 text-xs font-light">Transactions</p>
+      </div>
+  </div>
 
+  <hr class="border-white/10">
+
+  <!-- ========================= -->
+  <!-- Refer & Earn Card         -->
+  <!-- ========================= -->
+  <div class="pb-24">
+      <div class="bg-gradient-to-br from-[#007f73] to-black border border-[#00D2B1] rounded-xl px-4 py-10 text-center">
+          <h3 class="text-xl font-bold mb-2">Refer a Friend, Earn Big!</h3>
+          <p class="text-sm text-green-100 mb-4">
+              Get <span class="font-bold text-green-200">5% of their first deposit</span> when they register and fund their account.
+          </p>
+          <button data-refer-now class="bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
+              Refer Now
+          </button>
+      </div>
+  </div>
+
+</section>
 
 
 
@@ -508,167 +501,151 @@
 
 
     <!-- Deposit Tab -->
-    <section id="tab-deposit" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-      <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#061914] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
-        <!-- Close -->
-        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]" title="Close">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+    <section id="tab-deposit" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+      
+      <div class="max-w-md mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
+        
+        <h2 class="text-3xl font-extrabold mb-1 text-white">Deposit Funds</h2>
+        <p class="text-sm text-white/50 mb-6">Securely transfer funds to your trading account.</p>
 
-        <style>
-          /* local modal styles */
-          .dep-active { border: 2px solid #00D2B1 !important; background: rgba(0,210,177,0.04) !important; }
-          .file-thumb { max-width: 100px; max-height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
-          .spinner-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:40; }
-          .spinner { width:56px; height:56px; border-radius:999px; border:6px solid rgba(255,255,255,0.08); border-top-color:#00D2B1; animation:spin 1s linear infinite; box-shadow:0 6px 20px rgba(0,210,177,0.12); }
-          @keyframes spin { to { transform: rotate(360deg); } }
-          .center-toast { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:9999; }
-          .center-toast .card { pointer-events:auto; background:#0d2621; color:white; padding:16px 20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.6); max-width:90%; text-align:center; }
-          .hidden { display:none !important; }
-          .copy-btn { background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:8px; color:#fff; }
-          .small-muted { font-size:12px; color:rgba(255,255,255,0.6); }
-          .progress-line { height:6px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; position:relative; }
-          .progress-line .bar { position:absolute; left:0; top:0; height:100%; width:0%; background: linear-gradient(90deg,#00D2B1,#00bca3); transition:width 400ms ease; }
-        </style>
-
-        <h2 class="text-2xl font-bold mb-2">Deposit</h2>
-        <p class="text-sm text-white/70 mb-4">Choose method and follow the steps. Bank details are assigned per deposit.</p>
-
-        <!-- Method Tabs -->
-        <div class="flex gap-3 mb-4">
-          <button id="dep-tab-direct" class="flex-1 py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-white font-semibold">Direct Deposit</button>
-          <button id="dep-tab-crypto"  class="flex-1 py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-white font-semibold">Crypto</button>
-          <button id="dep-tab-p2p"     class="flex-1 py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-white font-semibold">P2P (O2O)</button>
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <button id="dep-tab-direct" class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Direct Deposit</button>
+          <button id="dep-tab-crypto"  class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Crypto</button>
+          <button id="dep-tab-p2p"     class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">P2P</button>
         </div>
 
-        <!-- top progress & step label -->
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-3">
-              <div id="node-1" class="w-3 h-3 rounded-full bg-[#00D2B1]"></div>
-              <div id="node-2" class="w-3 h-3 rounded-full bg-white/10"></div>
-              <div id="node-3" class="w-3 h-3 rounded-full bg-white/10"></div>
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div id="node-1" class="w-2 h-2 rounded-full bg-[#00D2B1] transition-colors duration-300"></div>
+              <div id="node-2" class="w-2 h-2 rounded-full bg-white/10 transition-colors duration-300"></div>
+              <div id="node-3" class="w-2 h-2 rounded-full bg-white/10 transition-colors duration-300"></div>
             </div>
-            <div id="step-label" class="text-xs text-white/60">1 of 3</div>
+            <div id="step-label" class="text-sm font-medium text-white/50">Step 1 of 3</div>
           </div>
           <div class="progress-line"><div class="bar" id="progress-bar"></div></div>
         </div>
 
-        <!-- STEP 1: amount + currency -->
-        <div id="step-1" class="space-y-3">
-          <label class="block text-sm font-semibold text-white/70">Currency</label>
+        <div id="step-1" class="space-y-4">
+          
           <div>
-            <!-- only NGN enabled; dropdown to show other currencies but disabled -->
-            <select id="currency-select" class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20">
-              <option value="NGN">NGN — Nigerian Naira</option>
-              <option value="USD">USD — US Dollar (Not available)</option>
-              <option value="GBP">GBP — British Pound (Not available)</option>
-              <option value="EUR">EUR — Euro (Not available)</option>
+            <label class="block text-sm font-medium text-white/80 mb-1">Currency</label>
+            <select id="currency-select" class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition">
+              <option value="NGN">🇳🇬 NGN — Nigerian Naira</option>
+              <option value="USD" disabled>🇺🇸 USD — US Dollar (Not available)</option>
+              <option value="GBP" disabled>🇬🇧 GBP — British Pound (Not available)</option>
+              <option value="EUR" disabled>🇪🇺 EUR — Euro (Not available)</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-white/70 mt-2">Amount (in selected currency)</label>
+            <label class="block text-sm font-medium text-white/80 mb-1">Amount (in selected currency)</label>
             <input id="step1-amount" type="number" min="1" step="any"
-                  class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20" placeholder="Enter amount"/>
-            <p id="conversion-preview" class="text-xs text-white/60 mt-1">Rate: — • Equivalent: —</p>
+                  class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition" placeholder="e.g., 50,000"/>
+            <p id="conversion-preview" class="text-xs text-white/50 mt-2">Rate: — • Equivalent: —</p>
           </div>
 
-          <div class="flex items-center justify-between pt-3">
-            <div class="flex gap-2">
-              <button id="step1-cancel" onclick="closeTab(this)" class="px-4 py-2 rounded-lg border border-white/10 text-white">Cancel</button>
-            </div>
-
-            <div>
-              <button id="step1-next" class="px-5 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">Continue</button>
-            </div>
+          <div class="flex items-center justify-center pt-4 gap-4">
+            <button id="step1-cancel" onclick="closeTab(this)" 
+                    class="px-10 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">
+              Cancel
+            </button>
+            <button id="step1-next" 
+                    class="px-6 py-3 rounded-lg bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
+              Continue
+            </button>
           </div>
         </div>
 
-        <!-- STEP 2: bank details (spinner then reveal) -->
-        <div id="step-2" class="space-y-3 hidden">
-          <div id="bank-loading" class="py-6 text-center text-white/70">
-            <div class="spinner mx-auto mb-3" style="width:48px;height:48px;border-width:6px;"></div>
-            Fetching secure bank details...
+        <div id="step-2" class="space-y-4 hidden">
+          <div id="bank-loading" class="py-12 text-center text-white/50">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-base font-medium">Fetching secure bank details...</p>
+            <p class="text-xs mt-1">This takes only a moment.</p>
           </div>
 
-          <div id="bank-details" class="hidden bg-white/5 p-4 rounded-lg border border-white/10 space-y-3">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="small-muted">Reference</div>
-                <div class="font-semibold" id="bank-ref">—</div>
-              </div>
-              <div>
-                <div class="small-muted">Amount</div>
-                <div class="font-semibold" id="bank-amount">$0.00</div>
-              </div>
+          <div id="bank-details" class="hidden bg-[#1e1e1e] p-5 rounded-xl border border-white/10 space-y-4">
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <div class="small-muted">Reference Code</div>
+                  <div class="font-bold text-lg text-white" id="bank-ref">—</div>
+                </div>
+                <div class="text-right">
+                  <div class="small-muted">Transfer Amount</div>
+                  <div class="font-bold text-lg text-[#00D2B1]" id="bank-amount">$0.00</div>
+                </div>
             </div>
 
-            <div class="bg-black/40 p-3 rounded">
-              <div class="small-muted">Bank</div>
-              <div class="font-semibold" id="bank-name">Providus Bank</div>
+            <div class="bg-black/30 p-4 rounded-xl space-y-2 border border-white/5">
+              
+              <div>
+                <div class="small-muted">Bank Name</div>
+                <div class="font-semibold text-white/90" id="bank-name">Providus Bank</div>
+              </div>
 
-              <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center justify-between pt-2">
                 <div>
                   <div class="small-muted">Account Name</div>
-                  <div class="font-semibold" id="bank-acct-name">Glorivest Services Ltd.</div>
+                  <div class="font-semibold text-white/90" id="bank-acct-name">Glorivest Services Ltd.</div>
                 </div>
                 <div class="text-right">
                   <div class="small-muted">Account Number</div>
-                  <div class="font-semibold flex items-center gap-2">
-                    <span id="bank-acct-num">1308556778</span>
-                    <button id="copy-acct" class="copy-btn" title="Copy account number"><i class="fa-regular fa-copy"></i></button>
+                  <div class="font-semibold flex items-center gap-3">
+                    <span id="bank-acct-num" class="text-lg">1308556778</span>
+                    <button id="copy-acct" class="copy-btn"><i class="fa-regular fa-copy"></i></button>
                   </div>
                 </div>
               </div>
 
-              <div class="text-xs text-white/60 mt-2">This account is for this deposit request only. Use the reference when transferring so we can match your payment.</div>
             </div>
+            
+            <p class="text-xs text-white/60 pt-1">
+                ⚠️ **IMPORTANT:** This account is temporary. Use the **Reference Code** when transferring funds so we can match your payment instantly.
+            </p>
           </div>
+          
 
-          <div class="flex items-center justify-between pt-3">
-            <div class="flex gap-2">
-              <button id="step2-back" class="px-4 py-2 rounded-lg border border-white/10 text-white">Back</button>
-              <button id="cancel-payment" class="px-4 py-2 rounded-lg border border-white/10 text-white">Cancel Payment</button>
+          <div class="flex items-center justify-between pt-4">
+            <div class="flex gap-3">
+              <button id="step2-back" class="px-5 py-2.5 rounded-xl border border-white/20 text-white font-medium hover:bg-white/10 transition">Back</button>
+              <button id="cancel-payment" onclick="closeTab(this)" class="px-5 py-2.5 rounded-xl border border-red-600/50 text-red-500 font-medium hover:bg-red-900/20 transition">Cancel Payment</button>
             </div>
             <div>
-              <button id="ive-sent" class="px-5 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">I've sent the money</button>
+              <button id="ive-sent" class="px-6 py-2.5 rounded-xl bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">I've sent the money</button>
             </div>
           </div>
         </div>
 
-        <!-- STEP 3: upload proof (if manual) -->
-        <div id="step-3" class="space-y-3 hidden">
+        <div id="step-3" class="space-y-4 hidden">
           <div>
-            <label class="block text-sm font-semibold text-white/70 mb-1">Upload Transfer Receipt (image or PDF)</label>
-            <input id="step3-file" type="file" accept="image/*,application/pdf" class="w-full p-2 rounded bg-white/5 border border-white/10 text-white"/>
+            <label class="block text-sm font-medium text-white/80 mb-2">Upload Transfer Receipt (image or PDF)</label>
+            <input id="step3-file" type="file" accept="image/*,application/pdf" class="w-full p-3 rounded-xl bg-[#1e1e1e] border border-white/10 text-white"/>
           </div>
 
-          <div id="file-preview-wrap" class="hidden">
-            <p class="text-xs text-white/60">Preview:</p>
+          <div id="file-preview-wrap" class="p-3 bg-white/5 rounded-lg border border-white/10 hidden">
+            <p class="text-xs text-white/60 mb-2">Preview:</p>
             <div id="file-preview" class="mt-2"></div>
           </div>
 
-          <div class="flex items-center justify-between pt-3">
-            <div class="flex gap-2">
-              <button id="step3-back" class="px-4 py-2 rounded-lg border border-white/10 text-white">Back</button>
+          <div class="flex items-center justify-between pt-4">
+            <div class="flex gap-3">
+              <button id="step3-back" class="px-5 py-2.5 rounded-xl border border-white/20 text-white font-medium hover:bg-white/10 transition">Back</button>
             </div>
             <div>
-              <button id="submit-deposit" class="px-5 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold">Submit Deposit</button>
+              <button id="submit-deposit" class="px-6 py-2.5 rounded-xl bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">Submit Deposit</button>
             </div>
           </div>
 
-          <p id="deposit-msg" class="text-xs text-center hidden"></p>
+          <p id="deposit-msg" class="text-sm text-center font-medium pt-3 hidden"></p>
         </div>
 
-        <!-- Spinner overlay for async ops (hidden by default) -->
         <div id="deposit-spinner" class="spinner-overlay hidden">
           <div class="spinner" aria-hidden="true"></div>
         </div>
 
       </div>
 
-      <!-- Centered toast used after modal closes -->
       <div id="center-toast" class="center-toast hidden">
         <div class="card">
           <span id="center-toast-text"></span>
@@ -679,79 +656,137 @@
 
 
     <!-- Withdraw Tab -->
-    <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-      <div class="max-w-md mx-auto bg-gradient-to-br from-black to-[#0b2f29] border border-[#00D2B1] rounded-xl p-6 shadow-xl relative">
-        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <h2 class="text-2xl font-bold mb-2">Withdraw Funds</h2>
-        <p class="text-sm text-white/70 mb-4">
-          Withdraw only to a TRON (TRC20) USDT wallet address.
-          <span class="font-semibold text-[#00D2B1]">Minimum: $20</span>
-        </p>
+    <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+    
+    <div class="max-w-md mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
+      
+      <h2 class="text-3xl font-extrabold mb-1 text-white">Withdraw Funds</h2>
+      <p class="text-sm text-white/50 mb-6">Choose your preferred withdrawal method.</p>
 
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-semibold">Asset</label>
-          
-            <!-- Static, non-interactive display -->
-            <div class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20">
-              USDT (TRC20 on TRON)
-            </div>
-          
-            <!-- Keep the expected id/value for your JS -->
-            <input type="hidden" id="wd-coin" value="USDT" />
-          
-            <p class="text-xs text-white/60 mt-1">Only USDT on the TRON network is supported.</p>
-          </div>
-          
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <button id="wd-tab-direct" class="wd-active py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Direct (Bank)</button>
+        <button id="wd-tab-crypto"  class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Crypto</button>
+        <button id="wd-tab-p2p"     class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">P2P (O2O)</button>
+      </div>
 
-          <div>
-            <label class="block text-sm font-semibold">Wallet Address (TRON)</label>
-            <input id="wd-address" type="text"
-                  class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
-                  placeholder="Enter TRON (TRC20) address only">
-          </div>
+      <div id="wd-content-direct" class="space-y-4">
+        
+        <p class="text-xs text-white/60 pt-2">Withdrawal will be paid to your linked bank account. Processing fees may apply.</p>
+        
+        <div>
+          <label class="block text-sm font-medium text-white/80 mb-1">Select Bank Account</label>
+          <select id="wd-bank-select" 
+                  class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition">
+            <option value="NGN">Access Bank — 1234567890 (NGN)</option>
+            <option value="NGN">GTBank — 0987654321 (NGN)</option>
+            <option value="ADD">Add New Bank Account...</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold">Amount ($)</label>
-            <input id="wd-amount" type="number" min="20"
-                  class="w-full rounded-lg bg-white/10 text-white px-4 py-2 border border-white/20 focus:outline-none"
-                  placeholder="Minimum $20">
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-white/80 mb-1">Amount (in USD equivalent)</label>
+          <input id="wd-amount-direct" type="number" min="10"
+                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
+                placeholder="Minimum $10">
+          <p class="text-xs text-white/50 mt-2">Conversion: $1.00 = NGN 1,450.00 • You receive NGN 14,500.00</p>
+        </div>
 
-          <button id="btn-withdraw" class="w-full mt-2 bg-[#00D2B1] text-black font-bold py-2 rounded-lg hover:bg-[#00bca3] transition-all">
-            Withdraw USDT (TRC20)
+        <div class="flex items-center justify-end pt-4 gap-4">
+          <button id="wd-direct-cancel" onclick="closeTab(this)" class="px-10 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
+          <button id="btn-withdraw-direct" class="px-6 py-3 rounded-lg bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
+            Withdraw to Bank
           </button>
-          <p id="wd-status" class="text-xs text-white/50 text-center hidden"></p>
         </div>
       </div>
-    </section>
+      
+      <div id="wd-content-crypto" class="space-y-4 hidden">
+        
+        <div>
+          <label class="block text-sm font-medium text-white/80 mb-1">Asset & Network</label>
+          <div class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10">
+            USDT (TRC20 on TRON)
+          </div>
+          <input type="hidden" id="wd-coin" value="USDT" />
+          <p class="text-xs text-red-400/80 mt-2">
+            ⚠️ **WARNING:** Only TRON (TRC20) USDT is supported. Using another network will result in loss of funds.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-white/80 mb-1">Wallet Address (TRC20)</label>
+          <input id="wd-address" type="text"
+                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
+                placeholder="Enter TRON (TRC20) address only">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-white/80 mb-1">Amount ($)</label>
+          <input id="wd-amount-crypto" type="number" min="20"
+                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
+                placeholder="Minimum $20">
+        </div>
+
+        <div class="flex items-center justify-end pt-4 gap-4">
+          <button id="wd-crypto-cancel" onclick="closeTab(this)" class="px-5 py-3 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
+          <button id="btn-withdraw-crypto" class="px-6 py-3 rounded-full bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
+            Withdraw USDT
+          </button>
+        </div>
+
+        <p id="wd-status" class="text-xs text-white/50 text-center pt-2 hidden"></p>
+      </div>
+      
+      <div id="wd-content-p2p" class="space-y-4 hidden">
+          <div class="p-6 bg-[#1e1e1e] rounded-xl border border-white/10 text-center">
+              <h3 class="text-lg font-bold text-white mb-2">P2P (O2O) Withdrawal</h3>
+              <p class="text-sm text-white/60">
+                Peer-to-Peer withdrawal allows you to sell your funds directly to other users.
+                This service is currently **unavailable** in your region.
+              </p>
+          </div>
+          <div class="flex items-center justify-end pt-4">
+              <button id="wd-p2p-cancel" onclick="closeTab(this)" class="px-5 py-3 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition">Close</button>
+          </div>
+      </div>
+      
+    </div>
+</section>
 
 
     <!-- Transactions Tab -->
-    <section id="tab-transactions" class="tab-content fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-      <div class="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-xl p-6 shadow-xl relative">
-        <button onclick="closeTab(this)" class="absolute top-4 right-4 text-white text-2xl hover:text-[#00D2B1]">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
+    <section id="tab-transactions" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
+    
+    <div class="max-w-2xl mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
+      
+      <h2 class="text-3xl font-extrabold mb-2 text-white">Transaction History</h2>
+      <p class="text-sm text-white/50 mb-6">A record of all deposits, withdrawals, and internal transfers.</p>
 
-        <table class="min-w-full text-left">
-          <thead class="bg-white/10 text-white/60 text-xs uppercase">
+      <div class="overflow-x-auto rounded-xl border border-white/10">
+        <table class="min-w-full text-left divide-y divide-white/10">
+          
+          <thead class="bg-[#1e1e1e] text-white/60 text-xs font-semibold uppercase tracking-wider">
             <tr>
-              <th class="px-2 py-2 w-1/4">Type</th>
-              <th class="px-2 py-2 w-1/4">Amount</th>
-              <th class="px-2 py-2 w-1/4">Status</th>
-              <th class="px-2 py-2 w-1/4">Date</th>
+              <th class="px-4 py-3 w-1/4">Type</th>
+              <th class="px-4 py-3 w-1/4 text-right">Amount</th>
+              <th class="px-4 py-3 w-1/4">Status</th>
+              <th class="px-4 py-3 w-1/4 text-right">Date</th>
             </tr>
           </thead>
-          <tbody id="transaction-history" class="text-white/80 text-xs pr-2">
-            <!-- rows injected by JS -->
-          </tbody>
-        </table>        
+          
+          <tbody id="transaction-history" class="text-white/80 text-sm divide-y divide-white/5">
+            </tbody>
+        </table>
       </div>
-    </section>
+      
+      <div class="flex justify-center pt-8">
+        <button onclick="closeTab(this)" 
+                class="px-6 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">
+          Close 
+        </button>
+      </div>
+
+    </div>
+</section>
 
       
 
