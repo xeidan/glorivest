@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Glorivest App</title>
   <link href="output.css" rel="stylesheet" />
+  <link rel="manifest" href="/manifest.json">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
 
   <style>
@@ -304,7 +305,7 @@
 
 
 <!-- Dashboard Tab -->
-<section id="tab-dashboard" class="tab-section">
+<section id="tab-dashboard" class="tab-section py-6 px-2">
 
   <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
 
@@ -791,145 +792,373 @@
       
 
     <!-- Earn tab -->
-    <section id="tab-earn" class="tab-section hidden py-6">
-      <h1 class="text-2xl font-bold mb-4 text-center text-white">Your Referral Stats</h1>
+    <section id="tab-earn" class="tab-section py-6 px-2">
     
-      <div id="referral-info" class="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 space-y-3 text-white text-sm">
-        <p>Referral Code: <span id="referral-code" class="font-mono text-[#00D2B1] text-base"></span></p>
-    
-        <div class="flex flex-wrap items-center gap-2">
-          <p>Referral Link:</p>
-          <span id="referral-link" class="font-mono text-[#00D2B1] text-sm truncate max-w-[200px]"></span>
-          <button id="copy-btn" class="text-white/70 hover:text-white text-xs border border-white/20 px-2 py-1 rounded">Copy</button>
-        </div>
-        <p id="copy-status" class="text-[#00D2B1] text-xs font-medium hidden">Copied to clipboard!</p>
+    <h1 class="text-3xl font-extrabold mb-6 text-white text-center">Refer & Earn</h1>
+
+    <div id="referral-summary-card" class="bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black mb-8 space-y-6">
         
-    
-        <div class="pt-4 space-y-2">
-          <p>Total Referrals: <span id="referral-count" class="font-semibold text-white/90">0</span></p>
-          <p>Referral Earnings: <span id="account-referral-earnings" class="font-bold text-[#00D2B1]">$0.00</span></p>
+        <h2 class="text-xl font-bold text-white mb-2">Your Referral Link</h2>
+        
+        <div class="flex items-center justify-between p-4 bg-[#1e1e1e] rounded-xl border border-white/10">
+            <div>
+                <p class="text-xs text-white/50 mb-1">Your Code / Link</p>
+                <span id="referral-code" class="font-mono text-lg text-[#00D2B1] font-bold">LOADING...</span>
+            </div>
+            <button id="copy-btn" 
+                    class="bg-[#00D2B1] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#00bca3] transition shadow-md shadow-[#00D2B1]/30">
+                <i class="fa-regular fa-copy mr-1"></i> Copy Link
+            </button>
         </div>
-      </div>
+        <p id="copy-status" class="text-[#00D2B1] text-center text-sm font-medium hidden">Copied to clipboard!</p>
+        
+        <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+            <div class="text-center">
+                <p class="text-xs text-white/50 uppercase tracking-wider">Total Referrals</p>
+                <p id="referral-count" class="text-3xl font-extrabold text-white mt-1">0</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-white/50 uppercase tracking-wider">Referral Earnings</p>
+                <p id="account-referral-earnings" class="text-3xl font-extrabold text-[#00D2B1] mt-1">$0.00</p>
+            </div>
+        </div>
+    </div>
     
-      <h2 class="text-xl font-bold mb-3 text-white">Leaderboard</h2>
-      <ul id="leaderboard" class="space-y-3 text-white text-sm pb-12"></ul>
-    </section>
+    <div class="bg-[#1e1e1e] p-5 rounded-xl border border-[#00D2B1]/20 mb-8 space-y-3">
+        <h3 class="text-lg font-bold text-white">Withdraw Referral Earnings</h3>
+        <p class="text-sm text-white/70">
+            To withdraw your referral earnings, you must first transfer them from your Referral Wallet to your Main Balance.
+        </p>
+        <button id="transfer-referral-btn" 
+                class="w-full py-3 rounded-xl border border-[#00D2B1] text-[#00D2B1] font-semibold hover:bg-[#00D2B1]/10 transition">
+            Transfer to Main Balance
+        </button>
+    </div>
+
+    <div class="bg-[#101010] border border-white/10 rounded-2xl p-6 shadow-xl mb-8">
+        <h2 class="text-xl font-bold text-white mb-4">Leaderboard</h2>
+        
+        <ul id="leaderboard" class="divide-y divide-white/5 text-white text-sm">
+            <li class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-[#00D2B1]">#1</span>
+                    <span>CryptoKing23</span>
+                </div>
+                <span class="font-semibold text-lg text-white/90">250 Ref.</span>
+            </li>
+            <li class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-white/60">#2</span>
+                    <span>TradeMaster</span>
+                </div>
+                <span class="font-semibold text-white/80">180 Ref.</span>
+            </li>
+            </ul>
+    </div>
+</section>
     
     
     <!-- Trade tab -->
-    <section id="tab-trade" class="tab-section hidden py-6 text-white space-y-6">
+    <section id="tab-trade" class="tab-section hidden py-6 px-2 text-white space-y-6">
 
-      <!-- AI Bot Summary Card -->
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-        <h2 class="text-xl font-bold mb-2">AI Auto Trader</h2>
-    
-        <div class="text-sm text-white/70 flex justify-between">
-          <span>Capital:</span><span id="bot-capital">$0.00</span>
-        </div>
-        <div class="text-sm text-white/70 flex justify-between">
-          <span>Days Active:</span><span id="bot-days">0</span>
-        </div>
-        <div class="text-sm text-white/70 flex justify-between">
-          <span>Projected Profit (20%):</span><span id="bot-profit">$0.00</span>
-        </div>
-    
-        <div class="mt-4">
-          <p class="text-xs text-white/50 mb-1">Progress to 20% Goal</p>
-          <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="bot-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1] transition-all duration-500 ease-out" style="width: 0%"></div>
-          </div>
-          <p id="bot-progress-label" class="text-xs text-white/70 text-right mt-1">0%</p>
-        </div>
-      </div>
-    
-      <!-- VIX75 Live Chart -->
-      <div class="bg-gradient-to-br from-black to-[#0b2f29] border border-white/10 rounded-xl p-4 shadow-md">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-bold">VIX75 Live Chart</h2>
-          <div class="flex items-center gap-2 text-sm">
-            <span id="vix75-price-trade" class="font-bold text-[#00D2B1]">$0.00</span>
-            <span id="vix75-arrow-trade" class="text-xs"></span>
-          </div>
-        </div>
-        <div id="vix-chart-wrap" class="relative w-full aspect-square border border-white/10 rounded-xl overflow-hidden">
-          <canvas id="vix75-sparkline" class="absolute inset-0 w-full h-full block"></canvas>
-        </div>
-      </div>
-
-    
-      <!-- Bot Action Section -->
-      <!-- Progress block: let it shrink nicely -->
-      <div class="flex-grow min-w-0">
-        <p id="bot-action-label" class="text-sm text-white/70 mb-1">Ready to Trade</p>
-        <div class="relative w-full h-2 rounded-full bg-white/10 overflow-hidden">
-          <div id="bot-loop-progress" class="absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <!-- Buttons: grouped, no-wrap -->
-      <div class="flex items-center gap-6 shrink-0 justify-center">
-        <button id="start-bot" class="py-2 px-4 bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
-          <i class="fas fa-play"></i> <span>Start Bot</span>
+    <div class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
+        <button id="trade-tab-overview"
+                class="trade-tab-active flex-1 text-center text-[#00D2B1] font-semibold py-2 rounded-lg transition"
+                onclick="showTradeTabContent('overview')">
+            Overview
         </button>
-
-        <button id="stop-bot" class="py-2 px-4 hidden bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-2 w-36 whitespace-nowrap">
-          <i class="fas fa-stop"></i> <span>Stop Bot</span>
+        <button id="trade-tab-start"
+                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
+                onclick="showTradeTabContent('start')">
+            New Cycle
         </button>
-      </div>
+        <button id="trade-tab-chart"
+                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
+                onclick="showTradeTabContent('chart')">
+            Markets
+        </button>
+        <button id="trade-tab-transfer"
+                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
+                onclick="showTradeTabContent('transfer')">
+            Transfer
+        </button>
+    </div>
 
-    
-      <p class="text-xs text-white/50 text-center pt-4">
-        Bot executes trades every 20 seconds and grows your capital by 20% in 30 days.
-      </p>
-    
-      <!-- Stop Confirmation Modal -->
-      <div id="stop-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
-        <div class="bg-white text-black rounded-xl p-6 max-w-sm text-center shadow-lg">
-          <h3 class="text-lg font-bold mb-2">Stop Bot?</h3>
-          <p class="text-sm text-gray-700 mb-4">You’ll lose all progress and profit if you stop the bot now. Are you sure?</p>
+    <hr class="border-white/10">
+
+    <div id="trade-content-overview" class="space-y-6">
+        <h2 class="text-2xl font-semibold text-white">Trading Bot Status</h2>
+        
+        <div class="grid grid-cols-2 gap-4">
+            
+            <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10">
+                <p class="text-xs text-white/50 uppercase tracking-wider">Total Active Capital</p>
+                <h3 id="summary-total-capital" class="text-2xl font-bold text-white mt-1">$0.00</h3>
+            </div>
+            
+            <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10">
+                <p class="text-xs text-white/50 uppercase tracking-wider">Realized Bot Profit</p>
+                <h3 id="summary-total-earnings" class="text-2xl font-bold text-[#00D2B1] mt-1">$0.00</h3>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-semibold pt-4 text-white">Current Cycle (<span id="summary-active-count">0</span> Active)</h2>
+        <div id="active-cycles-list" class="space-y-4">
+            <div class="cycle-card bg-[#1e1e1e] border border-white/10 rounded-xl p-5 space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <span class="cycle-status-badge text-sm font-medium text-green-400">Status: Running</span>
+                    <div class="text-sm text-white/60">Tier: <span class="text-yellow-400 font-semibold cycle-tier">---</span></div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3 py-2 text-center">
+                    <div>
+                        <p class="text-xs text-white/50">Invested</p>
+                        <p class="font-bold text-lg text-white cycle-capital">$0.00</p>
+                    </div>
+                     <div>
+                        <p class="text-xs text-white/50">Days Run</p>
+                        <p class="font-bold text-lg text-white cycle-days-run">0 / 30</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-white/50">Est. Payout</p>
+                        <p class="font-bold text-lg text-[#00D2B1] cycle-profit">$0.00</p>
+                    </div>
+                </div>
+                
+                <div class="pt-1">
+                    <div class="relative w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                        <div class="cycle-progress-bar absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
+                    </div>
+                    <p class="cycle-progress-label text-xs text-white/70 text-right mt-1">0% Complete</p>
+                </div>
+                
+                <div class="flex justify-between pt-3 gap-3 border-t border-white/10 mt-4">
+                     <button class="py-2 px-4 bg-gray-600 text-black font-bold rounded-lg text-sm transition" onclick="showTradeTabContent('start')">
+                        Start New Cycle
+                    </button>
+                    <button class="py-2 px-4 bg-red-600/10 hover:bg-red-600/20 text-red-400 font-semibold rounded-lg text-sm transition" onclick="showStopModal('cycle-1')">
+                        End Cycle Early
+                    </button>
+                    </div>
+            </div>
+            
+        </div>
+        
+    </div>
+
+    <hr class="border-white/10">
+
+    <div id="trade-content-start" class="hidden space-y-6 max-w-lg mx-auto">
+
+        <h2 class="text-2xl font-semibold text-white text-center">Start a New Cycle</h2>
+
+        <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10 space-y-3">
+            <h3 class="text-lg font-semibold text-[#00D2B1]">Tiers & Estimated Returns</h3>
+            <ul class="space-y-2 text-sm">
+                <li class="flex justify-between items-center text-white/90">
+                    <span>Standard: $50 - $499</span>
+                    <span class="font-bold text-red-400">15% Return</span>
+                </li>
+                <li class="flex justify-between items-center text-white/90">
+                    <span>Pro: $500 - $4999</span>
+                    <span class="font-bold text-yellow-400">20% Return</span>
+                </li>
+                <li class="flex justify-between items-center text-white/90">
+                    <span>Elite: $5000+</span>
+                    <span class="font-bold text-[#00D2B1]">25% Return</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-5">
+
+            <div class="flex justify-between items-center p-3 rounded-lg bg-black/30 border border-white/5">
+                <p class="text-sm text-white/70">Main Wallet Balance:</p>
+                <h3 id="main-wallet-balance" class="text-xl font-bold text-white">$0.00</h3>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Invested Capital ($)</label>
+                <input id="new-cycle-capital" type="number" min="50" step="any"
+                    class="w-full rounded-lg bg-black/40 text-white px-4 py-3 border border-white/10 text-xl font-semibold focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
+                    placeholder="Minimum $50.00"/>
+                <p id="tier-detection" class="text-sm font-semibold mt-2 text-white/70">Tier: <span class="text-yellow-400">---</span></p>
+            </div>
+
+            <div class="space-y-3 pt-4 border-t border-white/10 bg-black/20 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-white">Projected Cycle Details (30 Days)</h3>
+                <div class="text-sm flex justify-between">
+                    <span class="text-white/70">Tier Level:</span>
+                    <span id="preview-tier" class="font-semibold text-yellow-400">---</span>
+                </div>
+                <div class="text-sm flex justify-between">
+                    <span class="text-white/70">Guaranteed Return:</span>
+                    <span id="preview-return" class="font-bold text-[#00D2B1]">0%</span>
+                </div>
+                <div class="text-base flex justify-between pt-1 border-t border-white/5 mt-2">
+                    <span class="text-white/90 font-bold">Total Estimated Payout:</span>
+                    <span id="preview-payout" class="font-extrabold text-white">$0.00</span>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button id="start-new-cycle-btn" disabled
+                        class="w-full py-3 rounded-lg bg-gray-600 text-black font-bold hover:bg-[#00bca3] transition cursor-not-allowed opacity-50">
+                    Enter Valid Capital
+                </button>
+            </div>
+
+            <div id="referral-transfer-option" class="bg-black/30 p-4 rounded-lg border border-white/5">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-white/70">Referral Earnings: <span id="transfer-referral-amount" class="font-bold text-[#00D2B1]">$0.00</span></div>
+                    <button id="transfer-referral-btn" class="px-3 py-1 rounded-lg text-xs border border-[#00D2B1] text-[#00D2B1] hover:bg-[#00D2B1]/10 transition">
+                        Transfer Referral
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-white/10">
+
+    <div id="trade-content-chart" class="hidden space-y-6">
+        <h2 class="text-2xl font-semibold text-white mb-4">Market View & Price Analysis</h2>
+
+        <div class="flex flex-col md:flex-row justify-between items-center bg-[#1e1e1e] p-4 rounded-xl border border-white/10">
+            <h3 class="text-lg font-semibold text-white mb-2 md:mb-0">Chart Symbol</h3>
+            <div class="flex items-center space-x-3">
+                <label for="index-selector" class="text-sm text-white/70">Change Symbol:</label>
+                <select id="index-selector"
+                        class="bg-black/40 text-white rounded-lg px-3 py-2 border border-white/10 focus:ring-[#00D2B1] focus:border-[#00D2B1] transition">
+                    <option value="R_75">VIX 75 Index</option>
+                    <option value="R_10">VIX 10 Index</option>
+                    <option value="RDBULL">Bull Market Index</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-[#101010] border border-white/10 rounded-xl p-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold" id="current-symbol-title">VIX 75 Price</h3>
+              <span id="vix75-price-chart-tab" class="font-bold text-[#00D2B1] text-xl">$0.00</span>
+            </div>
+            <div id="vix-chart-wrap-new" class="relative w-full aspect-[1/1] md:aspect-[2/1] border border-white/10 rounded-lg overflow-hidden">
+              <canvas id="vix75-sparkline-new" class="absolute inset-0 w-full h-full block"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-white/10">
+
+    <div id="trade-content-transfer" class="hidden space-y-6 max-w-lg mx-auto">
+        <h2 class="text-2xl font-semibold text-white text-center">Transfer Bot Profits</h2>
+
+        <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-5">
+
+            <div class="flex justify-between items-center p-4 rounded-lg bg-black/30 border border-white/5">
+                <p class="text-sm text-white/70">Profits Ready for Transfer:</p>
+                <h3 id="withdrawable-bot-earnings-display" class="text-2xl font-bold text-[#00D2B1]">$0.00</h3>
+            </div>
+
+            <p class="text-sm text-white/70 pt-2">Transfer realized profits from completed trading cycles to your main wallet.</p>
+
+            <div class="flex justify-between items-center p-3 rounded-lg border border-white/10">
+                <p class="text-sm text-white/70">Main Wallet Balance will be:</p>
+                <h3 id="projected-main-wallet-balance" class="text-xl font-bold text-white">$1500.00</h3>
+            </div>
+
+            <div class="pt-4">
+                <button id="transfer-bot-earnings-btn" disabled
+                        class="w-full py-3 rounded-lg bg-gray-600 text-black font-bold hover:bg-[#00bca3] transition cursor-not-allowed opacity-50">
+                    Transfer $0.00 to Main Wallet
+                </button>
+            </div>
+
+            <p class="text-xs text-white/50 text-center pt-2">Note: Active cycle capital and referral earnings are managed elsewhere.</p>
+        </div>
+    </div>
+
+    <div id="stop-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
+        <div class="bg-[#1e1e1e] text-white rounded-xl p-6 max-w-sm text-center shadow-lg border border-white/10">
+          <h3 class="text-xl font-bold mb-3">End Cycle Early?</h3>
+          <p class="text-sm text-red-400 mb-4 font-semibold">Warning: Early termination will forfeit guaranteed returns and may incur a penalty.</p>
           <div class="flex justify-center gap-4">
-            <button id="cancel-stop" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
-            <button id="confirm-stop" class="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white">Stop Bot</button>
+            <button id="cancel-stop" class="px-5 py-2 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
+            <button id="confirm-stop" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition">End Cycle</button>
           </div>
         </div>
-      </div>
-    
-    </section>
+    </div>
+
+    <div id="start-cycle-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
+        <div class="bg-[#1e1e1e] text-white rounded-xl p-6 max-w-sm text-center shadow-lg border border-white/10">
+          <h3 class="text-xl font-bold mb-3 text-[#00D2B1]">Confirm New Cycle</h3>
+          <p class="text-sm text-white/70 mb-4">You are committing $<span id="confirm-capital">0.00</span> to a <span id="confirm-tier">---</span> cycle for a guaranteed <span id="confirm-return">0%</span> return over 30 days. Funds will be locked.</p>
+          <div class="flex justify-center gap-4">
+            <button id="cancel-start-cycle" class="px-5 py-2 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
+            <button id="confirm-start-cycle" class="px-5 py-2 rounded-lg bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold transition">Confirm & Start</button>
+          </div>
+        </div>
+    </div>
+</section>
     
     
 
     <!-- Positions tab -->
-    <section id="tab-positions" class="tab-section hidden py-6 mb-20 text-white">
-      <div class="max-w-6xl mx-auto space-y-6">
+    <section id="tab-positions" class="tab-section hidden py-6 mb-20 px-4 text-white">
+    <div class="max-w-6xl mx-auto space-y-6">
 
-        <!-- Table -->
-        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-white/5 text-white/70">
-                <tr>
-                  <th class="text-left p-3">Time</th>
-                  <th class="text-left p-3">Symbol</th>
-                  <th class="text-left p-3">Side</th>
-                  <th class="text-right p-3">Qty</th>
-                  <th class="text-right p-3">Entry</th>
-                  <th class="text-right p-3">Exit</th>
-                  <th class="text-left p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody id="pos-tbody"></tbody>
-            </table>
-          </div>
-          <div class="flex items-center justify-between p-3 text-xs bg-black/40 border-t border-white/10">
-            <div id="pos-pagination-info">Page 1 of 1</div>
-            <div class="flex gap-2">
-              <button id="pos-prev" class="px-3 py-1 bg-white/10 rounded">Prev</button>
-              <button id="pos-next" class="px-3 py-1 bg-white/10 rounded">Next</button>
+        <h2 class="text-2xl font-semibold text-white">Recent Trading Positions</h2>
+        <p class="text-sm text-white/70">A log of all closed bot trades executed on the market indices.</p>
+
+        <div class="bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    
+                    <thead class="bg-black/40 text-white/70 uppercase tracking-wider">
+                        <tr>
+                            <th class="text-left p-4 font-medium">Time</th>
+                            <th class="text-left p-4 font-medium">Symbol</th>
+                            <th class="text-left p-4 font-medium">Side</th>
+                            <th class="text-right p-4 font-medium">Qty</th>
+                            <th class="text-right p-4 font-medium">Entry ($)</th>
+                            <th class="text-right p-4 font-medium">Exit ($)</th>
+                            <th class="text-right p-4 font-medium">P/L ($)</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody id="pos-tbody" class="divide-y divide-white/10">
+                        <tr class="hover:bg-black/20 transition">
+                            <td class="p-4 text-white/90 text-xs">08:15:22</td>
+                            <td class="p-4 text-white/90">VIX 75</td>
+                            <td class="p-4 font-semibold text-red-400">SELL</td>
+                            <td class="text-right p-4 text-white/90">1.00</td>
+                            <td class="text-right p-4 text-white/90">9,876.12</td>
+                            <td class="text-right p-4 text-white/90">9,870.50</td>
+                            <td class="text-right p-4 font-bold text-red-400">-5.62</td>
+                        </tr>
+                        <tr class="hover:bg-black/20 transition">
+                            <td class="p-4 text-white/90 text-xs">08:10:55</td>
+                            <td class="p-4 text-white/90">VIX 10</td>
+                            <td class="p-4 font-semibold text-[#00D2B1]">BUY</td>
+                            <td class="text-right p-4 text-white/90">5.00</td>
+                            <td class="text-right p-4 text-white/90">4,120.90</td>
+                            <td class="text-right p-4 text-white/90">4,125.10</td>
+                            <td class="text-right p-4 font-bold text-[#00D2B1]">+21.00</td>
+                        </tr>
+                        </tbody>
+                </table>
             </div>
-          </div>
+            
+            <div class="flex items-center justify-between p-3 text-sm bg-black/40 border-t border-white/10">
+                <div id="pos-pagination-info" class="text-white/70">Page 1 of 1</div>
+                <div class="flex gap-2">
+                    <button id="pos-prev" class="px-3 py-1 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition disabled:opacity-30 disabled:cursor-not-allowed">Previous</button>
+                    <button id="pos-next" class="px-3 py-1 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition disabled:opacity-30 disabled:cursor-not-allowed">Next</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </section>
+    </div>
+</section>
     
     
     <!-- Account tab -->

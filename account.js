@@ -1,76 +1,79 @@
-// account.js — Glorivest
-(function(){
-  const API_BASE = "https://glorivest-api-a16f75b6b330.herokuapp.com";
+(() => {
+  'use strict';
 
-  // Event delegation for account actions
-  document.addEventListener('DOMContentLoaded', () => {
-    const accountSection = document.getElementById('tab-account');
-    if (!accountSection) return;
+  // State variable to store the browser's PWA install prompt event
+  let deferredPrompt;
 
-    accountSection.addEventListener('click', async (e) => {
-      const row = e.target.closest('[data-action]');
-      if (!row) return;
-      const action = row.getAttribute('data-action');
-      try {
-        switch(action){
-          case 'telegram':
-            window.open('https://t.me/', '_blank');
-            break;
-          case 'install':
-            await triggerPWAInstall();
-            break;
-          case 'profile':
-            alert('Profile editing coming soon.');
-            break;
-          case 'kyc':
-            alert('KYC flow coming soon.');
-            break;
-          case 'security':
-            alert('Security settings coming soon.');
-            break;
-          case 'notifications':
-            alert('Notification preferences coming soon.');
-            break;
-          case 'support':
-            window.location.href = 'mailto:support@glorivest.com?subject=Support%20Request';
-            break;
-          case 'terms':
-            window.open('#', '_blank');
-            break;
-          case 'logout':
-            handleLogout();
-            break;
+  // DOM element for the "Install Web App" action
+  const installAppAction = document.querySelector('[data-action="install"]');
+
+  /***** === PWA Installation Logic === *****/
+
+  // 1. Listen for the browser's install prompt event
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing automatically
+    e.preventDefault();
+    // Stash the event so it can be triggered later by the user's click
+    deferredPrompt = e;
+
+    // Visually enable the install button when the prompt is ready
+    if (installAppAction) {
+        // Ensure the element is visible and highlight it for the user
+        installAppAction.style.display = 'flex'; // Ensure visibility if it was hidden
+        installAppAction.classList.add('cursor-pointer');
+        // Add a visual indicator (using the teal color #00D2B1 for the icon)
+        const icon = installAppAction.querySelector('i');
+        if (icon) {
+            icon.classList.add('text-[#00D2B1]');
+            icon.classList.remove('text-white/70');
         }
-      } catch(err){
-        console.error('Account action error:', err);
+    }
+  });
+
+  // 2. Handle the click event on the "Install Web App" element
+  if (installAppAction) {
+    installAppAction.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (deferredPrompt) {
+        // Show the stored installation prompt
+        deferredPrompt.prompt();
+
+        // Wait for the user to respond
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the Glorivest install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          // Clear the prompt event to prevent re-use
+          deferredPrompt = null;
+
+          // Optionally hide the button after one attempt
+          if (installAppAction) {
+            // Revert icon to default look, or hide the element entirely
+            const icon = installAppAction.querySelector('i');
+            if (icon) {
+                icon.classList.remove('text-[#00D2B1]');
+                icon.classList.add('text-white/70');
+            }
+          }
+        });
+      } else {
+        alert("The app is already installed or your browser is not yet ready to show the prompt. Check your browser settings for an 'Install App' option.");
       }
     });
-  });
-
-  function handleLogout(){
-    localStorage.removeItem('token');
-    // Optionally clear other state
-    localStorage.removeItem('botRunning');
-    localStorage.removeItem('botStartTime');
-    alert('You have been logged out.');
-    window.location.href = 'index.html';
   }
 
-  // --- PWA Install support
-  let deferredInstallPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-  });
-
-  async function triggerPWAInstall(){
-    if (deferredInstallPrompt){
-      deferredInstallPrompt.prompt();
-      const choice = await deferredInstallPrompt.userChoice;
-      if (choice.outcome !== 'accepted') console.log('PWA install dismissed');
-      deferredInstallPrompt = null;
-    } else {
-      alert('Install is not available right now. Try again later.');
-    }
+  // 3. Register the Service Worker (Best practice is to register this in the main script that loads first)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    });
   }
 })();
