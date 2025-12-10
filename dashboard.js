@@ -1,11 +1,4 @@
-// ======================================================================
-// DASHBOARD.JS — CLEAN, FULL REWRITE (Option A)
-// - Supports only two account types: "demo" and "live"
-// - Removes tier logic (std/pro/elite)
-// - Demo/Live toggle in header
-// - Account sheet rendering updated
-// - Exposes safe window hooks for other pages
-// ======================================================================
+
 
 (function () {
   'use strict';
@@ -456,217 +449,131 @@
     }
   }
 
+
   // ---------------------------
-  // Toggle (Demo / Live) UI logic
-  // ---------------------------
-  // ========================================================
-//  OPTION B — DEMO & LIVE CARDS LOGIC
-//  Clean, simple, reliable
-// ========================================================
+// Toggle (Demo / Live) UI logic — FINAL WORKING VERSION
+// ---------------------------
 
-(function () {
-  'use strict';
+const DEMO_DEFAULT = 10000;
+const DEMO_DEFAULT_CENTS = DEMO_DEFAULT * 100;
 
-  const qs = (id) => document.getElementById(id);
+// Ensure demo + live accounts are identified after loadFullUser runs
+function resolveAccounts() {
+  state.demo = state.accounts.find(a => (a.account_type || '').toLowerCase() === 'demo') || null;
+  state.live = state.accounts.find(a => ['live', 'real'].includes((a.account_type || '').toLowerCase())) || null;
+}
 
-  const DEMO_DEFAULT = 10000;           // display value
-  const DEMO_DEFAULT_CENTS = 10000 * 100;  // raw cents
+// ---------------------------
+// Update cards
+// ---------------------------
+function updateDemoCard() {
+  if (!state.demo || !state.user) return;
 
-  const state = {
-    user: null,
-    accounts: [],
-    demo: null,
-    live: null
-  };
+  qs("demo-total").textContent = `$${DEMO_DEFAULT.toLocaleString()}.00`;
+  qs("demo-profit").textContent = "+$0.00";
+  qs("demo-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> +0.0%`;
+}
 
-  // ======================================================
-  // LOAD USER + ACCOUNTS
-  // ======================================================
-  async function loadFullData() {
-    try {
-      const user = await apiFetch("/auth/me");
-      const accounts = await apiFetch("/accounts");
+function updateLiveCard() {
+  if (!state.live || !state.user) return;
 
-      state.user = user;
-      state.accounts = Array.isArray(accounts) ? accounts : [];
+  const bal = Number(state.live.balance_cents || 0) / 100;
+  const profit = Number(state.live.profit_cents || 0) / 100;
 
-      state.demo = state.accounts.find(a => (a.account_type || "").toLowerCase() === "demo") || null;
-      state.live = state.accounts.find(a =>
-        ["live", "real"].includes((a.account_type || "").toLowerCase())
-      ) || null;
+  qs("live-total").textContent = money(bal);
+  qs("live-profit").textContent = profit >= 0 ? `+$${profit.toFixed(2)}` : `-$${Math.abs(profit).toFixed(2)}`;
 
-      return true;
-    } catch (e) {
-      console.error("loadFullData failed:", e);
-      return false;
-    }
+  const percent = bal > 0 ? (profit / bal) * 100 : 0;
+  qs("live-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${percent.toFixed(1)}%`;
+}
+
+// ---------------------------
+// Card visibility switching
+// ---------------------------
+function showDemoCard() {
+  qs("demo-card").classList.remove("hidden");
+  qs("live-card").classList.add("hidden");
+
+  qs("account-title").textContent = "Demo";
+
+  // show reset button in demo mode
+  qs("demo-reset")?.classList.remove("hidden");
+}
+
+
+function showLiveCard() {
+  qs("live-card").classList.remove("hidden");
+  qs("demo-card").classList.add("hidden");
+
+  qs("account-title").textContent = "Live";
+
+  // hide reset button in live mode
+  qs("demo-reset")?.classList.add("hidden");
+}
+
+
+// ---------------------------
+// Toggle pill movement
+// ---------------------------
+function moveToggle(mode) {
+  const track = qs("toggle-track");
+
+  if (mode === "demo") {
+    track.style.transform = "translateX(0px)";
+  } else {
+    track.style.transform = "translateX(63px)";
   }
+}
 
-  // ======================================================
-  // UPDATE CARDS (Demo & Live)
-  // ======================================================
-  function updateDemoCard() {
-    if (!state.demo) return;
-
-    // enforce default 10,000
-    let bal = Number(state.demo.balance_cents || 0);
-    if (bal <= 0) bal = DEMO_DEFAULT_CENTS;
-
-    qs("demo-total").textContent = `$${DEMO_DEFAULT.toLocaleString()}.00`;
-    qs("demo-available").textContent = `$${DEMO_DEFAULT.toLocaleString()}.00`;
-    qs("demo-referral").textContent = `$${(state.user.reward_balance || 0).toFixed(2)}`;
-    qs("demo-profit").textContent = "+$0.00";
-    qs("demo-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> +0.0%`;
-  }
-
-  function updateLiveCard() {
-    if (!state.live) return;
-
-    const bal = Number(state.live.balance_cents || 0) / 100;
-    const profit = Number(state.live.profit_cents || 0) / 100;
-    const referral = Number(state.user.reward_balance || 0);
-
-    qs("live-total").textContent = `$${bal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-    qs("live-available").textContent = `$${(bal + referral - profit).toLocaleString(undefined,{minimumFractionDigits:2})}`;
-    qs("live-referral").textContent = `$${referral.toFixed(2)}`;
-    qs("live-profit").textContent = `${profit >= 0 ? '+' : '-'}$${Math.abs(profit).toFixed(2)}`;
-
-    const percent = bal > 0 ? (profit / bal) * 100 : 0;
-    qs("live-percentage").innerHTML = `<i class="fa-solid fa-arrow-up"></i> ${percent.toFixed(1)}%`;
-  }
-
-  async function renderCards() {
-    const ok = await loadFullData();
-    if (!ok) return;
-
-    updateDemoCard();
-    updateLiveCard();
-
-    // by default → show demo
-    showDemoCard();
+// ---------------------------
+// Click handlers
+// ---------------------------
+function initToggle() {
+  qs("toggle-demo").addEventListener("click", () => {
     moveToggle("demo");
-  }
-
-  // ======================================================
-  // CARD VISIBILITY SWITCH
-  // ======================================================
-  function showDemoCard() {
-    qs("demo-card").classList.remove("hidden");
-    qs("live-card").classList.add("hidden");
-  }
-
-  function showLiveCard() {
-    qs("live-card").classList.remove("hidden");
-    qs("demo-card").classList.add("hidden");
-  }
-
-  // ======================================================
-  // TOGGLE ANIMATION / STATE
-  // ======================================================
-  function moveToggle(mode) {
-    const track = qs("toggle-track");
-    const demoBtn = qs("toggle-demo");
-    const liveBtn = qs("toggle-live");
-
-    if (mode === "demo") {
-        track.style.transform = "translateX(0px)";
-        demoBtn.classList.add("active");
-        demoBtn.classList.remove("inactive");
-        liveBtn.classList.add("inactive");
-        liveBtn.classList.remove("active");
-    } else {
-        track.style.transform = "translateX(63px)"; // exactly half width
-        liveBtn.classList.add("active");
-        liveBtn.classList.remove("inactive");
-        demoBtn.classList.add("inactive");
-        demoBtn.classList.remove("active");
-    }
-}
-
-
-  // ======================================================
-  // TOGGLE CLICK HANDLERS
-  // ======================================================
-  function initToggle() {
-    qs("toggle-demo").addEventListener("click", () => {
-      showDemoCard();
-      moveToggle("demo");
-    });
-
-    qs("toggle-live").addEventListener("click", () => {
-      showLiveCard();
-      moveToggle("live");
-    });
-  }
-
-  // ======================================================
-  // DEMO RESET CONFIRMATION
-  // ======================================================
-  function askResetDemo() {
-    const modal = document.createElement("div");
-    modal.id = "demo-reset-modal";
-
-    modal.innerHTML = `
-      <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]" id="demo-reset-backdrop">
-        <div class="bg-white rounded-xl p-6 w-80 text-black" id="demo-reset-card">
-          <h2 class="text-lg font-semibold mb-2">Reset demo balance?</h2>
-          <p class="text-sm mb-4">
-            This will set your Demo balance back to <strong>$10,000</strong>.
-          </p>
-
-          <div class="flex justify-end gap-3">
-            <button id="cancel-reset"
-              class="px-4 py-2 bg-gray-200 rounded-lg text-sm">Cancel</button>
-
-            <button id="confirm-reset"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm">Reset Balance</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const backdrop = document.getElementById("demo-reset-backdrop");
-    const card = document.getElementById("demo-reset-card");
-
-    // 1. Clicking outside → close
-    backdrop.addEventListener("click", () => modal.remove());
-
-    // 2. Clicking inside modal should NOT close
-    card.addEventListener("click", (e) => e.stopPropagation());
-
-    // 3. Cancel button
-    document.getElementById("cancel-reset").onclick = () => modal.remove();
-
-    // 4. Confirm reset
-    document.getElementById("confirm-reset").onclick = async () => {
-        modal.remove();
-
-        if (state.demo) state.demo.balance_cents = 1000000; // 10k USD
-
-        updateDemoCard();
-        showToast("Demo balance reset to $10,000");
-    };
-}
-
-
-  function initDemoReset() {
-    qs("demo-reset").addEventListener("click", askResetDemo);
-  }
-
-  // ======================================================
-  // INIT
-  // ======================================================
-  document.addEventListener("DOMContentLoaded", async () => {
-    await renderCards();
-    initToggle();
-    initDemoReset();
+    showDemoCard();
   });
 
-})();
+  qs("toggle-live").addEventListener("click", () => {
+    moveToggle("live");
+    showLiveCard();
+  });
+}
 
-/////
+// ---------------------------
+// Demo reset
+// ---------------------------
+function initDemoReset() {
+  qs("demo-reset").addEventListener("click", () => {
+    if (!state.demo) return;
+
+    state.demo.balance_cents = DEMO_DEFAULT_CENTS;
+    updateDemoCard();
+    showDemoCard();
+    showToast("Demo balance reset to $10,000");
+  });
+}
+
+// ---------------------------
+// Boot inside main DOMContentLoaded
+// ---------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  resolveAccounts();
+  updateDemoCard();
+  updateLiveCard();
+  showDemoCard();
+  moveToggle("demo");
+  initToggle();
+  initDemoReset();
+});
+
+
+
+
+
+// ---------------------------
+// Update demo reset button visibility
+// ---------------------------
 function updateDemoResetVisibility(account) {
     const btn = qs("demo-reset");
     if (!btn || !account) return;

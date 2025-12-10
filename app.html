@@ -5,249 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Glorivest App</title>
   <link href="output.css" rel="stylesheet" />
+  <link rel="stylesheet" href="app.css">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
 
-  <style>
-    .active-tab {
-      color: #00D2B1;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .tab-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-    .tab-btn i, .tab-btn span {
-      transition: color 0.3s ease;
-    }
-    .tab-btn.active-tab i, .tab-btn.active-tab span {
-      color: #00D2B1;
-    }
-    .nav-glow {
-      box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
-    }
-    /* Dashboard card styling */
-    .dashboard-card {
-        background: rgba(255, 255, 255, 0.03); /* Subtle glass background for cards */
-        border: 1px solid rgba(255, 255, 255, 0.08); /* Slightly more prominent border */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Deeper shadow */
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-    }
 
-    .dashboard-card:hover {
-        transform: translateY(-5px); /* Lift effect on hover */
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
-    }
-    /* Smooth slide + fade sheet transitions */
-    .sheet-panel {
-      transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-
-    .sheet-backdrop {
-      transition: opacity 0.25s ease;
-    }
-
-    .sheet-hidden {
-      display: none !important;
-    }
-    /* General tab button layout */
-    .tab-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      color: white;
-      transition: color 0.3s ease;
-    }
-    
-    /* Active tab highlights */
-    .tab-btn.active-tab {
-      color: #00D2B1;
-    }
-    
-    .tab-btn.active-tab i,
-    .tab-btn.active-tab span {
-      color: #00D2B1;
-    }
-    
-    .tab-btn i,
-    .tab-btn span {
-      transition: color 0.3s ease;
-    }
-    
-    /* Optional: tab content layout */
-    .tab-section {
-      display: none;
-    }
-    
-    .tab-section:not(.hidden) {
-      display: block;
-    }
-    
-    /* Nav styling */
-    .nav-glow {
-      box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
-      z-index: 100;
-    }
-    /* sheet scroll shadow: optional nicety */
-    .sheet-scroll-shadow {
-      position: relative;
-    }
-
-    .sheet-scroll-shadow::before {
-      content: "";
-      position: absolute;
-      left: 0; right: 0; top: 0;
-      height: 12px;
-      pointer-events: none;
-      background: linear-gradient(rgba(0,0,0,0.25), transparent);
-      opacity: 0;
-      transition: opacity .18s;
-    }
-
-    .sheet-scroll-shadow.scrolled::before { opacity: 1; }
-    :root { --bottom-nav-h: 64px; 
-              --sheet-offset: 16px;
-              --sheet-h: 46vh;
-            } 
-
-    .icon-active {
-  color: #00D2B1;
-}
-  </style>
-  <!-- styles for guide and notification modal -->
-   <style>
-  /* Make the sheet body scroll internally */
-  #sheet-notifications-panel,
-  #sheet-guide-panel {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Force inner scrollable area */
-  #notifications-list,
-  #guide-body {
-    flex: 1;                /* take remaining vertical space */
-    overflow-y: auto;       /* scroll inside */
-    min-height: 0;          /* IMPORTANT: allows flex children to scroll */
-  }
-
-    #sheet-notifications-backdrop,
-    #sheet-guide-backdrop {
-      background: rgba(0,0,0,0.55) !important;
-    }
-</style>
-<style>
-  /* Container for the overall toggle */
-#account-toggle {
-    /* Use a very dark grey to match the dashboard background */
-    background: #000000; 
-    border: 1px solid #333333; 
-    border-radius: 8px !important; 
-    padding: 3px !important; /* Increased padding slightly for better visual separation */
-    width: 132px; 
-    height: 38px;
-    box-sizing: border-box; 
-    overflow: hidden; /* Important */
-}
-
-/* The sliding track (The active pill) */
-#toggle-track {
-    /* Use a medium-dark grey (like the dashboard card) for the active pill */
-    background: #2D2D2D !important; 
-    border-radius: 6px !important;
-    
-    /* Adjusted dimensions to account for 3px padding */
-    width: 60px; 
-    height: 30px; 
-    top: 3px;
-    left: 3px;
-
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Subtle shadow for lift */
-    z-index: 1;
-}
-
-/* Text Buttons (Demo/Live) */
-/* Text Buttons (Demo/Live) - Ultimate Vertical Alignment Fix */
-#toggle-demo, #toggle-live {
-    /* Layout properties */
-    display: flex;
-    align-items: center; /* Enforce vertical centering */
-    justify-content: center; /* Enforce horizontal centering */
-    
-    /* Ensure no unwanted spacing is inherited */
-    padding: 0 !important;
-    margin: 0 !important;
-    height: 100%; /* Take full height of the parent area (30px internal) */
-    
-    /* Visual properties (keep unchanged) */
-    font-weight: 400;
-    font-size: 14px;
-    z-index: 2;
-    transition: color 0.3s ease;
-    background: transparent;
-    border: none;
-    text-align: center;
-    min-width: 50%;
-    
-    /* Manual Nudge (If needed after implementing this block) */
-    /* If the text is slightly too high, uncomment and use a positive value: */
-    /* transform: translateY(0.5px); */ 
-}
-
-/* State 1: Active (Text over the dark pill) */
-#toggle-demo.active, 
-#toggle-live.active {
-    color: #ffffff !important; /* Crisp White text */
-}
-
-/* State 2: Inactive (Text over the very dark container) */
-#toggle-live.inactive,
-#toggle-demo.inactive {
-    color: #888888 !important; /* Muted light grey text */
-}
-
-/* Optional: Improve hover feedback */
-#toggle-demo:hover, #toggle-live:hover {
-    color: #ffffff !important;
-}
-</style>
-<style>
-  /* Local modal styles */
-  .dep-active { border: 2px solid #00D2B1 !important; background: rgba(0,210,177,0.08) !important; box-shadow: 0 0 10px rgba(0,210,177,0.3); }
-  .file-thumb { max-width: 100px; max-height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-  
-  /* Modern Spinner Overlay */
-  .spinner-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index:40; border-radius: inherit; }
-  .spinner { width:48px; height:48px; border-radius:999px; border:4px solid rgba(255,255,255,0.15); border-top-color:#00D2B1; animation:spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; box-shadow:0 0 15px rgba(0,210,177,0.4); }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Toast Styling */
-  .center-toast { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:9999; }
-  .center-toast .card { pointer-events:auto; background:#1b3631; color:white; padding:16px 24px; border-radius:12px; box-shadow:0 15px 40px rgba(0,0,0,0.8); max-width:90%; text-align:center; }
-  
-  /* Utility classes */
-  .hidden { display:none !important; }
-  .copy-btn { background: rgba(255,255,255,0.08); border:none; padding:8px 10px; border-radius:6px; color:#fff; transition: background 0.2s; }
-  .copy-btn:hover { background: rgba(255,255,255,0.15); }
-  .small-muted { font-size:12px; color:rgba(255,255,255,0.5); }
-  
-  /* Progress Bar */
-  .progress-line { height:4px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; position:relative; }
-  .progress-line .bar { position:absolute; left:0; top:0; height:100%; width:0%; background: linear-gradient(90deg,#00D2B1,#00bca3); transition:width 400ms ease; }
-  #currency-select {
-    /* Pushes text and chevron away from the right edge */
-    padding-right: 2.5rem !important; /* Forces extra padding (approx. 40px) */
-    background-position: right 1rem center !important; /* Optionally move the chevron icon itself further left */
-}
-</style>
 
 
 </head>
@@ -309,41 +71,32 @@
 
   <div class="rounded-xl p-4 md:p-8 shadow-2xl bg-white/5 border border-white/10 text-gray-200">
 
-      <!-- ========================= -->
-      <!-- ACCOUNT TOGGLE (Shared)   -->
-      <!-- ========================= -->
-      <div class="flex justify-end mb-4">
-    <div id="account-toggle" 
-         class="relative flex w-[132px] h-[36px] bg-white/10 border border-white/20 p-0.5">
-        
-       <div id="toggle-track"class="absolute top-0.5 left-0.5 w-[62px] h-[30px] bg-white rounded-md transition-all duration-300"></div>
+      <!-- HEADER ROW (Title + Toggle) -->
+      <div class="flex items-center justify-between mb-6">
 
-        <button id="toggle-demo" class="active">
-            Demo
-        </button>
+        <!-- Dynamic title -->
+        <h1 class="text-3xl font-bold flex items-center gap-2">
+          <span id="account-title">Demo</span>
+          <button id="demo-reset" class="hidden text-white/60 hover:text-white transition text-xl">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </h1>
 
-        <button id="toggle-live" class="inactive">
-            Live
-        </button>
-    </div>
-</div>
+        <!-- ACCOUNT TOGGLE (no extra tailwind that overrides sizes) -->
+        <div id="account-toggle" class="relative" style="width:132px; height:38px;">
+          <div id="toggle-track" class="absolute"></div>
+          <button id="toggle-demo" class="active">Demo</button>
+          <button id="toggle-live" class="inactive">Live</button>
+        </div>
+      </div>
+
 
 
       <!-- ========================= -->
-      <!-- DEMO CARD                 -->
+      <!-- DEMO CARD CONTENT         -->
       <!-- ========================= -->
+
       <div id="demo-card" class="space-y-4">
-
-          <div class="flex justify-between items-center">
-              <h1 class="text-3xl font-bold flex items-center gap-2">
-                  Demo
-                  <button id="demo-reset"
-                          class="text-white/60 hover:text-white transition text-xl"
-                          title="Reset demo balance to $10,000">
-                      <i class="fa-solid fa-rotate-right"></i>
-                  </button>
-              </h1>
-          </div>
 
           <!-- Total Balance -->
           <div>
@@ -356,17 +109,15 @@
               <div id="demo-percentage"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
               <div id="demo-profit">+$0.00</div>
           </div>
+
       </div>
 
 
       <!-- ========================= -->
-      <!-- LIVE CARD                 -->
+      <!-- LIVE CARD CONTENT         -->
       <!-- ========================= -->
-      <div id="live-card" class="space-y-4 hidden">
 
-          <div class="flex justify-between items-center">
-              <h1 class="text-3xl font-bold">Live</h1>
-          </div>
+      <div id="live-card" class="space-y-4 hidden">
 
           <!-- Total Balance -->
           <div>
@@ -380,13 +131,13 @@
               <div id="live-profit">+$0.00</div>
           </div>
 
-          <!-- Available -->
+          <!-- Available Balance -->
           <div>
               <p class="text-xs font-light text-white/60">Available Balance</p>
               <h3 id="live-available" class="text-xl font-bold text-white mt-1">$0.00</h3>
           </div>
 
-          <!-- Referral -->
+          <!-- Referral Earnings -->
           <div>
               <p class="text-xs font-light text-white/60">Referral Earnings</p>
               <h3 id="live-referral" class="text-xl font-bold text-white mt-1">$0.00</h3>
@@ -394,53 +145,72 @@
 
       </div>
 
-  </div>
+  </div> <!-- card wrapper -->
+
 
 
   <!-- ========================= -->
   <!-- ACTION BUTTONS            -->
   <!-- ========================= -->
+
   <div class="flex justify-around py-10">
+
       <div class="flex flex-col items-center">
-          <div onclick="showTab('deposit')" class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
+          <div onclick="showTab('deposit')" 
+               class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
               <i class="fa-solid fa-plus"></i>
           </div>
           <p class="mt-2 text-xs font-light">Deposit</p>
       </div>
 
       <div class="flex flex-col items-center">
-          <div onclick="showTab('withdraw')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+          <div onclick="showTab('withdraw')"
+               class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
               <i class="fa-solid fa-minus"></i>
           </div>
           <p class="mt-2 text-xs font-light">Withdraw</p>
       </div>
 
       <div class="flex flex-col items-center">
-          <div onclick="showTab('transactions')" class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
+          <div onclick="showTab('transactions')"
+               class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
               <i class="fa-solid fa-arrow-right-arrow-left"></i>
           </div>
           <p class="mt-2 text-xs font-light">Transactions</p>
       </div>
+
   </div>
 
   <hr class="border-white/10">
 
+
   <!-- ========================= -->
-  <!-- Refer & Earn Card         -->
+  <!-- REFERRAL BANNER           -->
   <!-- ========================= -->
+
   <div class="pb-24">
-      <div class="bg-gradient-to-br from-[#007f73] to-black border border-[#00D2B1] rounded-xl px-4 py-10 text-center">
+      <div class="bg-gradient-to-br from-[#007f73] to-black border border-[#00D2B1]
+                  rounded-xl px-4 py-10 text-center">
+
           <h3 class="text-xl font-bold mb-2">Refer a Friend, Earn Big!</h3>
+
           <p class="text-sm text-green-100 mb-4">
-              Get <span class="font-bold text-green-200">5% of their first deposit</span> when they register and fund their account.
+              Get <span class="font-bold text-green-200">5% of their first deposit</span>
+              when they register and fund their account.
           </p>
-          <button data-refer-now class="bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
+
+          <button data-refer-now
+                  class="bg-white text-black px-6 py-2 rounded-lg font-semibold 
+                         hover:bg-gray-100 transition">
               Refer Now
           </button>
+
       </div>
   </div>
 
 </section>
+
+
 
 
 
