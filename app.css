@@ -145,11 +145,11 @@
   justify-content: space-between;
   position: relative;
 
-  width: 132px;        /* MUST match JS logic */
-  height: 38px;        /* MUST match JS logic */
+  width: 100px;        /* MUST match JS logic */
+  height: 32px;        /* MUST match JS logic */
   padding: 3px;        /* creates 6px inner padding horizontally */
 
-  background: rgba(255, 255, 255, 0.06);
+  background: #000;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   overflow: hidden;
@@ -161,7 +161,7 @@
   top: 3px;
   left: 3px;
 
-  width: 63px;                   /* EXACT half of inner width = 126/2 */
+  width: 44px;                   /* EXACT half of inner width = 126/2 */
   height: calc(100% - 6px);      /* 38px - 6px padding = 32px */
 
   background: #2D2D2D;
@@ -182,8 +182,8 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 300;
   text-align: center;
   cursor: pointer;
   z-index: 2;

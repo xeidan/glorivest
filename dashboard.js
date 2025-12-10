@@ -516,13 +516,13 @@ function showLiveCard() {
 // Toggle pill movement
 // ---------------------------
 function moveToggle(mode) {
-  const track = qs("toggle-track");
+    const track = qs("toggle-track");
 
-  if (mode === "demo") {
-    track.style.transform = "translateX(0px)";
-  } else {
-    track.style.transform = "translateX(63px)";
-  }
+    if (mode === "demo") {
+        track.style.transform = "translateX(0px)";
+    } else {
+        track.style.transform = "translateX(47px)";
+    }
 }
 
 // ---------------------------
