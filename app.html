@@ -101,14 +101,15 @@
           <!-- Total Balance -->
           <div>
               <p class="text-xs font-light text-white/60">Total Balance</p>
-              <h3 id="demo-total" class="text-2xl font-bold text-white mt-1">$10,000.00</h3>
-          </div>
-
-          <!-- Profit -->
-          <div class="flex items-center space-x-4 text-[#00D2B1] text-xs font-normal pb-12">
+              <h3 id="demo-total" class="text-2xl font-bold text-white mt-1">$0.00</h3>
+              <!-- Profit -->
+          <div class="profit-text flex items-center space-x-4 text-[#00D2B1]  font-light pb-12 mt-1">
               <div id="demo-percentage"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
               <div id="demo-profit">+$0.00</div>
           </div>
+          </div>
+
+          
 
       </div>
 
@@ -123,13 +124,13 @@
           <div>
               <p class="text-xs font-light text-white/60">Total Balance</p>
               <h3 id="live-total" class="text-2xl font-bold text-white mt-1">$0.00</h3>
-          </div>
-
-          <!-- Profit -->
-          <div class="flex items-center space-x-4 text-[#00D2B1] text-xs font-normal">
+              <!-- Profit -->
+          <div class="profit-text flex items-center space-x-4 text-[#00D2B1] font-light mt-1">
               <div id="live-percentage"><i class="fa-solid fa-arrow-up"></i> +0.0%</div>
               <div id="live-profit">+$0.00</div>
           </div>
+          </div>
+
 
           <!-- Available Balance -->
           <div>
@@ -1001,7 +1002,7 @@
   </main>
 
   <!-- Bottom Nav -->
-  <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around pt-4 pb-10 nav-glow bg-black z-50">
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around nav-glow bg-black z-50">
     <button data-tab="dashboard" class="tab-btn active-tab">
       <i class="fas fa-home mb-2 text-sm"></i>
       <span class="text-xs font-light">Dashboard</span>
@@ -1040,6 +1041,32 @@
 <!-- Toast Notification -->
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#00D2B1] text-black px-4 py-2 rounded-full text-sm font-semibold opacity-0 pointer-events-none transition-all duration-300 z-[9999]">
     <span id="toast-text">Message</span>
+</div>
+
+
+<!-- DEMO RESET CONFIRM MODAL -->
+<div id="demo-reset-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-[#1c1c1c] border border-white/10 rounded-xl p-6 w-80 shadow-xl text-white">
+
+        <h2 class="text-lg font-semibold mb-3">Reset Demo Balance?</h2>
+
+        <p class="text-sm text-white/70 mb-6">
+            Are you sure you want to reset your demo balance back to $10,000?
+        </p>
+
+        <div class="flex justify-end gap-3">
+            <button id="demo-reset-cancel"
+                class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-sm">
+                Cancel
+            </button>
+
+            <button id="demo-reset-confirm"
+                class="px-4 py-2 rounded-lg bg-[#00D2B1] text-black font-semibold hover:bg-[#00bba0] transition text-sm">
+                Reset
+            </button>
+        </div>
+
+    </div>
 </div>
 
 

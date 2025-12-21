@@ -16,6 +16,21 @@
   color: #00D2B1; 
 }
 
+#bottom-nav .tab-btn span {
+    font-size: 11px !important; /* smaller than text-xs */
+}
+
+#bottom-nav {
+    padding-top: 16px !important;   /* adjust for smaller or larger spacing */
+    padding-bottom: 32px !important;
+}
+
+.profit-text {
+    font-size: 10px;
+}
+
+
+
 
 /* ============================================================
    NAVIGATION & TABS
@@ -149,7 +164,7 @@
   height: 32px;        /* MUST match JS logic */
   padding: 3px;        /* creates 6px inner padding horizontally */
 
-  background: #000;
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   overflow: hidden;

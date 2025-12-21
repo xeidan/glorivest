@@ -3,6 +3,13 @@
 (function () {
   'use strict';
 
+    // ---------------------------
+// Toggle (Demo / Live) UI logic — FINAL WORKING VERSION
+// ---------------------------
+
+const DEMO_DEFAULT = 10000;
+const DEMO_DEFAULT_CENTS = DEMO_DEFAULT * 100;
+
   // ---------------------------
   // Helpers & API bootstrap
   // ---------------------------
@@ -154,12 +161,22 @@
   window.computeAndRender = computeAndRender;
 
   async function loadBalances() {
-    const { user, account } = await loadFullUser();
-    if (!user || !account) return;
-    computeAndRender(user, account);
-    // ensure toggle UI reflects selected account
-    syncToggleWithCurrent(account);
+  const { user, account } = await loadFullUser();
+  if (!user || !account) return;
+
+  computeAndRender(user, account);
+
+  // FIX: NOW RUN when accounts actually exist
+  resolveAccounts();  
+
+  updateDemoCard();
+  updateLiveCard();
+
+  if (typeof syncToggleWithCurrent === "function") {
+      syncToggleWithCurrent(account);
   }
+}
+
   window.loadBalances = loadBalances;
   
 
@@ -417,7 +434,7 @@
         try {
           newCreate.disabled = true;
           newCreate.textContent = 'Creating...';
-          const payload = { account_type: chosen.toLowerCase() };
+          const payload = { tier_code: chosen.toLowerCase() };
           await APIFETCH('/accounts', {
             method: 'POST',
             body: JSON.stringify(payload)
@@ -449,19 +466,42 @@
     }
   }
 
+  // Close modal when clicking backdrop
+document.addEventListener("click", (e) => {
+    const modals = ["tab-deposit", "tab-withdraw", "tab-transactions"];
 
-  // ---------------------------
-// Toggle (Demo / Live) UI logic — FINAL WORKING VERSION
-// ---------------------------
+    modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (!modal) return;
 
-const DEMO_DEFAULT = 10000;
-const DEMO_DEFAULT_CENTS = DEMO_DEFAULT * 100;
+        // If modal visible AND user clicked directly on backdrop area
+        if (!modal.classList.contains("hidden") && e.target === modal) {
+            closeTab(modal);
+        }
+    });
+});
+
+
+
+
 
 // Ensure demo + live accounts are identified after loadFullUser runs
 function resolveAccounts() {
-  state.demo = state.accounts.find(a => (a.account_type || '').toLowerCase() === 'demo') || null;
-  state.live = state.accounts.find(a => ['live', 'real'].includes((a.account_type || '').toLowerCase())) || null;
+  state.demo = state.accounts.find(a => {
+    const t = (a.account_type || "").toLowerCase();
+    return t.includes("demo") || t.includes("practice") || t.includes("test");
+  }) || null;
+
+  state.live = state.accounts.find(a => {
+    const t = (a.account_type || "").toLowerCase();
+    return t.includes("live") || t.includes("real");
+  }) || null;
+
+  console.log("Resolved demo:", state.demo);
+  console.log("Resolved live:", state.live);
 }
+
+
 
 // ---------------------------
 // Update cards
@@ -540,19 +580,8 @@ function initToggle() {
   });
 }
 
-// ---------------------------
-// Demo reset
-// ---------------------------
-function initDemoReset() {
-  qs("demo-reset").addEventListener("click", () => {
-    if (!state.demo) return;
 
-    state.demo.balance_cents = DEMO_DEFAULT_CENTS;
-    updateDemoCard();
-    showDemoCard();
-    showToast("Demo balance reset to $10,000");
-  });
-}
+
 
 // ---------------------------
 // Boot inside main DOMContentLoaded
@@ -564,7 +593,6 @@ document.addEventListener("DOMContentLoaded", () => {
   showDemoCard();
   moveToggle("demo");
   initToggle();
-  initDemoReset();
 });
 
 
@@ -615,7 +643,7 @@ function updateDemoResetVisibility(account) {
     // init account sheet handlers
     setupAccountSheetHandlers();
     // attach toggle handlers
-    attachToggleHandlers();
+    initToggle();
 
     // load balances and initial render
     await loadBalances();
@@ -675,4 +703,139 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+
+
+
+
+
+
+
+
+
+// ---------- Robust demo reset (delegated + diagnostics) ----------
+(function initDemoResetDelegated() {
+  const DEFAULT_CENTS = 10000 * 100;  // 1,000,000
+
+  function safeShowToast(msg) {
+    if (typeof showToast === 'function') return showToast(msg);
+    const t = qs('center-toast') || qs('toast') || null;
+    if (t) {
+      const txt = qs('center-toast-text') || qs('toast-text');
+      if (txt) txt.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2000);
+      return;
+    }
+    console.info('TOAST:', msg);
+  }
+
+  function isCovered(el) {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const topEl = document.elementFromPoint(cx, cy);
+    return topEl && !el.contains(topEl) && topEl !== el;
+  }
+
+  // Delegated click handler (works even if the element is replaced later)
+  function onClick(e) {
+    const btn = e.target.closest && e.target.closest('#demo-reset');
+    if (!btn) return;
+
+    e.preventDefault();
+
+    // Diagnostics
+    if (!btn) {
+      console.warn('demo-reset: button not found on click (unexpected).');
+      return;
+    }
+
+    // ensure state.demo exists (try to resolve quickly if missing)
+    if (!state.demo) {
+      if (typeof resolveAccounts === 'function') {
+        resolveAccounts();
+      }
+    }
+
+    if (!state.demo) {
+      console.warn('demo-reset: state.demo is null. Accounts:', state.accounts);
+      safeShowToast('Demo account not available');
+      return;
+    }
+
+    // ensure button is visible and interactive
+    const style = window.getComputedStyle(btn);
+    if (style.display === 'none' || style.visibility === 'hidden' || btn.disabled) {
+      console.warn('demo-reset: button hidden/disabled', { display: style.display, visibility: style.visibility, disabled: btn.disabled });
+      safeShowToast('Reset unavailable right now');
+      return;
+    }
+
+    // check for overlay covering the button
+    if (isCovered(btn)) {
+      console.warn('demo-reset: button appears covered by another element (click may not register).');
+      safeShowToast('UI overlay blocking interaction; try again');
+      // still continue — but return to avoid double actions
+      return;
+    }
+
+    const bal = Number(state.demo.balance_cents || 0);
+
+    // already default
+    if (bal === DEFAULT_CENTS) {
+      safeShowToast('Demo balance is already at $10,000');
+      return;
+    }
+
+    // browser confirmation
+    const ok = confirm('Reset demo balance to $10,000? This cannot be undone.');
+    if (!ok) return;
+
+    // perform reset
+    try {
+      state.demo.balance_cents = DEFAULT_CENTS;
+      if (typeof updateDemoCard === 'function') updateDemoCard();
+      if (typeof updateDemoResetVisibility === 'function') updateDemoResetVisibility(state.demo);
+      if (typeof showDemoCard === 'function') showDemoCard();
+      safeShowToast('Demo balance reset to $10,000');
+      console.info('demo-reset: reset performed; new state.demo:', state.demo);
+      // persist to localStorage/account endpoint if desired (commented)
+      // if (state.demo.id) localStorage.setItem('demoBalanceCents:' + state.demo.id, String(DEFAULT_CENTS));
+    } catch (err) {
+      console.error('demo-reset: error during reset', err);
+      safeShowToast('Failed to reset demo balance');
+    }
+  }
+
+  // Attach once (delegated)
+  document.addEventListener('click', onClick);
+
+  // Also try to attach directly if element present (helps older setups)
+  function directAttach() {
+    const directBtn = qs('demo-reset');
+    if (!directBtn) return;
+    // remove existing listeners by cloning
+    const clone = directBtn.cloneNode(true);
+    directBtn.parentNode.replaceChild(clone, directBtn);
+    clone.addEventListener('click', (e) => {
+      // delegate to the delegated handler for unified behavior
+      onClick(e);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', directAttach);
+  } else {
+    directAttach();
+  }
+
+  // expose for debugging
+  window.__dbg_demo_reset = {
+    handlerInstalled: true,
+    checkCovered: isCovered,
+    DEFAULT_CENTS
+  };
+})();
 
