@@ -1,7 +1,4 @@
-/** ============================================
- *        BASE + TOKEN + API WRAPPER
- * ============================================ */
-const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 
 const getToken = () => localStorage.getItem('token');
 const setToken = (t) => localStorage.setItem('token', t);
@@ -13,42 +10,23 @@ async function apiFetch(path, options = {}) {
       'Content-Type': 'application/json',
       ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
     },
-    ...(options.body ? { body: JSON.stringify(options.body) } : {})
+    body: options.body ? JSON.stringify(options.body) : undefined
   });
 
-  let data = {};
-  try { data = await res.json(); } catch {}
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('Invalid server response');
+  }
 
-  if (!res.ok) throw new Error(data.message || 'Request failed');
+  if (!res.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+
   return data;
 }
 
-/** ============================================
- *        ACCOUNT + PROFILE LOADING
- * ============================================ */
-async function ensureDefaultAccount() {
-  if (!getToken()) return;
-
-  try {
-    const accounts = await apiFetch('/accounts');
-    if (!accounts || accounts.length === 0) {
-      await apiFetch('/accounts', {
-        method: 'POST',
-        body: { tier: 'standard' }
-      });
-    }
-  } catch {}
-}
-
-async function loadMe() {
-  try {
-    const me = await apiFetch('/auth/me');
-    localStorage.setItem('me', JSON.stringify(me));
-
-    document.querySelectorAll('[data-me="email"]').forEach(el => el.textContent = me.email || '');
-    document.querySelectorAll('[data-me="account-id"]').forEach(el => el.textContent = me.default_account_id || '');
-  } catch {}
-}
 
 /** ============================================
  *                REGISTER
@@ -63,9 +41,8 @@ if (registerForm) {
     const referral = document.getElementById('registerReferral')?.value.trim() || null;
 
     const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-
     if (!strongPassword.test(password)) {
-      alert("Password must be at least 8 characters long and include a letter, a number, and a symbol.");
+      alert('Password must include letter, number, and symbol.');
       return;
     }
 
@@ -83,20 +60,22 @@ if (registerForm) {
       });
 
       window.location.href = 'otp.html';
-
     } catch (err) {
-      alert(err.message);
+      alert(err.message || 'Request failed');
     }
   });
 }
+
 
 /** ============================================
  *                LOGIN
  * ============================================ */
 const loginForm = document.getElementById('login-form');
+
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
@@ -107,16 +86,16 @@ if (loginForm) {
       });
 
       setToken(data.token);
-
-      await ensureDefaultAccount();
-      await loadMe();
-
       window.location.href = 'app.html';
+
     } catch (err) {
-      alert(err.message);
+      alert(err.message || 'Login failed');
     }
   });
 }
+
+
+
 
 /** ============================================
  *        BACK TO TOP BUTTON

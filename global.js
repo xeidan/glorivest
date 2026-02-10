@@ -3,12 +3,40 @@
 //  Contains ONLY cross-page utilities, API helpers, tab navigation, header load,
 //  and global balance visibility logic.
 // ============================================================================
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+
+const getToken = () => localStorage.getItem('token');
+const setToken = (t) => localStorage.setItem('token', t);
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('Invalid server response');
+  }
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+
+  return data;
+}
 
 
 // ============================================================================
 // 1. BASE API + TOKEN HELPERS
 // ============================================================================
-window.API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+window.API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 
 window.getToken  = () => localStorage.getItem('token');
 window.setToken  = (t) => localStorage.setItem('token', t);
@@ -20,82 +48,59 @@ window.clearToken = () => localStorage.removeItem('token');
 // ============================================================================
 window.apiFetch = async (path, opts = {}) => {
   const token = getToken();
-  const headers = { ...(opts.headers || {}) };
 
-  if (opts.body && !headers['Content-Type']) {
-    headers['Content-Type'] = 'application/json';
-  }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: opts.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts.headers || {})
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
 
-  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
-
-  // Global unauthorized handler
   if (res.status === 401) {
     clearToken();
-    if (window.location.pathname !== '/login.html') {
-      window.location.href = '/login.html';
+    if (!location.pathname.includes('login')) {
+      location.href = '/login.html';
     }
     throw new Error('Unauthorized');
   }
 
+  const ct = res.headers.get('content-type') || '';
+  const data = ct.includes('application/json')
+    ? await res.json()
+    : await res.text();
+
   if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    const err = new Error(`HTTP ${res.status} ${res.statusText}`);
-    err.status = res.status;
-    err.body = body;
-    throw err;
+    throw new Error(data?.message || 'Request failed');
   }
 
-  const ct = res.headers.get('content-type') || '';
-  return ct.includes('application/json') ? res.json() : res.text();
+  return data;
 };
 
 
 
+
 // ============================================================================
-// 3. USER + ACCOUNT LOADERS
+// 3. USER + WALLET LOADERS
 // ============================================================================
 
 // Full loader (user + accounts)
 window.loadFullUser = async () => {
   const token = getToken();
-  if (!token) return { user: null, account: null };
+  if (!token) return { user: null, wallets: [] };
 
-  let user = null;
-  let accounts = [];
+  const user = await apiFetch('/auth/me');
+  const wallets = await apiFetch('/wallets');
 
-  // Fetch user
-  try {
-    user = await apiFetch('/auth/me');
-  } catch (e) {
-    console.error("loadFullUser: /auth/me failed", e);
-    return { user: null, account: null };
-  }
-
-  // Fetch accounts
-  try {
-    const accRes = await apiFetch('/accounts');
-    accounts = Array.isArray(accRes) ? accRes : (accRes.data || []);
-  } catch (e) {
-    console.error("loadFullUser: /accounts failed", e);
-    accounts = [];
-  }
-
-  // Pick current
-  let selectedId = Number(localStorage.getItem('currentAccountId') || 0);
-  let account = accounts.find(a => a.id === selectedId) || accounts[0] || null;
-
-  if (account) {
-    localStorage.setItem('currentAccountId', String(account.id));
-  }
-
-  return { user, account };
+  return { user, wallets };
 };
 
 
-// Simple header loader
+// ============================================================================
+// 4. HEADER LOADER
+// ============================================================================
 window.loadMe = async () => {
   const token = getToken();
   if (!token) return null;
@@ -103,8 +108,9 @@ window.loadMe = async () => {
   try {
     const me = await apiFetch('/auth/me');
 
-    document.querySelectorAll('[data-me="email"]').forEach(el => el.textContent = me.email ?? '');
-    document.querySelectorAll('[data-me="account-id"]').forEach(el => el.textContent = me.default_account_id ?? '—');
+    document.querySelectorAll('[data-me="email"]').forEach(el => {
+      el.textContent = me.email ?? '';
+    });
 
     return me;
   } catch (e) {
@@ -114,35 +120,41 @@ window.loadMe = async () => {
 };
 
 
-// Just return current account ID
-window.getCurrentAccountId = async () => {
-  const { user, account } = await window.loadFullUser();
-  return account ? account.id : null;
-};
-
 
 
 // ============================================================================
-// 4. GLOBAL SELECTOR
+// 5. GLOBAL SELECTOR
 // ============================================================================
 window.qs = (id) => document.getElementById(id);
 
 
 
 // ============================================================================
-// 5. GLOBAL TAB NAVIGATION
+// 6. GLOBAL TAB NAVIGATION
 // ============================================================================
 window.showTab = function (tab) {
-  document.querySelectorAll('.tab-section, .tab-content')
-    .forEach(el => el.classList.add('hidden'));
+  // Hide all top-level tabs
+  document.querySelectorAll('.tab-section').forEach(el => {
+    el.classList.add('hidden');
+  });
 
   const target = document.getElementById(`tab-${tab}`);
-  if (target) target.classList.remove('hidden');
+  if (!target) return;
 
+  target.classList.remove('hidden');
+
+  // Update bottom nav
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.classList.toggle('active-tab', btn.dataset.tab === tab);
   });
+
+  // 🔒 CRITICAL: Trade manages its own internal routing
+  if (tab === 'trade' && typeof window.showTradeTabContent === 'function') {
+    window.showTradeTabContent('overview');
+  }
 };
+
+
 
 
 // Auto activate dashboard on page load
@@ -162,12 +174,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // ============================================================================
 async function loadUserHeader() {
   try {
-    const { user } = await window.loadFullUser();
+    const user = await apiFetch('/auth/me');
     if (!user) return;
 
     const email = user.email || "user@example.com";
     const glorivestId = user.glorivest_id || `GV${String(user.id).padStart(6, '0')}`;
-    const initials = email.split("@")[0].slice(0, 2).toUpperCase();
+    const initials = email.slice(0, 2).toUpperCase();
 
     qs("user-email").textContent = email;
     qs("glorivest-id").textContent = glorivestId;
@@ -185,40 +197,7 @@ window.addEventListener('DOMContentLoaded', loadUserHeader);
 // ============================================================================
 // 7. GLOBAL BALANCE VISIBILITY TOGGLE (show/hide balances with eye icon)
 // ============================================================================
-let isBalanceVisible = true;
 
-window.toggleBalance = function () {
-  isBalanceVisible = !isBalanceVisible;
-
-  const ids = [
-    'total-balance',
-    'available-balance',
-    'referral-earnings',
-    'profit-increase',
-    'percentage-increase'
-  ];
-
-  ids.forEach(id => {
-    const el = qs(id);
-    if (!el) return;
-    el.textContent = isBalanceVisible ? (el.dataset.value || el.textContent) : '•••••••';
-  });
-
-  const eye = qs('real-balance-eye-icon');
-  if (eye) {
-    eye.className = isBalanceVisible
-      ? 'fa-solid fa-eye text-white/70 text-lg'
-      : 'fa-solid fa-eye-slash text-white/70 text-lg';
-  }
-};
-
-
-// Click handler for any element with [data-toggle-balance]
-document.addEventListener('click', e => {
-  if (e.target.closest('[data-toggle-balance]')) {
-    toggleBalance();
-  }
-});
 
 
 
@@ -359,3 +338,150 @@ window.showToast = function (msg = "", timeout = 2500) {
     toast.classList.add("opacity-0");
   }, timeout);
 };
+
+
+
+
+
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-refer-now]');
+  if (!btn) return;
+
+  showTab('earn');
+
+  document.querySelectorAll('[data-tab]').forEach(nav => {
+    nav.classList.toggle('active-tab', nav.dataset.tab === 'earn');
+  });
+});
+
+
+
+
+// ===============================
+// GLOBAL ACCOUNT MODE
+// ===============================
+window.__accountMode = localStorage.getItem('accountMode') || 'LIVE';
+
+window.setAccountMode = function (mode) {
+  if (!['LIVE', 'DEMO'].includes(mode)) return;
+
+  window.__accountMode = mode;
+  localStorage.setItem('accountMode', mode);
+
+  // ❌ do NOT touch UI here
+  document.dispatchEvent(new Event('accountMode:changed'));
+};
+
+
+
+function updateAccountModeTag() {
+  const label = qs('account-mode-label');
+  const balance = qs('account-mode-balance');
+  const dot = qs('account-mode-dot');
+
+  if (!label || !balance || !dot) return;
+
+  const wallets = window.__wallets;
+  if (!Array.isArray(wallets) || wallets.length === 0) return;
+
+  if (window.__accountMode === 'DEMO') {
+    const wallet = wallets.find(w => w.type === 'DEMO');
+    if (!wallet) return;
+
+    const cents = Number(wallet.balance_cents || 0);
+
+    label.textContent = 'DEMO';
+    balance.textContent = `$${(cents / 100).toLocaleString()}`;
+    dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-gray-400';
+
+  } else {
+    const wallet = wallets.find(w => w.type === 'REAL');
+    if (!wallet) return;
+
+    const cents = Number(wallet.balance_cents || 0);
+
+    label.textContent = 'LIVE';
+    balance.textContent = `$${(cents / 100).toLocaleString()}`;
+    dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-[#00D2B1]';
+  }
+}
+
+document.addEventListener('accountMode:changed', () => {
+  updateAccountModeTag();
+});
+
+
+
+// ===============================
+// GLOBAL WALLET STATE (AUTHORITATIVE)
+// ===============================
+window.loadWallets = async function () {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.__wallets = [];
+    return;
+  }
+
+  const res = await fetch(
+    'https://glorivest-api-a16f75b6b330.herokuapp.com/api/wallets',
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  );
+
+  if (!res.ok) {
+    console.error('Wallet fetch failed', res.status);
+    window.__wallets = [];
+    return;
+  }
+
+  window.__wallets = await res.json();
+
+  // 🔽🔽🔽 ADD THIS BLOCK 🔽🔽🔽
+  const demoWallet = window.__wallets.find(w => w.type === 'DEMO');
+  if (demoWallet?.demo_reset_at) {
+    const ts = new Date(demoWallet.demo_reset_at).getTime();
+    window.__demoResetAt = ts;
+    localStorage.setItem('demoResetAt', String(ts));
+  }
+  // 🔼🔼🔼 END ADDITION 🔼🔼🔼
+
+  updateAccountModeTag();
+  document.dispatchEvent(new Event('wallets:refresh'));
+};
+
+
+
+
+// Accessors
+window.getAllWallets = function () {
+  return window.__wallets || [];
+};
+
+window.getActiveWallet = function () {
+  // legacy helper — default to REAL
+  return window.__wallets.find(w => w.type === 'REAL') || null;
+};
+
+
+
+Object.defineProperty(window, 'loadWallets', {
+  writable: false,
+  configurable: false
+});
+
+document.addEventListener('click', (e) => {
+  const tag = e.target.closest('#account-mode-tag');
+  if (!tag) return;
+
+  const next = window.__accountMode === 'LIVE' ? 'DEMO' : 'LIVE';
+  window.setAccountMode(next);
+});
+
+
+window.__demoResetAt = Number(localStorage.getItem('demoResetAt') || 0);
+
+
+
+

@@ -1,154 +1,167 @@
-// positions.js — 
+// positions.js — REAL Positions Tab (Backend-driven)
 (function () {
-  const API_BASE = "https://glorivest-api-a16f75b6b330.herokuapp.com";
-  const ENDPOINTS = { list: `${API_BASE}/positions/me` };
+  'use strict';
+
+  const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+  const ENDPOINT = `${API_BASE}/api/positions`;
 
   const els = {
-    section: document.getElementById("tab-positions"),
-    tbody: document.getElementById("pos-tbody"),
-    pageInfo: document.getElementById("pos-pagination-info"),
-    prev: document.getElementById("pos-prev"),
-    next: document.getElementById("pos-next"),
+    section: document.getElementById('tab-positions'),
+    tbody: document.getElementById('pos-tbody'),
+    pageInfo: document.getElementById('pos-pagination-info'),
+    prev: document.getElementById('pos-prev'),
+    next: document.getElementById('pos-next')
   };
 
-  const state = { page: 1, pages: 1, loading: false, initialized: false };
-
-  const authHeaders = () => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const state = {
+    page: 1,
+    pages: 1,
+    pageSize: 10,
+    initialized: false
   };
-  const fmtMoney = (n) => `$${Number(n || 0).toFixed(2)}`;
-  const fmtQty   = (n) => Number(n || 0).toFixed(2);
-  const fmtTime  = (iso) => (iso ? new Date(iso).toLocaleString() : "—");
+
+  /* ===============================
+     HELPERS
+  =============================== */
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  });
+
+  const fmtMoney = (cents) =>
+    cents == null ? '—' : `$${(Number(cents) / 100).toFixed(2)}`;
+
+  const fmtPrice = (n) =>
+    n == null ? '—' : Number(n).toFixed(2);
+
+  const fmtQty = (n) =>
+    Number(n || 0).toFixed(6);
+
+  const fmtTime = (iso) =>
+    iso ? new Date(iso).toLocaleString() : '—';
 
   const sidePill = (side) => {
-    if (side === "BUY") {
-      return `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 font-semibold">BUY</span>`;
+    if (side === 'LONG') {
+      return `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold">LONG</span>`;
     }
-    if (side === "SELL") {
-      return `<span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 font-semibold">SELL</span>`;
+    if (side === 'SHORT') {
+      return `<span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 font-semibold">SHORT</span>`;
     }
-    return `<span class="px-2 py-0.5 rounded-md bg-white/10 text-white/70">—</span>`;
+    return '—';
   };
 
-  const statusBadge = (status) => {
-    const map = {
-      RUNNING: "bg-amber-500/15 text-amber-300",
-      CLOSED: "bg-emerald-500/15 text-emerald-300",
-      CANCELLED: "bg-rose-500/15 text-rose-300",
-    };
-    return `<span class="px-2 py-1 rounded ${map[status] || "bg-white/10 text-white/80"}">${status || "—"}</span>`;
+  const pnlCell = (cents) => {
+    if (cents == null) return '—';
+    const cls = cents >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const sign = cents >= 0 ? '+' : '';
+    return `<span class="font-bold ${cls}">${sign}${fmtMoney(cents)}</span>`;
   };
 
-  const setEmpty = (msg = "No positions yet.") => {
-    els.tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-white/60">${msg}</td></tr>`;
-    if (els.pageInfo) els.pageInfo.textContent = "Page 1 of 1";
-    els.prev?.setAttribute("disabled", "true");
-    els.next?.setAttribute("disabled", "true");
-  };
-
-  const todayStartISO = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  };
-
-  async function fetchJSON(url) {
-    const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-    });
-    if (res.status === 401 || res.status === 403) throw new Error("AUTH");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return res.json();
+  function setEmpty(msg = 'No positions yet.') {
+    els.tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-4 text-center text-white/60">${msg}</td>
+      </tr>
+    `;
+    els.pageInfo.textContent = 'Page 1 of 1';
+    els.prev.disabled = true;
+    els.next.disabled = true;
   }
 
-  function queryString() {
-    const p = new URLSearchParams();
-    p.set("page", state.page);
-    p.set("page_size", 10); // fixed at 10 per page
-    p.set("sort_by", "opened_at");
-    p.set("sort_dir", "desc");
-    p.set("date_from", todayStartISO()); // daily reset
-    return p.toString();
-  }
-
-  async function loadTable() {
-    const token = localStorage.getItem("token");
+  /* ===============================
+     DATA FETCH
+  =============================== */
+  async function loadPositions() {
+    const token = localStorage.getItem('token');
     if (!token) {
-      setEmpty("Sign in to see your positions.");
+      setEmpty('Sign in to view positions.');
       return;
     }
 
-    const url = `${ENDPOINTS.list}?${queryString()}`;
+    const params = new URLSearchParams({
+      page: state.page,
+      page_size: state.pageSize
+    });
+
     try {
-      const { data = [], page, pages, total } = await fetchJSON(url);
+      const res = await fetch(`${ENDPOINT}?${params}`, {
+        headers: authHeaders()
+      });
+
+      if (!res.ok) throw new Error('Failed');
+
+      const { data = [], page, pages, total } = await res.json();
+
       state.page = page;
       state.pages = pages;
 
       if (!data.length) {
-        setEmpty("No positions yet for today.");
+        setEmpty();
         return;
       }
 
-      els.tbody.innerHTML = data
-        .map((r) => `
-          <tr class="border-t border-white/10 hover:bg-white/5">
-            <td class="p-3">
-              ${fmtTime(r.opened_at)}
-              ${r.closed_at ? `<div class="text-xs text-white/50">→ ${fmtTime(r.closed_at)}</div>` : ""}
-            </td>
-            <td class="p-3">${r.symbol || "—"}</td>
-            <td class="p-3">${sidePill(r.side)}</td>
-            <td class="p-3 text-right">${fmtQty(r.qty)}</td>
-            <td class="p-3 text-right">${fmtMoney(r.entry_price)}</td>
-            <td class="p-3 text-right">${r.exit_price != null ? fmtMoney(r.exit_price) : "—"}</td>
-            <td class="p-3">${statusBadge(r.status)}</td>
-          </tr>
-        `)
-        .join("");
+      els.tbody.innerHTML = data.map(p => `
+        <tr class="hover:bg-black/20 transition">
+          <td class="p-4 text-white/80 text-xs">
+            ${fmtTime(p.opened_at)}
+          </td>
+          <td class="p-4 text-white/90">${p.symbol}</td>
+          <td class="p-4">${sidePill(p.side)}</td>
+          <td class="text-right p-4 text-white/90">${fmtQty(p.size)}</td>
+          <td class="text-right p-4 text-white/90">${fmtPrice(p.entry_price)}</td>
+          <td class="text-right p-4 text-white/90">${fmtPrice(p.exit_price)}</td>
+          <td class="text-right p-4">
+            ${pnlCell(p.pnl_cents)}
+          </td>
+        </tr>
+      `).join('');
 
-      if (els.pageInfo) els.pageInfo.textContent = `Page ${page} of ${pages} • ${total} total`;
+      els.pageInfo.textContent = `Page ${page} of ${pages} • ${total} total`;
       els.prev.disabled = page <= 1;
       els.next.disabled = page >= pages;
-    } catch (e) {
-      if (e.message === "AUTH") {
-        setEmpty("Please log in again.");
-        return;
-      }
-      console.error("Positions load error:", e);
-      setEmpty("Failed to load positions.");
+
+    } catch (err) {
+      console.error('Positions error:', err);
+      setEmpty('Failed to load positions.');
     }
   }
 
+  /* ===============================
+     PAGINATION
+  =============================== */
   function bindPagination() {
-    els.prev?.addEventListener("click", () => {
+    els.prev.addEventListener('click', () => {
       if (state.page > 1) {
         state.page--;
-        loadTable();
+        loadPositions();
       }
     });
-    els.next?.addEventListener("click", () => {
+
+    els.next.addEventListener('click', () => {
       if (state.page < state.pages) {
         state.page++;
-        loadTable();
+        loadPositions();
       }
     });
   }
 
+  /* ===============================
+     INIT (ON TAB OPEN)
+  =============================== */
   function initOnce() {
     if (state.initialized) return;
     state.initialized = true;
     bindPagination();
-    loadTable();
+    loadPositions();
   }
 
   if (els.section) {
     const obs = new MutationObserver(() => {
-      if (!els.section.classList.contains("hidden")) initOnce();
+      if (!els.section.classList.contains('hidden')) {
+        initOnce();
+      }
     });
-    obs.observe(els.section, { attributes: true, attributeFilter: ["class"] });
+    obs.observe(els.section, { attributes: true, attributeFilter: ['class'] });
   }
-  document.querySelector('.tab-btn[data-tab="positions"]')?.addEventListener("click", initOnce, { once: true });
 
-  document.addEventListener("positions:refresh", loadTable);
+  document.addEventListener('positions:refresh', loadPositions);
 })();

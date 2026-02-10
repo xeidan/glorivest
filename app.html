@@ -17,50 +17,91 @@
 
   <!-- Top Nav -->
   <!-- Header -->
-  <header class="w-full px-4 py-3 sticky top-0 z-50 flex items-center justify-between 
-          border-b border-white/10 bg-black/90 backdrop-blur-md">
+<header class="w-full px-4 py-3 sticky top-0 z-50 flex items-center justify-between 
+        border-b border-white/10 bg-black/90 backdrop-blur-md">
 
-    <!-- LEFT: Avatar + User Info -->
-    <div class="flex items-center gap-4">
+  <!-- LEFT: Avatar + User Info -->
+  <div class="flex items-center gap-4">
 
-      <!-- Initials Avatar -->
-      <div id="user-initials"
-        class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold 
-              border border-[#00D2B1] bg-black/40 backdrop-blur-md">
-        GV
-      </div>
-
-      <!-- Text Info -->
-      <div class="leading-tight">
-        <p class="text-sm font-semibold">Hello <span id="user-email">user@example.com</span></p>
-        <p class="text-xs text-gray-400">
-          ID: <span id="glorivest-id">GV000000</span>
-        </p>
-      </div>
+    <!-- Initials Avatar -->
+    <div id="user-initials"
+      class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold 
+            border border-[#00D2B1] bg-black/40 backdrop-blur-md">
+      GV
     </div>
 
+    <!-- Text Info -->
+    <div class="leading-tight">
+      <p id="user-email" class="text-sm font-semibold">
+        user@example.com</span>
+      </p>
+      <p class="text-sm tracking-wide font-light text-white">
+        ID: <span id="glorivest-id">GV000000</span>
+      </p>
+    </div>
+  </div>
 
-    <!-- RIGHT: Notification + Guide buttons -->
-    <div class="flex items-center gap-4 text-lg">
+  <!-- RIGHT: Icons + Account Mode -->
+  <div class="flex flex-col items-end">
 
-      <!-- Notification icon -->
-      <button id="btn-open-notifications" class="p-2 hover:text-[#00D2B1] transition">
+    <!-- Icons Row -->
+    <div class="flex items-center justify-end bg-black/5 p-1 ">
+      <button id="btn-open-notifications" 
+              class="relative p-2 text-white/20 hover:text-black transition-all duration-200">
         <i class="fa-solid fa-bell"></i>
         <span data-bell-badge
-          class="ml-1 text-[10px] text-white bg-red-600 rounded-full px-1 hidden"></span>
+              class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full hidden">
+        </span>
       </button>
 
-      <!-- Guide icon -->
-      <button id="btn-open-guide" class="p-2 hover:text-[#00D2B1] transition">
+      <button id="btn-open-guide" 
+              class="p-2 text-white/20 hover:text-black transition-all duration-200">
         <i class="fa-regular fa-circle-question"></i>
       </button>
-
     </div>
-  </header>
 
+    <!-- ACCOUNT MODE TAG (UNCHANGED DESIGN) -->
+    <div id="account-mode-tag"
+         class="group flex items-center gap-3 px-2 py-1 rounded-lg
+                bg-black/80 backdrop-blur-xl 
+                hover:border-[#00D2B1]/50 transition-all duration-300
+                cursor-pointer select-none shadow-sm">
 
-    
-  
+      <div class="flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D2B1] opacity-75"></span>
+          <span id="account-mode-dot"
+                class="relative inline-flex rounded-full h-2 w-2 bg-[#00D2B1]"></span>
+        </span>
+
+        <span id="account-mode-label" 
+              class="text-xs tracking-widest font-light text-white/90">
+          LIVE
+        </span>
+      </div>
+
+      <div class="w-[1px] h-3 bg-white/20"></div>
+
+      <span id="account-mode-balance" 
+            class="text-sm font-medium text-white font-mono tracking-tight 
+                   group-hover:text-[#00D2B1] transition-colors">
+        $0.00
+      </span>
+    </div>
+
+  </div>
+
+</header>
+
+<style>
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+</style>
+
 
   <!-- Tabs -->
   <main id="main-content" class="p-4 space-y-6">
@@ -214,9 +255,6 @@
 
 
 
-
-
-
 <!-- ===== Notifications Sheet ===== -->
 <div id="sheet-notifications" class="fixed inset-0 hidden z-40">
   <div id="sheet-notifications-backdrop"
@@ -265,9 +303,6 @@
 
   </div>
 </div>
-
-
-
 
 
 
@@ -564,313 +599,468 @@
 
     <!-- Earn tab -->
     <section id="tab-earn" class="tab-section py-6 px-2">
-    
-    <h1 class="text-3xl font-extrabold mb-6 text-white text-center">Refer & Earn</h1>
 
-    <div id="referral-summary-card" class="bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black mb-8 space-y-6">
-        
-        <h2 class="text-xl font-bold text-white mb-2">Your Referral Link</h2>
-        
+      <h1 class="text-3xl font-extrabold mb-6 text-white text-center">
+        Refer & Earn
+      </h1>
+
+      <!-- Referral Summary -->
+      <div class="bg-[#101010] border border-white/10 rounded-2xl p-6 mb-8 space-y-6">
+
+        <h2 class="text-xl font-bold text-white">Your Referral Code</h2>
+
         <div class="flex items-center justify-between p-4 bg-[#1e1e1e] rounded-xl border border-white/10">
-            <div>
-                <p class="text-xs text-white/50 mb-1">Your Code / Link</p>
-                <span id="referral-code" class="font-mono text-lg text-[#00D2B1] font-bold">LOADING...</span>
-            </div>
-            <button id="copy-btn" 
-                    class="bg-[#00D2B1] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#00bca3] transition shadow-md shadow-[#00D2B1]/30">
-                <i class="fa-regular fa-copy mr-1"></i> Copy Link
-            </button>
+          <span id="referral-code"
+                class="font-mono text-lg text-[#00D2B1] font-bold">
+            LOADING...
+          </span>
+
+          <button id="copy-btn"
+                  class="bg-[#00D2B1] text-black font-semibold px-4 py-2 rounded-lg">
+            Copy Code
+          </button>
         </div>
-        <p id="copy-status" class="text-[#00D2B1] text-center text-sm font-medium hidden">Copied to clipboard!</p>
-        
-        <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
-            <div class="text-center">
-                <p class="text-xs text-white/50 uppercase tracking-wider">Total Referrals</p>
-                <p id="referral-count" class="text-3xl font-extrabold text-white mt-1">0</p>
-            </div>
-            <div class="text-center">
-                <p class="text-xs text-white/50 uppercase tracking-wider">Referral Earnings</p>
-                <p id="account-referral-earnings" class="text-3xl font-extrabold text-[#00D2B1] mt-1">$0.00</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-[#1e1e1e] p-5 rounded-xl border border-[#00D2B1]/20 mb-8 space-y-3">
-        <h3 class="text-lg font-bold text-white">Withdraw Referral Earnings</h3>
-        <p class="text-sm text-white/70">
-            To withdraw your referral earnings, you must first transfer them from your Referral Wallet to your Main Balance.
+
+        <p id="copy-status"
+          class="text-[#00D2B1] text-center text-sm hidden">
+          Copied to clipboard!
         </p>
-        <button id="transfer-referral-btn" 
-                class="w-full py-3 rounded-xl border border-[#00D2B1] text-[#00D2B1] font-semibold hover:bg-[#00D2B1]/10 transition">
-            Transfer to Main Balance
-        </button>
-    </div>
+          <div class="text-center">
+            <p class="text-xs text-white/50 uppercase">Total Referrals</p>
+            <p id="referral-count"
+              class="text-3xl font-extrabold text-white">0</p>
+          </div>
 
-    <div class="bg-[#101010] border border-white/10 rounded-2xl p-6 shadow-xl mb-8">
-        <h2 class="text-xl font-bold text-white mb-4">Leaderboard</h2>
-        
-        <ul id="leaderboard" class="divide-y divide-white/5 text-white text-sm">
-            <li class="flex justify-between items-center py-3">
-                <div class="flex items-center gap-3">
-                    <span class="font-bold text-[#00D2B1]">#1</span>
-                    <span>CryptoKing23</span>
-                </div>
-                <span class="font-semibold text-lg text-white/90">250 Ref.</span>
-            </li>
-            <li class="flex justify-between items-center py-3">
-                <div class="flex items-center gap-3">
-                    <span class="font-bold text-white/60">#2</span>
-                    <span>TradeMaster</span>
-                </div>
-                <span class="font-semibold text-white/80">180 Ref.</span>
-            </li>
-            </ul>
-    </div>
-</section>
-    
-    
-    <!-- Trade tab -->
-    <section id="tab-trade" class="tab-section hidden py-6 px-2 text-white space-y-6">
-
-    <div class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
-        <button id="trade-tab-overview"
-                class="trade-tab-active flex-1 text-center text-[#00D2B1] font-semibold py-2 rounded-lg transition"
-                onclick="showTradeTabContent('overview')">
-            Overview
-        </button>
-        <button id="trade-tab-start"
-                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
-                onclick="showTradeTabContent('start')">
-            New Cycle
-        </button>
-        <button id="trade-tab-chart"
-                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
-                onclick="showTradeTabContent('chart')">
-            Markets
-        </button>
-        <button id="trade-tab-transfer"
-                class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg hover:text-white transition"
-                onclick="showTradeTabContent('transfer')">
-            Transfer
-        </button>
-    </div>
-
-    <hr class="border-white/10">
-
-    <div id="trade-content-overview" class="space-y-6">
-        <h2 class="text-2xl font-semibold text-white">Trading Bot Status</h2>
-        
-        <div class="grid grid-cols-2 gap-4">
-            
-            <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10">
-                <p class="text-xs text-white/50 uppercase tracking-wider">Total Active Capital</p>
-                <h3 id="summary-total-capital" class="text-2xl font-bold text-white mt-1">$0.00</h3>
-            </div>
-            
-            <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10">
-                <p class="text-xs text-white/50 uppercase tracking-wider">Realized Bot Profit</p>
-                <h3 id="summary-total-earnings" class="text-2xl font-bold text-[#00D2B1] mt-1">$0.00</h3>
-            </div>
-        </div>
-
-        <h2 class="text-xl font-semibold pt-4 text-white">Current Cycle (<span id="summary-active-count">0</span> Active)</h2>
-        <div id="active-cycles-list" class="space-y-4">
-            <div class="cycle-card bg-[#1e1e1e] border border-white/10 rounded-xl p-5 space-y-3">
-                <div class="flex justify-between items-center pb-2 border-b border-white/10">
-                    <span class="cycle-status-badge text-sm font-medium text-green-400">Status: Running</span>
-                    <div class="text-sm text-white/60">Tier: <span class="text-yellow-400 font-semibold cycle-tier">---</span></div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-3 py-2 text-center">
-                    <div>
-                        <p class="text-xs text-white/50">Invested</p>
-                        <p class="font-bold text-lg text-white cycle-capital">$0.00</p>
-                    </div>
-                     <div>
-                        <p class="text-xs text-white/50">Days Run</p>
-                        <p class="font-bold text-lg text-white cycle-days-run">0 / 30</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-white/50">Est. Payout</p>
-                        <p class="font-bold text-lg text-[#00D2B1] cycle-profit">$0.00</p>
-                    </div>
-                </div>
-                
-                <div class="pt-1">
-                    <div class="relative w-full h-1 rounded-full bg-white/10 overflow-hidden">
-                        <div class="cycle-progress-bar absolute h-full left-0 top-0 bg-[#00D2B1]" style="width: 0%"></div>
-                    </div>
-                    <p class="cycle-progress-label text-xs text-white/70 text-right mt-1">0% Complete</p>
-                </div>
-                
-                <div class="flex justify-between pt-3 gap-3 border-t border-white/10 mt-4">
-                     <button class="py-2 px-4 bg-gray-600 text-black font-bold rounded-lg text-sm transition" onclick="showTradeTabContent('start')">
-                        Start New Cycle
-                    </button>
-                    <button class="py-2 px-4 bg-red-600/10 hover:bg-red-600/20 text-red-400 font-semibold rounded-lg text-sm transition" onclick="showStopModal('cycle-1')">
-                        End Cycle Early
-                    </button>
-                    </div>
-            </div>
-            
-        </div>
-        
-    </div>
-
-    <hr class="border-white/10">
-
-    <div id="trade-content-start" class="hidden space-y-6 max-w-lg mx-auto">
-
-        <h2 class="text-2xl font-semibold text-white text-center">Start a New Cycle</h2>
-
-        <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10 space-y-3">
-            <h3 class="text-lg font-semibold text-[#00D2B1]">Tiers & Estimated Returns</h3>
-            <ul class="space-y-2 text-sm">
-                <li class="flex justify-between items-center text-white/90">
-                    <span>Standard: $50 - $499</span>
-                    <span class="font-bold text-red-400">15% Return</span>
-                </li>
-                <li class="flex justify-between items-center text-white/90">
-                    <span>Pro: $500 - $4999</span>
-                    <span class="font-bold text-yellow-400">20% Return</span>
-                </li>
-                <li class="flex justify-between items-center text-white/90">
-                    <span>Elite: $5000+</span>
-                    <span class="font-bold text-[#00D2B1]">25% Return</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-5">
-
-            <div class="flex justify-between items-center p-3 rounded-lg bg-black/30 border border-white/5">
-                <p class="text-sm text-white/70">Main Wallet Balance:</p>
-                <h3 id="main-wallet-balance" class="text-xl font-bold text-white">$0.00</h3>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-white/80 mb-2">Invested Capital ($)</label>
-                <input id="new-cycle-capital" type="number" min="50" step="any"
-                    class="w-full rounded-lg bg-black/40 text-white px-4 py-3 border border-white/10 text-xl font-semibold focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
-                    placeholder="Minimum $50.00"/>
-                <p id="tier-detection" class="text-sm font-semibold mt-2 text-white/70">Tier: <span class="text-yellow-400">---</span></p>
-            </div>
-
-            <div class="space-y-3 pt-4 border-t border-white/10 bg-black/20 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold text-white">Projected Cycle Details (30 Days)</h3>
-                <div class="text-sm flex justify-between">
-                    <span class="text-white/70">Tier Level:</span>
-                    <span id="preview-tier" class="font-semibold text-yellow-400">---</span>
-                </div>
-                <div class="text-sm flex justify-between">
-                    <span class="text-white/70">Guaranteed Return:</span>
-                    <span id="preview-return" class="font-bold text-[#00D2B1]">0%</span>
-                </div>
-                <div class="text-base flex justify-between pt-1 border-t border-white/5 mt-2">
-                    <span class="text-white/90 font-bold">Total Estimated Payout:</span>
-                    <span id="preview-payout" class="font-extrabold text-white">$0.00</span>
-                </div>
-            </div>
-
-            <div class="pt-4">
-                <button id="start-new-cycle-btn" disabled
-                        class="w-full py-3 rounded-lg bg-gray-600 text-black font-bold hover:bg-[#00bca3] transition cursor-not-allowed opacity-50">
-                    Enter Valid Capital
-                </button>
-            </div>
-
-            <div id="referral-transfer-option" class="bg-black/30 p-4 rounded-lg border border-white/5">
-                <div class="flex justify-between items-center">
-                    <div class="text-sm text-white/70">Referral Earnings: <span id="transfer-referral-amount" class="font-bold text-[#00D2B1]">$0.00</span></div>
-                    <button id="transfer-referral-btn" class="px-3 py-1 rounded-lg text-xs border border-[#00D2B1] text-[#00D2B1] hover:bg-[#00D2B1]/10 transition">
-                        Transfer Referral
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <hr class="border-white/10">
-
-    <div id="trade-content-chart" class="hidden space-y-6">
-        <h2 class="text-2xl font-semibold text-white mb-4">Market View & Price Analysis</h2>
-
-        <div class="flex flex-col md:flex-row justify-between items-center bg-[#1e1e1e] p-4 rounded-xl border border-white/10">
-            <h3 class="text-lg font-semibold text-white mb-2 md:mb-0">Chart Symbol</h3>
-            <div class="flex items-center space-x-3">
-                <label for="index-selector" class="text-sm text-white/70">Change Symbol:</label>
-                <select id="index-selector"
-                        class="bg-black/40 text-white rounded-lg px-3 py-2 border border-white/10 focus:ring-[#00D2B1] focus:border-[#00D2B1] transition">
-                    <option value="R_75">VIX 75 Index</option>
-                    <option value="R_10">VIX 10 Index</option>
-                    <option value="RDBULL">Bull Market Index</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="bg-[#101010] border border-white/10 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold" id="current-symbol-title">VIX 75 Price</h3>
-              <span id="vix75-price-chart-tab" class="font-bold text-[#00D2B1] text-xl">$0.00</span>
-            </div>
-            <div id="vix-chart-wrap-new" class="relative w-full aspect-[1/1] md:aspect-[2/1] border border-white/10 rounded-lg overflow-hidden">
-              <canvas id="vix75-sparkline-new" class="absolute inset-0 w-full h-full block"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <hr class="border-white/10">
-
-    <div id="trade-content-transfer" class="hidden space-y-6 max-w-lg mx-auto">
-        <h2 class="text-2xl font-semibold text-white text-center">Transfer Bot Profits</h2>
-
-        <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-5">
-
-            <div class="flex justify-between items-center p-4 rounded-lg bg-black/30 border border-white/5">
-                <p class="text-sm text-white/70">Profits Ready for Transfer:</p>
-                <h3 id="withdrawable-bot-earnings-display" class="text-2xl font-bold text-[#00D2B1]">$0.00</h3>
-            </div>
-
-            <p class="text-sm text-white/70 pt-2">Transfer realized profits from completed trading cycles to your main wallet.</p>
-
-            <div class="flex justify-between items-center p-3 rounded-lg border border-white/10">
-                <p class="text-sm text-white/70">Main Wallet Balance will be:</p>
-                <h3 id="projected-main-wallet-balance" class="text-xl font-bold text-white">$1500.00</h3>
-            </div>
-
-            <div class="pt-4">
-                <button id="transfer-bot-earnings-btn" disabled
-                        class="w-full py-3 rounded-lg bg-gray-600 text-black font-bold hover:bg-[#00bca3] transition cursor-not-allowed opacity-50">
-                    Transfer $0.00 to Main Wallet
-                </button>
-            </div>
-
-            <p class="text-xs text-white/50 text-center pt-2">Note: Active cycle capital and referral earnings are managed elsewhere.</p>
-        </div>
-    </div>
-
-    <div id="stop-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
-        <div class="bg-[#1e1e1e] text-white rounded-xl p-6 max-w-sm text-center shadow-lg border border-white/10">
-          <h3 class="text-xl font-bold mb-3">End Cycle Early?</h3>
-          <p class="text-sm text-red-400 mb-4 font-semibold">Warning: Early termination will forfeit guaranteed returns and may incur a penalty.</p>
-          <div class="flex justify-center gap-4">
-            <button id="cancel-stop" class="px-5 py-2 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
-            <button id="confirm-stop" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition">End Cycle</button>
+          <div class="text-center">
+            <p class="text-xs text-white/50 uppercase">Referral Earnings</p>
+            <p id="referral-balance"
+              class="text-3xl font-extrabold text-[#00D2B1]">$0.00</p>
           </div>
         </div>
+      </div>
+
+      <!-- Transfer -->
+      <div class="bg-[#1e1e1e] p-5 rounded-xl border border-white/10 mb-8">
+        <h3 class="text-lg font-bold text-white mb-2">
+          Withdraw Referral Earnings
+        </h3>
+        <p class="text-sm text-white/70 mb-4">
+          Transfer earnings from your Referral Wallet to your Main Balance.
+        </p>
+
+        <button id="transfer-referral-btn"
+                class="w-full py-3 rounded-xl border border-[#00D2B1]
+                      text-[#00D2B1] font-semibold hover:bg-[#00D2B1]/10">
+          Transfer to Main Balance
+        </button>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="bg-[#101010] border border-white/10 rounded-2xl p-6">
+        <h2 class="text-xl font-bold text-white mb-4">
+          Leaderboard
+        </h2>
+
+        <ul id="leaderboard"
+            class="divide-y divide-white/5 text-white text-sm">
+          <li class="py-4 text-center text-white/50 text-sm">
+            Loading leaderboard…
+          </li>
+        </ul>
+      </div>
+
+    </section>
+
+    
+<!-- TRADE TAB -->
+<section id="tab-trade"
+  class="tab-section hidden py-6 px-2 text-white space-y-6 min-h-[70vh]">
+
+  <!-- TAB NAV -->
+  <div class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
+    <button id="trade-tab-overview" data-trade-tab="overview"
+      class="trade-tab-active flex-1 text-center font-semibold py-2 rounded-lg transition"
+      data-trade-tab="overview">
+      Overview
+    </button>
+    <button id="trade-tab-start" data-trade-tab="start"
+      class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg transition"
+   data-trade-tab="start">
+      New Cycle
+    </button>
+    <button id="trade-tab-charts" data-trade-tab="charts"
+      class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg transition"
+   data-trade-tab="chart">
+      Charts
+    </button>
+    <button id="trade-tab-transfer" data-trade-tab="transfer"
+      class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg transition"
+      data-trade-tab="transfer">
+      Transfer
+    </button>
+  </div>
+
+  <!-- ================= OVERVIEW ================= -->
+<div id="trade-content-overview" class="space-y-10">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-semibold">Bot Overview</h2>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
+      <p class="text-xs text-white/50 uppercase tracking-wide">
+        Active Capital
+      </p>
+      <h3
+        id="summary-total-capital"
+        class="mt-1 text-2xl font-bold">
+        $0.00
+      </h3>
     </div>
 
-    <div id="start-cycle-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
-        <div class="bg-[#1e1e1e] text-white rounded-xl p-6 max-w-sm text-center shadow-lg border border-white/10">
-          <h3 class="text-xl font-bold mb-3 text-[#00D2B1]">Confirm New Cycle</h3>
-          <p class="text-sm text-white/70 mb-4">You are committing $<span id="confirm-capital">0.00</span> to a <span id="confirm-tier">---</span> cycle for a guaranteed <span id="confirm-return">0%</span> return over 30 days. Funds will be locked.</p>
-          <div class="flex justify-center gap-4">
-            <button id="cancel-start-cycle" class="px-5 py-2 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
-            <button id="confirm-start-cycle" class="px-5 py-2 rounded-lg bg-[#00D2B1] hover:bg-[#00bca3] text-black font-bold transition">Confirm & Start</button>
-          </div>
-        </div>
+    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
+      <p class="text-xs text-white/50 uppercase tracking-wide">
+        Bot Profit
+      </p>
+      <h3
+        id="summary-total-earnings"
+        class="mt-1 text-2xl font-bold text-[#00D2B1]">
+        $0.00
+      </h3>
     </div>
+
+    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
+      <p class="text-xs text-white/50 uppercase tracking-wide">
+        Active Cycles
+      </p>
+      <h3 class="mt-1 text-2xl font-bold">
+        <span id="summary-active-count">0</span>
+      </h3>
+    </div>
+
+  </div>
+
+  <!-- ACTIVE CYCLES -->
+  <section class="space-y-4 pt-4">
+
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-semibold">
+        Active Cycles
+      </h3>
+      <span class="text-xs text-white/40">
+        Currently running
+      </span>
+    </div>
+
+    <!-- JS injects cycle cards here -->
+    <div
+      id="overview-active-cycles"
+      class="space-y-4">
+
+      <!-- empty state handled by JS -->
+
+    </div>
+
+  </section>
+
+  <!-- COMPLETED CYCLES -->
+  <section class="space-y-4 pt-6 border-t border-white/10">
+
+    <h3 class="text-xl font-semibold">
+      Completed Cycles
+    </h3>
+
+    <div
+      id="cycle-history-list"
+      class="space-y-4">
+
+      <p class="text-sm text-white/50 text-center py-6">
+        No completed cycles yet
+      </p>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+
+  <!-- ================= NEW CYCLE ================= -->
+<div id="trade-content-start" class="hidden space-y-8 max-w-lg mx-auto">
+
+  <!-- HEADER -->
+  <div class="text-center space-y-2">
+    <h2 class="text-2xl font-semibold">Start New Trading Cycle</h2>
+
+
+
+  <!-- BALANCE -->
+  <div class="bg-[#1e1e1e] p-4 rounded-xl border border-white/10 space-y-1">
+    <p class="text-xs text-white/50 uppercase">Available Balance</p>
+    <div id="main-wallet-balance"
+         class="text-2xl font-bold text-[#00D2B1]">
+      $0.00
+    </div>
+    <p class="text-xs text-white/40">
+      Funds available for this account mode
+    </p>
+  </div>
+
+  <!-- DURATION -->
+  <div>
+    <label class="block text-sm font-medium mb-2">
+      Cycle Duration
+    </label>
+
+    <div id="cycle-duration-options" class="grid grid-cols-3 gap-2">
+      <button class="duration-btn active" data-months="1">30 Days</button>
+      <button class="duration-btn" data-months="3">90 Days</button>
+      <button class="duration-btn" data-months="6">180 Days</button>
+    </div>
+  </div>
+
+  <!-- AMOUNT -->
+  <div>
+    <label class="block text-sm font-medium mb-2">
+      Amount to Commit
+    </label>
+
+    <input
+      id="new-cycle-capital"
+      type="number"
+      min="50"
+      step="any"
+      class="w-full rounded-lg bg-black/40 text-white px-4 py-3
+             border border-white/10 text-xl font-semibold"
+      placeholder="Minimum $50.00"
+    />
+
+    <!-- SLIDER -->
+    <div class="mt-4 space-y-1">
+      <input
+        id="stake-slider"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="0"
+        class="w-full accent-[#00D2B1]"
+      />
+      <div class="flex justify-between text-xs text-white/40">
+        <span>0%</span>
+        <span>100%</span>
+      </div>
+      <p class="text-xs text-white/50">
+        Using <span id="slider-pct">0</span>% of available balance
+      </p>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="bg-black/30 p-4 rounded-xl border border-white/10 space-y-2">
+    <h3 class="font-semibold">Cycle Summary</h3>
+
+    <div class="flex justify-between text-sm">
+      <span class="text-white/70">Amount</span>
+      <span id="preview-amount">$0.00</span>
+    </div>
+
+    <div class="flex justify-between text-sm">
+      <span class="text-white/70">Duration</span>
+      <span id="preview-duration">30 Days</span>
+    </div>
+
+    <div class="flex justify-between text-sm">
+      <span class="text-white/70">Expected Returns</span>
+      <span id="preview-expected">$0.00</span>
+    </div>
+
+    <p class="text-xs text-white/40 pt-2">
+      Profit and tier are assigned automatically once the cycle is activated.
+    </p>
+  </div>
+
+  <!-- CTA -->
+  <button
+    id="start-new-cycle-btn"
+    onclick="startNewCycle()"
+    class="w-full py-3 rounded-lg
+           bg-[#00D2B1] text-white font-bold
+           cursor-not-allowed opacity-50">
+    Start Cycle
+  </button>
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+<!-- ================= MARKETS ================= -->
+<div id="trade-content-charts" class="hidden space-y-6 max-w-lg mx-auto">
+
+  <!-- ===== Asset Header ===== -->
+  <div class="flex items-center justify-between gap-4">
+
+    <!-- Asset Dropdown -->
+    <div class="relative">
+      <button
+        id="asset-toggle"
+        class="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10 group">
+
+        <div class="w-6 h-6 rounded-full bg-[#00D2B1]/20 flex items-center justify-center">
+          <i class="fa-solid fa-coins text-[#00D2B1] text-xs"></i>
+        </div>
+
+        <span id="asset-label" class="font-bold text-sm text-white tracking-wide">
+          BTC/USDT
+        </span>
+
+        <i class="fa-solid fa-chevron-down text-[10px] opacity-50 group-hover:text-[#00D2B1]"></i>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div
+        id="asset-menu"
+        class="absolute left-0 mt-2 hidden bg-black border border-white/10 rounded-xl shadow-2xl z-[100] w-60 overflow-hidden">
+
+        <div class="max-h-[320px] overflow-y-auto custom-scrollbar p-1 space-y-1">
+
+          <div class="px-3 py-2 text-white/40 text-xs">CRYPTO</div>
+          <button data-symbol="BTCUSDT" class="asset-item">BTC/USD</button>
+          <button data-symbol="ETHUSDT" class="asset-item">ETH/USD</button>
+          <button data-symbol="SOLUSDT" class="asset-item">SOL/USD</button>
+          <button data-symbol="XRPUSDT" class="asset-item">XRP/USD</button>
+
+          <div class="px-3 py-2 text-white/40 text-xs">METALS</div>
+          <button data-symbol="XAUUSDT" class="asset-item">XAU/USD</button>
+          <button data-symbol="XAGUSDT" class="asset-item">XAG/USD</button>
+
+          <div class="px-3 py-2 text-white/40 text-xs">STOCKS</div>
+          <button data-symbol="AAPL" class="asset-item">AAPL</button>
+          <button data-symbol="TSLA" class="asset-item">TSLA</button>
+          <button data-symbol="MSFT" class="asset-item">MSFT</button>
+          <button data-symbol="NVDA" class="asset-item">NVDA</button>
+
+          <div class="px-3 py-2 text-white/40 text-xs">FOREX</div>
+          <button data-symbol="EURUSD" class="asset-item">EUR/USD</button>
+          <button data-symbol="GBPUSD" class="asset-item">GBP/USD</button>
+          <button data-symbol="USDJPY" class="asset-item">USD/JPY</button>
+          <button data-symbol="AUDUSD" class="asset-item">AUD/USD</button>
+          <button data-symbol="USDCAD" class="asset-item">USD/CAD</button>
+          <button data-symbol="USDCHF" class="asset-item">USD/CHF</button>
+          <button data-symbol="NZDUSD" class="asset-item">NZD/USD</button>
+          <button data-symbol="EURJPY" class="asset-item">EUR/JPY</button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Info -->
+    <div class="flex flex-col items-end leading-none">
+      <div
+        id="price-wrapper"
+        class="flex items-center gap-1.5 font-bold text-sm transition-colors duration-200 text-[#00D2B1]">
+        <span id="live-price" class="pr-2">0.00</span>
+        <span id="price-arrow">▲</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Chart ===== -->
+  <div
+    id="vix75-chart"
+    style="height:360px"
+    class="rounded-xl border border-white/10 overflow-hidden">
+  </div>
+
+  <!-- ===== Timeframes ===== -->
+  <div class="rounded-xl border border-white/10 bg-[#1e1e1e] p-2">
+    <div class="flex gap-2 text-xs">
+      <button data-tf="1m" class="active px-2 py-1 rounded-md">1m</button>
+      <button data-tf="5m" class="px-2 py-1 rounded-md">5m</button>
+      <button data-tf="15m" class="px-2 py-1 rounded-md">15m</button>
+      <button data-tf="30m" class="px-2 py-1 rounded-md">30m</button>
+      <button data-tf="1h" class="px-2 py-1 rounded-md">1h</button>
+      <button data-tf="4h" class="px-2 py-1 rounded-md">4h</button>
+      <button data-tf="1d" class="px-2 py-1 rounded-md">1d</button>
+      <button data-tf="1w" class="px-2 py-1 rounded-md">1w</button>
+      <button data-tf="1M" class="px-2 py-1 rounded-md">1M</button>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+  <!-- ================= TRANSFER ================= -->
+  <div id="trade-content-transfer" class="hidden space-y-6 max-w-lg mx-auto">
+
+    <h2 class="text-2xl font-semibold text-center">Transfer Profits</h2>
+
+    <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-4">
+
+      <div class="flex justify-between items-center p-4 bg-black/30 rounded-lg">
+        <p class="text-sm text-white/70">Available Profits</p>
+        <h3 id="withdrawable-bot-earnings-display"
+          class="text-2xl font-bold text-[#00D2B1]">$0.00</h3>
+      </div>
+
+      <p class="text-sm text-white/60">
+        Transfer realized profits from completed cycles to your main wallet.
+      </p>
+
+      <div class="flex justify-between items-center p-3 border border-white/10 rounded-lg">
+        <p class="text-sm text-white/70">Main Wallet After Transfer</p>
+        <h3 id="projected-main-wallet-balance"
+          class="text-xl font-bold">$0.00</h3>
+      </div>
+
+      <button id="transfer-bot-earnings-btn" disabled
+        class="w-full py-3 rounded-lg bg-gray-600 text-[#00D2B1] border border-[#00D2B1] font-bold cursor-not-allowed opacity-50">
+        Transfer Profits
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================= STOP MODAL ================= -->
+  <div id="stop-modal"
+    class="fixed inset-0 hidden bg-black/60 z-50 flex items-center justify-center">
+    <div class="bg-[#1e1e1e] p-6 rounded-xl max-w-sm text-center border border-white/10">
+      <h3 class="text-xl font-bold mb-2">End Cycle?</h3>
+      <p class="text-sm text-red-400 mb-4">
+        Stopping early forfeits all accrued profit.
+      </p>
+      <div class="flex justify-center gap-4">
+        <button id="cancel-stop"
+          class="px-5 py-2 border border-white/20 rounded-lg">Cancel</button>
+        <button id="confirm-stop"
+          class="px-5 py-2 bg-red-600 rounded-lg font-bold">End Cycle</button>
+      </div>
+    </div>
+  </div>
+
 </section>
+
     
     
 
@@ -878,9 +1068,10 @@
     <section id="tab-positions" class="tab-section hidden py-6 mb-20 px-4 text-white">
     <div class="max-w-6xl mx-auto space-y-6">
 
-        <h2 class="text-2xl font-semibold text-white">Recent Trading Positions</h2>
-        <p class="text-sm text-white/70">A log of all closed bot trades executed on the market indices.</p>
-
+        <h2 class="text-2xl font-semibold text-white">Trading Positions</h2>
+          <p class="text-sm text-white/70">
+            A record of all bot-executed positions, including entry, exit, and realized P/L.
+          </p>
         <div class="bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -898,25 +1089,9 @@
                     </thead>
                     
                     <tbody id="pos-tbody" class="divide-y divide-white/10">
-                        <tr class="hover:bg-black/20 transition">
-                            <td class="p-4 text-white/90 text-xs">08:15:22</td>
-                            <td class="p-4 text-white/90">VIX 75</td>
-                            <td class="p-4 font-semibold text-red-400">SELL</td>
-                            <td class="text-right p-4 text-white/90">1.00</td>
-                            <td class="text-right p-4 text-white/90">9,876.12</td>
-                            <td class="text-right p-4 text-white/90">9,870.50</td>
-                            <td class="text-right p-4 font-bold text-red-400">-5.62</td>
-                        </tr>
-                        <tr class="hover:bg-black/20 transition">
-                            <td class="p-4 text-white/90 text-xs">08:10:55</td>
-                            <td class="p-4 text-white/90">VIX 10</td>
-                            <td class="p-4 font-semibold text-[#00D2B1]">BUY</td>
-                            <td class="text-right p-4 text-white/90">5.00</td>
-                            <td class="text-right p-4 text-white/90">4,120.90</td>
-                            <td class="text-right p-4 text-white/90">4,125.10</td>
-                            <td class="text-right p-4 font-bold text-[#00D2B1]">+21.00</td>
-                        </tr>
-                        </tbody>
+                      <!-- rows injected dynamically -->
+                    </tbody>
+
                 </table>
             </div>
             
@@ -1071,7 +1246,45 @@
 
 
 
+<!-- STOP CYCLE MODAL -->
+<div id="stop-cycle-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70">
 
+  <div class="w-full max-w-md bg-[#121212] border border-red-500/30 rounded-2xl p-6 space-y-4">
+
+    <h3 class="text-lg font-bold text-red-400">
+      Stop Trading Cycle
+    </h3>
+
+    <p class="text-sm text-white/80">
+      Stopping this cycle will <span class="text-red-400 font-semibold">
+      permanently forfeit all accrued profit</span>.
+    </p>
+
+    <p class="text-xs text-white/50">
+      This action cannot be undone.
+    </p>
+
+    <div class="flex gap-3 pt-4">
+      <button id="cancel-stop-cycle"
+              class="flex-1 py-2 rounded-lg border border-white/10 hover:bg-white/5">
+        Cancel
+      </button>
+
+      <button id="confirm-stop-cycle"
+              class="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-semibold">
+        Stop Cycle
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+
+<script src="auth.js"></script>
+<script src="wallet.js"></script>
 <script src="global.js"></script>
 <script src="dashboard.js"></script>
 <script src="earn.js"></script>
