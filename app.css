@@ -469,3 +469,24 @@
   background: transparent;
 }
 
+.positive {
+  color: #00c853;
+  font-weight: 600;
+}
+
+.negative {
+  color: #d50000;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  align-items: center;
+}

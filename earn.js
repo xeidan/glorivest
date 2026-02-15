@@ -55,7 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!copyBtn || !linkEl || !statusEl) return;
 
   copyBtn.addEventListener("click", async () => {
-    const link = linkEl.dataset.link;
+    const codeEl = document.getElementById("referral-code");
+const code = codeEl ? codeEl.textContent.trim() : null;
+if (!code) return;
+
+await navigator.clipboard.writeText(code);
+
     if (!link) return;
 
     await navigator.clipboard.writeText(link);
@@ -79,16 +84,23 @@ function renderLeaderboard(users) {
 
   list.innerHTML = "";
 
-  if (!users.length) {
+  if (!Array.isArray(users) || users.length === 0) {
     list.innerHTML = `
       <li class="py-4 text-center text-white/50 text-sm">
-        No referrals yet
+        No leaderboard data
       </li>
     `;
     return;
   }
 
-  users.forEach((user, index) => {
+  // Sort highest earners first (authoritative)
+  const sorted = [...users].sort((a, b) => {
+    const aEarn = Number(a.referral_earnings_cents || 0);
+    const bEarn = Number(b.referral_earnings_cents || 0);
+    return bEarn - aEarn;
+  });
+
+  sorted.forEach((user, index) => {
     const earned =
       Number(user.referral_earnings_cents || 0) / 100;
 
@@ -109,25 +121,37 @@ function renderLeaderboard(users) {
   });
 }
 
+
 async function loadLeaderboard() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
   try {
     const res = await fetch(
       "https://glorivest-api-a16f75b6b330.herokuapp.com/api/leaderboard",
       {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       }
     );
 
     if (!res.ok) throw new Error("Leaderboard failed");
 
-    const users = await res.json();
+    const json = await res.json();
+
+    // Handle flexible response shapes
+    const users =
+      Array.isArray(json) ? json :
+      Array.isArray(json.data) ? json.data :
+      Array.isArray(json.users) ? json.users :
+      [];
+
     renderLeaderboard(users);
+
   } catch (err) {
     console.error("Leaderboard error:", err);
   }
 }
+
 
 /* =========================================================
    TRANSFER REFERRAL → MAIN WALLET
@@ -136,14 +160,11 @@ async function transferReferralToMain() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  const amountStr = prompt(
-    "Enter amount to transfer (USD):",
-    "0.00"
-  );
-
+  const amountStr = prompt("Enter amount to transfer (USD):", "0.00");
   if (!amountStr) return;
 
   const amount = Math.round(Number(amountStr) * 100);
+
   if (!Number.isInteger(amount) || amount <= 0) {
     alert("Invalid amount");
     return;
@@ -151,35 +172,38 @@ async function transferReferralToMain() {
 
   try {
     const res = await fetch(
-      "https://glorivest-api-a16f75b6b330.herokuapp.com/api/wallets/referral-transfer",
+      "https://glorivest-api-a16f75b6b330.herokuapp.com/api/transfer/profits",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ amount_cents: amount })
+        body: JSON.stringify({
+          amount_cents: amount,
+          source: "REFERRAL"
+        })
       }
     );
 
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Transfer failed");
+      alert(data.error || "Transfer failed");
       return;
     }
 
-    // Refresh balances everywhere
     await loadEarnTab();
     document.dispatchEvent(new Event("wallets:refresh"));
 
     alert("Transfer successful");
 
   } catch (err) {
-    console.error("Transfer error:", err);
+    console.error(err);
     alert("Transfer failed");
   }
 }
+
 
 /* =========================================================
    INIT

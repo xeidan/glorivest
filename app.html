@@ -1064,47 +1064,79 @@
     
     
 
-    <!-- Positions tab -->
-    <section id="tab-positions" class="tab-section hidden py-6 mb-20 px-4 text-white">
-    <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Performance tab -->
+   <section id="tab-performance" class="tab-section hidden py-6 mb-20 px-4 text-white">
 
-        <h2 class="text-2xl font-semibold text-white">Trading Positions</h2>
-          <p class="text-sm text-white/70">
-            A record of all bot-executed positions, including entry, exit, and realized P/L.
-          </p>
-        <div class="bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    
-                    <thead class="bg-black/40 text-white/70 uppercase tracking-wider">
-                        <tr>
-                            <th class="text-left p-4 font-medium">Time</th>
-                            <th class="text-left p-4 font-medium">Symbol</th>
-                            <th class="text-left p-4 font-medium">Side</th>
-                            <th class="text-right p-4 font-medium">Qty</th>
-                            <th class="text-right p-4 font-medium">Entry ($)</th>
-                            <th class="text-right p-4 font-medium">Exit ($)</th>
-                            <th class="text-right p-4 font-medium">P/L ($)</th>
-                        </tr>
-                    </thead>
-                    
-                    <tbody id="pos-tbody" class="divide-y divide-white/10">
-                      <!-- rows injected dynamically -->
-                    </tbody>
+  <div class="max-w-5xl mx-auto space-y-8">
 
-                </table>
-            </div>
-            
-            <div class="flex items-center justify-between p-3 text-sm bg-black/40 border-t border-white/10">
-                <div id="pos-pagination-info" class="text-white/70">Page 1 of 1</div>
-                <div class="flex gap-2">
-                    <button id="pos-prev" class="px-3 py-1 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition disabled:opacity-30 disabled:cursor-not-allowed">Previous</button>
-                    <button id="pos-next" class="px-3 py-1 bg-white/10 rounded-lg text-white/70 hover:bg-white/20 transition disabled:opacity-30 disabled:cursor-not-allowed">Next</button>
-                </div>
-            </div>
-        </div>
+    <!-- HEADER -->
+    <div>
+      <h2 class="text-2xl font-semibold">Bot Performance</h2>
+      <p class="text-sm text-white/60">
+        Cycle growth based on active strategy progress.
+      </p>
     </div>
+
+    <!-- SUMMARY -->
+    <div id="perf-summary" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+
+    <!-- TRADE TABLE -->
+<div class="bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden">
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+
+      <thead class="bg-black/40 text-white/70 uppercase tracking-wider">
+        <tr>
+          <th class="text-left p-4">Opened</th>
+          <th class="text-left p-4">Symbol</th>
+          <th class="text-left p-4">Side</th>
+          <th class="text-right p-4">Size</th>
+          <th class="text-right p-4">Entry</th>
+          <th class="text-right p-4">Exit</th>
+          <th class="text-right p-4">P/L</th>
+          <th class="text-left p-4">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="perf-tbody" class="divide-y divide-white/10">
+        <tr>
+          <td colspan="8" class="p-4 text-center text-white/60">
+            No performance data yet.
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+  <div class="flex items-center justify-between p-3 text-sm bg-black/40 border-t border-white/10">
+    <div id="perf-pagination-info" class="text-white/70">
+      Page 1 of 1
+    </div>
+
+    <div class="flex gap-2">
+      <button id="perf-prev"
+        class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+        Previous
+      </button>
+      <button id="perf-next"
+        class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+        Next
+      </button>
+    </div>
+  </div>
+
+</div>
+
+
+  </div>
+
 </section>
+
+
+
     
     
     <!-- Account tab -->
@@ -1187,12 +1219,12 @@
       <span class="text-xs font-light">Earn</span>
     </button>
     <button data-tab="trade" class="tab-btn">
-      <i class="fas fa-arrow-trend-up mb-2 text-sm"></i>
+      <i class="fas fa-robot mb-2 text-sm"></i>
       <span class="text-xs font-light">Trade</span>
     </button>
-    <button data-tab="positions" class="tab-btn">
-      <i class="fas fa-briefcase mb-2 text-sm"></i>
-      <span class="text-xs font-light">Positions</span>
+    <button data-tab="performance" class="tab-btn">
+      <i class="fas fa-arrow-trend-up mb-2 text-sm"></i>
+      <span class="text-xs font-light">Performance</span>
     </button>
     <button data-tab="account" class="tab-btn">
       <i class="fas fa-user mb-2 text-sm"></i>
@@ -1283,13 +1315,14 @@
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 
+
 <script src="auth.js"></script>
 <script src="wallet.js"></script>
 <script src="global.js"></script>
 <script src="dashboard.js"></script>
 <script src="earn.js"></script>
 <script src="trade.js"></script>
-<script src="positions.js"></script>
+<script src="performance.js"></script>
 <script src="account.js"></script>
 <script src="deposit.js"></script>
 <script src="withdraw.js"></script>
