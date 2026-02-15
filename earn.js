@@ -193,16 +193,7 @@ async function transferReferralToMain() {
       return;
     }
 
-    // 🔥 Update referral balance instantly
-    const earningsEl = document.getElementById("referral-balance");
-    if (earningsEl) {
-      const current = parseFloat(
-        earningsEl.textContent.replace("$", "")
-      );
-      const updated = current - (amount / 100);
-      earningsEl.textContent = `$${updated.toFixed(2)}`;
-    }
-
+    await loadEarnTab();
     document.dispatchEvent(new Event("wallets:refresh"));
 
     alert("Transfer successful");
@@ -214,34 +205,15 @@ async function transferReferralToMain() {
 }
 
 
-
 /* =========================================================
    INIT
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
-  const copyBtn = document.getElementById("copy-btn");
-  const linkEl = document.getElementById("referral-link");
+  loadEarnTab();
+  loadLeaderboard();
 
-  if (!copyBtn || !linkEl) return;
-
-  copyBtn.addEventListener("click", async () => {
-    const link = linkEl.dataset.link;
-    if (!link) return;
-
-    try {
-      await navigator.clipboard.writeText(link);
-
-      // Change button text
-      const originalText = copyBtn.textContent;
-      copyBtn.textContent = "Copied ✓";
-
-      setTimeout(() => {
-        copyBtn.textContent = originalText;
-      }, 1500);
-
-    } catch (err) {
-      console.error("Copy failed:", err);
-    }
-  });
+  const transferBtn = document.getElementById("transfer-referral-btn");
+  if (transferBtn) {
+    transferBtn.addEventListener("click", transferReferralToMain);
+  }
 });
-
