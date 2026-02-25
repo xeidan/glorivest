@@ -45,29 +45,47 @@ async function loadEarnTab() {
 }
 
 /* =========================================================
-   COPY REFERRAL LINK
+   COPY REFERRAL CODE 
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   const copyBtn = document.getElementById("copy-btn");
-  const linkEl = document.getElementById("referral-link");
+  const codeEl = document.getElementById("referral-code");
   const statusEl = document.getElementById("copy-status");
 
-  if (!copyBtn || !linkEl || !statusEl) return;
+  if (!copyBtn || !codeEl) return;
 
   copyBtn.addEventListener("click", async () => {
-    const codeEl = document.getElementById("referral-code");
-const code = codeEl ? codeEl.textContent.trim() : null;
-if (!code) return;
+    const code = codeEl.textContent.trim();
+    if (!code || code === "LOADING...") return;
 
-await navigator.clipboard.writeText(code);
+    try {
+      await navigator.clipboard.writeText(code);
 
-    if (!link) return;
+      // Change button text
+      const original = copyBtn.textContent;
+      copyBtn.textContent = "Copied";
+      copyBtn.disabled = true;
 
-    await navigator.clipboard.writeText(link);
-    statusEl.classList.remove("hidden");
-    setTimeout(() => statusEl.classList.add("hidden"), 1500);
+      if (statusEl) {
+        statusEl.classList.remove("hidden");
+      }
+
+      setTimeout(() => {
+        copyBtn.textContent = original;
+        copyBtn.disabled = false;
+        if (statusEl) {
+          statusEl.classList.add("hidden");
+        }
+      }, 1500);
+
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
   });
 });
+
+
+
 
 /* =========================================================
    LEADERBOARD

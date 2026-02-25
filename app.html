@@ -190,40 +190,53 @@
   </div> <!-- card wrapper -->
 
 
+<!-- ========================= -->
+<!-- ACTION BUTTONS            -->
+<!-- ========================= -->
 
-  <!-- ========================= -->
-  <!-- ACTION BUTTONS            -->
-  <!-- ========================= -->
+<div class="flex justify-around py-10">
 
-  <div class="flex justify-around py-10">
-
-      <div class="flex flex-col items-center">
-          <div onclick="showTab('deposit')" 
-               class="w-14 h-14 flex items-center justify-center bg-white rounded-xl text-black text-xl cursor-pointer">
-              <i class="fa-solid fa-plus"></i>
-          </div>
-          <p class="mt-2 text-xs font-light">Deposit</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-          <div onclick="showTab('withdraw')"
-               class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-              <i class="fa-solid fa-minus"></i>
-          </div>
-          <p class="mt-2 text-xs font-light">Withdraw</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-          <div onclick="showTab('transactions')"
-               class="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white text-xl cursor-pointer">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-          </div>
-          <p class="mt-2 text-xs font-light">Transactions</p>
-      </div>
-
+  <!-- Deposit -->
+  <div class="flex flex-col items-center">
+    <button
+      data-open="modal-deposit"
+      class="w-14 h-14 flex items-center justify-center
+             bg-white rounded-xl text-black text-xl
+             hover:scale-105 active:scale-95 transition">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+    <p class="mt-2 text-xs font-light">Deposit</p>
   </div>
 
-  <hr class="border-white/10">
+  <!-- Withdraw -->
+  <div class="flex flex-col items-center">
+    <button
+      data-open="modal-withdraw"
+      class="w-14 h-14 flex items-center justify-center
+             bg-white/5 border border-white/10
+             rounded-xl text-white text-xl
+             hover:bg-white/10 hover:scale-105 active:scale-95 transition">
+      <i class="fa-solid fa-minus"></i>
+    </button>
+    <p class="mt-2 text-xs font-light">Withdraw</p>
+  </div>
+
+  <!-- Transactions -->
+  <div class="flex flex-col items-center">
+    <button
+      data-open="modal-transactions"
+      class="w-14 h-14 flex items-center justify-center
+             bg-white/5 border border-white/10
+             rounded-xl text-white text-xl
+             hover:bg-white/10 hover:scale-105 active:scale-95 transition">
+      <i class="fa-solid fa-arrow-right-arrow-left"></i>
+    </button>
+    <p class="mt-2 text-xs font-light">Transactions</p>
+  </div>
+
+</div>
+
+<hr class="h-[0.5px] bg-white/20 border-0  mb-12">
 
 
   <!-- ========================= -->
@@ -306,294 +319,176 @@
 
 
 
+<!-- DEPOSIT MODAL -->
+<div id="modal-deposit" class="gv-modal hidden">
 
-    <!-- Deposit Tab -->
-    <section id="tab-deposit" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-      
-      <div class="max-w-md mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
-        
-        <h2 class="text-3xl font-extrabold mb-1 text-white">Deposit Funds</h2>
-        <p class="text-sm text-white/50 mb-6">Securely transfer funds to your trading account.</p>
+  <div class="gv-modal-card">
 
-        <div class="grid grid-cols-3 gap-3 mb-6">
-          <button id="dep-tab-direct" class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Direct Deposit</button>
-          <button id="dep-tab-crypto"  class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Crypto</button>
-          <button id="dep-tab-p2p"     class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">P2P</button>
-        </div>
-
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <div id="node-1" class="w-2 h-2 rounded-full bg-[#00D2B1] transition-colors duration-300"></div>
-              <div id="node-2" class="w-2 h-2 rounded-full bg-white/10 transition-colors duration-300"></div>
-              <div id="node-3" class="w-2 h-2 rounded-full bg-white/10 transition-colors duration-300"></div>
-            </div>
-            <div id="step-label" class="text-sm font-medium text-white/50">Step 1 of 3</div>
-          </div>
-          <div class="progress-line"><div class="bar" id="progress-bar"></div></div>
-        </div>
-
-        <div id="step-1" class="space-y-4">
-          
-          <div>
-            <label class="block text-sm font-medium text-white/80 mb-1">Currency</label>
-            <select id="currency-select" class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition">
-              <option value="NGN">🇳🇬 NGN — Nigerian Naira</option>
-              <option value="USD" disabled>🇺🇸 USD — US Dollar (Not available)</option>
-              <option value="GBP" disabled>🇬🇧 GBP — British Pound (Not available)</option>
-              <option value="EUR" disabled>🇪🇺 EUR — Euro (Not available)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-white/80 mb-1">Amount (in selected currency)</label>
-            <input id="step1-amount" type="number" min="1" step="any"
-                  class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition" placeholder="e.g., 50,000"/>
-            <p id="conversion-preview" class="text-xs text-white/50 mt-2">Rate: — • Equivalent: —</p>
-          </div>
-
-          <div class="flex items-center justify-center pt-4 gap-4">
-            <button id="step1-cancel" onclick="closeTab(this)" 
-                    class="px-10 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">
-              Cancel
-            </button>
-            <button id="step1-next" 
-                    class="px-6 py-3 rounded-lg bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
-              Continue
-            </button>
-          </div>
-        </div>
-
-        <div id="step-2" class="space-y-4 hidden">
-          <div id="bank-loading" class="py-12 text-center text-white/50">
-            <div class="spinner mx-auto mb-4"></div>
-            <p class="text-base font-medium">Fetching secure bank details...</p>
-            <p class="text-xs mt-1">This takes only a moment.</p>
-          </div>
-
-          <div id="bank-details" class="hidden bg-[#1e1e1e] p-5 rounded-xl border border-white/10 space-y-4">
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <div class="small-muted">Reference Code</div>
-                  <div class="font-bold text-lg text-white" id="bank-ref">—</div>
-                </div>
-                <div class="text-right">
-                  <div class="small-muted">Transfer Amount</div>
-                  <div class="font-bold text-lg text-[#00D2B1]" id="bank-amount">$0.00</div>
-                </div>
-            </div>
-
-            <div class="bg-black/30 p-4 rounded-xl space-y-2 border border-white/5">
-              
-              <div>
-                <div class="small-muted">Bank Name</div>
-                <div class="font-semibold text-white/90" id="bank-name">Providus Bank</div>
-              </div>
-
-              <div class="flex items-center justify-between pt-2">
-                <div>
-                  <div class="small-muted">Account Name</div>
-                  <div class="font-semibold text-white/90" id="bank-acct-name">Glorivest Services Ltd.</div>
-                </div>
-                <div class="text-right">
-                  <div class="small-muted">Account Number</div>
-                  <div class="font-semibold flex items-center gap-3">
-                    <span id="bank-acct-num" class="text-lg">1308556778</span>
-                    <button id="copy-acct" class="copy-btn"><i class="fa-regular fa-copy"></i></button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-            
-            <p class="text-xs text-white/60 pt-1">
-                ⚠️ **IMPORTANT:** This account is temporary. Use the **Reference Code** when transferring funds so we can match your payment instantly.
-            </p>
-          </div>
-          
-
-          <div class="flex items-center justify-between pt-4">
-            <div class="flex gap-3">
-              <button id="step2-back" class="px-5 py-2.5 rounded-xl border border-white/20 text-white font-medium hover:bg-white/10 transition">Back</button>
-              <button id="cancel-payment" onclick="closeTab(this)" class="px-5 py-2.5 rounded-xl border border-red-600/50 text-red-500 font-medium hover:bg-red-900/20 transition">Cancel Payment</button>
-            </div>
-            <div>
-              <button id="ive-sent" class="px-6 py-2.5 rounded-xl bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">I've sent the money</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="step-3" class="space-y-4 hidden">
-          <div>
-            <label class="block text-sm font-medium text-white/80 mb-2">Upload Transfer Receipt (image or PDF)</label>
-            <input id="step3-file" type="file" accept="image/*,application/pdf" class="w-full p-3 rounded-xl bg-[#1e1e1e] border border-white/10 text-white"/>
-          </div>
-
-          <div id="file-preview-wrap" class="p-3 bg-white/5 rounded-lg border border-white/10 hidden">
-            <p class="text-xs text-white/60 mb-2">Preview:</p>
-            <div id="file-preview" class="mt-2"></div>
-          </div>
-
-          <div class="flex items-center justify-between pt-4">
-            <div class="flex gap-3">
-              <button id="step3-back" class="px-5 py-2.5 rounded-xl border border-white/20 text-white font-medium hover:bg-white/10 transition">Back</button>
-            </div>
-            <div>
-              <button id="submit-deposit" class="px-6 py-2.5 rounded-xl bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">Submit Deposit</button>
-            </div>
-          </div>
-
-          <p id="deposit-msg" class="text-sm text-center font-medium pt-3 hidden"></p>
-        </div>
-
-        <div id="deposit-spinner" class="spinner-overlay hidden">
-          <div class="spinner" aria-hidden="true"></div>
-        </div>
-
-      </div>
-
-      <div id="center-toast" class="center-toast hidden">
-        <div class="card">
-          <span id="center-toast-text"></span>
-        </div>
-      </div>
-    </section>
-
-
-
-    <!-- Withdraw Tab -->
-    <section id="tab-withdraw" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-    
-    <div class="max-w-md mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
-      
-      <h2 class="text-3xl font-extrabold mb-1 text-white">Withdraw Funds</h2>
-      <p class="text-sm text-white/50 mb-6">Choose your preferred withdrawal method.</p>
-
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <button id="wd-tab-direct" class="wd-active py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Direct (Bank)</button>
-        <button id="wd-tab-crypto"  class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">Crypto</button>
-        <button id="wd-tab-p2p"     class="py-3 px-3 rounded-xl border border-white/10 bg-[#1e1e1e] text-white font-semibold transition hover:bg-[#252525] focus:ring-2 focus:ring-[#00D2B1]/50 focus:outline-none">P2P (O2O)</button>
-      </div>
-
-      <div id="wd-content-direct" class="space-y-4">
-        
-        <p class="text-xs text-white/60 pt-2">Withdrawal will be paid to your linked bank account. Processing fees may apply.</p>
-        
-        <div>
-          <label class="block text-sm font-medium text-white/80 mb-1">Select Bank Account</label>
-          <select id="wd-bank-select" 
-                  class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition">
-            <option value="NGN">Access Bank — 1234567890 (NGN)</option>
-            <option value="NGN">GTBank — 0987654321 (NGN)</option>
-            <option value="ADD">Add New Bank Account...</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-white/80 mb-1">Amount (in USD equivalent)</label>
-          <input id="wd-amount-direct" type="number" min="10"
-                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
-                placeholder="Minimum $10">
-          <p class="text-xs text-white/50 mt-2">Conversion: $1.00 = NGN 1,450.00 • You receive NGN 14,500.00</p>
-        </div>
-
-        <div class="flex items-center justify-end pt-4 gap-4">
-          <button id="wd-direct-cancel" onclick="closeTab(this)" class="px-10 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
-          <button id="btn-withdraw-direct" class="px-6 py-3 rounded-lg bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
-            Withdraw to Bank
-          </button>
-        </div>
-      </div>
-      
-      <div id="wd-content-crypto" class="space-y-4 hidden">
-        
-        <div>
-          <label class="block text-sm font-medium text-white/80 mb-1">Asset & Network</label>
-          <div class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10">
-            USDT (TRC20 on TRON)
-          </div>
-          <input type="hidden" id="wd-coin" value="USDT" />
-          <p class="text-xs text-red-400/80 mt-2">
-            ⚠️ **WARNING:** Only TRON (TRC20) USDT is supported. Using another network will result in loss of funds.
-          </p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-white/80 mb-1">Wallet Address (TRC20)</label>
-          <input id="wd-address" type="text"
-                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
-                placeholder="Enter TRON (TRC20) address only">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-white/80 mb-1">Amount ($)</label>
-          <input id="wd-amount-crypto" type="number" min="20"
-                class="w-full rounded-xl bg-[#1e1e1e] text-white px-4 py-3 border border-white/10 focus:border-[#00D2B1] focus:ring-1 focus:ring-[#00D2B1] transition"
-                placeholder="Minimum $20">
-        </div>
-
-        <div class="flex items-center justify-end pt-4 gap-4">
-          <button id="wd-crypto-cancel" onclick="closeTab(this)" class="px-5 py-3 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition">Cancel</button>
-          <button id="btn-withdraw-crypto" class="px-6 py-3 rounded-full bg-[#00D2B1] text-black font-bold shadow-lg shadow-[#00D2B1]/30 hover:bg-[#00bca3] transition">
-            Withdraw USDT
-          </button>
-        </div>
-
-        <p id="wd-status" class="text-xs text-white/50 text-center pt-2 hidden"></p>
-      </div>
-      
-      <div id="wd-content-p2p" class="space-y-4 hidden">
-          <div class="p-6 bg-[#1e1e1e] rounded-xl border border-white/10 text-center">
-              <h3 class="text-lg font-bold text-white mb-2">P2P (O2O) Withdrawal</h3>
-              <p class="text-sm text-white/60">
-                Peer-to-Peer withdrawal allows you to sell your funds directly to other users.
-                This service is currently **unavailable** in your region.
-              </p>
-          </div>
-          <div class="flex items-center justify-end pt-4">
-              <button id="wd-p2p-cancel" onclick="closeTab(this)" class="px-5 py-3 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition">Close</button>
-          </div>
-      </div>
-      
+    <div class="gv-modal-header">
+      <h2>Deposit Funds</h2>
+      <button data-close="modal-deposit">&times;</button>
     </div>
-</section>
+
+    <div class="gv-modal-body space-y-6">
+
+      <!-- Tabs -->
+      <div class="gv-segment">
+        <button data-dep="direct" class="active">Bank</button>
+        <button data-dep="crypto">Crypto</button>
+        <button data-dep="p2p">P2P</button>
+      </div>
+
+      <!-- Amount -->
+      <div class="space-y-2">
+        <label class="text-sm text-white/60">Amount (USD)</label>
+        <input id="deposit-amount"
+          type="number"
+          class="gv-input"
+          placeholder="Minimum $50">
+      </div>
+
+      <!-- Dynamic Content -->
+      <div id="deposit-dynamic"></div>
+
+      <button id="btn-submit-deposit" class="gv-primary-btn">
+        Continue
+      </button>
+
+    </div>
+
+  </div>
+</div>
 
 
-    <!-- Transactions Tab -->
-    <section id="tab-transactions" class="tab-content fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden py-6 px-4 h-full pt-24">
-    
-    <div class="max-w-2xl mx-auto bg-[#101010] border border-[#00D2B1]/30 rounded-2xl p-6 shadow-2xl shadow-black relative">
-      
-      <h2 class="text-3xl font-extrabold mb-2 text-white">Transaction History</h2>
-      <p class="text-sm text-white/50 mb-6">A record of all deposits, withdrawals, and internal transfers.</p>
 
-      <div class="overflow-x-auto rounded-xl border border-white/10">
-        <table class="min-w-full text-left divide-y divide-white/10">
-          
-          <thead class="bg-[#1e1e1e] text-white/60 text-xs font-semibold uppercase tracking-wider">
-            <tr>
-              <th class="px-4 py-3 w-1/4">Type</th>
-              <th class="px-4 py-3 w-1/4 text-right">Amount</th>
-              <th class="px-4 py-3 w-1/4">Status</th>
-              <th class="px-4 py-3 w-1/4 text-right">Date</th>
-            </tr>
-          </thead>
-          
-          <tbody id="transaction-history" class="text-white/80 text-sm divide-y divide-white/5">
+<!-- WITHDRAW MODAL -->
+<div id="modal-withdraw" class="gv-modal hidden">
+
+  <div class="gv-modal-card">
+
+    <div class="gv-modal-header">
+      <h2>Withdraw Funds</h2>
+      <button data-close="modal-withdraw">&times;</button>
+    </div>
+
+    <div class="gv-modal-body space-y-6">
+
+      <div class="gv-segment">
+        <button data-wd="bank" class="active">Bank</button>
+        <button data-wd="crypto">Crypto</button>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm text-white/60">Amount</label>
+        <input id="withdraw-amount"
+          type="number"
+          class="gv-input"
+          placeholder="Minimum $10">
+      </div>
+
+      <div id="withdraw-dynamic"></div>
+
+      <button id="btn-submit-withdraw" class="gv-primary-btn">
+        Withdraw
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- TRANSACTIONS MODAL -->
+<div id="modal-transactions" class="gv-modal hidden">
+
+  <div class="gv-modal-card wide">
+
+    <!-- HEADER -->
+    <div class="gv-modal-header">
+      <h2>Transactions</h2>
+      <button data-close="modal-transactions">&times;</button>
+    </div>
+
+    <!-- BODY -->
+    <div class="gv-modal-body flex flex-col gap-4">
+
+      <!-- FILTER BAR -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+
+        <!-- TYPE FILTER -->
+        <select id="filter-type" class="gv-input text-sm md:w-48">
+          <option value="all">All</option>
+          <option value="deposit">Deposits</option>
+          <option value="withdrawal">Withdrawals</option>
+        </select>
+
+        <!-- DATE PRESETS
+        <div id="tx-range-bar"
+            class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
+
+          <button data-range="7" class="tx-range-btn">7D</button>
+          <button data-range="30" class="tx-range-btn active">30D</button>
+          <button data-range="90" class="tx-range-btn">90D</button>
+          <button data-range="all" class="tx-range-btn">All</button>
+
+        </div> -->
+
+      </div>
+
+      <!-- SCROLL AREA -->
+      <div id="transaction-scroll" class="flex-1 overflow-y-auto">
+
+        <!-- DESKTOP TABLE -->
+        <div class="hidden md:block">
+
+          <table class="w-full text-sm">
+
+            <thead class="text-white/50 border-b border-white/10">
+              <tr>
+                <th class="text-left py-3">Type</th>
+                <th class="text-right py-3">Amount</th>
+                <th class="text-right py-3">Status</th>
+                <th class="text-right py-3">Date</th>
+              </tr>
+            </thead>
+
+            <tbody id="transaction-table-body"
+                   class="divide-y divide-white/5">
             </tbody>
-        </table>
+
+          </table>
+
+        </div>
+
+        <!-- MOBILE STACK -->
+        <div id="transaction-mobile-list"
+             class="space-y-3 md:hidden">
+        </div>
+
       </div>
-      
-      <div class="flex justify-center pt-8">
-        <button onclick="closeTab(this)" 
-                class="px-6 py-3 rounded-lg border border-white/20 text-white font-medium hover:bg-white/10 transition">
-          Close 
+
+      <!-- PAGINATION -->
+      <div class="flex justify-between items-center pt-3 border-t border-white/10 text-sm">
+
+        <button id="tx-prev"
+                class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+          Prev
         </button>
+
+        <span id="tx-page-info" class="text-white/50"></span>
+
+        <button id="tx-next"
+                class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+          Next
+        </button>
+
       </div>
 
     </div>
-</section>
+
+  </div>
+</div>
 
       
 
@@ -1325,7 +1220,7 @@
 <script src="performance.js"></script>
 <script src="account.js"></script>
 <script src="deposit.js"></script>
-<script src="withdraw.js"></script>
+<script src="withdrawal.js"></script>
 <script src="transactions.js"></script>
 
 </body>
