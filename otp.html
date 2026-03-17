@@ -3,40 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>Verify OTP</title>
-  <link href="output.css" rel="stylesheet" />
+
+  <!-- Tailwind Output -->
+  <link href="./output.css" rel="stylesheet" />
 </head>
-<body class="bg-gradient-to-br from-[#00D2B1] to-[#008080] min-h-screen flex items-center justify-center px-4">
-  <div class="bg-white shadow-lg rounded-xl max-w-md w-full p-8 animate-fade-in">
-    <h2 class="text-3xl font-bold text-gray-800 text-center mb-3">Verify Your Email</h2>
-    <p class="text-sm text-gray-500 text-center mb-6">Enter the 6-digit code sent to your email</p>
 
-    <input id="otp" maxlength="6" placeholder="123456"
-      class="w-full text-center text-xl tracking-widest border rounded-lg px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00D2B1]" />
+<body class="bg-white min-h-screen flex items-center justify-center px-4">
 
-    <button onclick="verifyOTP()"
-      class="w-full bg-[#00D2B1] hover:bg-[#00b8a1] transition text-white font-bold py-3 rounded-lg mb-4">
+  <div class="bg-white border border-gray-200 rounded-2xl max-w-md w-full p-8 animate-fade-in">
+
+    <!-- HEADER -->
+    <h2 class="text-3xl font-bold text-gray-800 text-center mb-2">
+      Verify Your Email
+    </h2>
+
+    <p class="text-sm text-gray-500 text-center mb-6">
+      Enter the 6-digit code sent to your email
+    </p>
+
+    <!-- OTP BOXES -->
+    <div id="otp-container" class="flex justify-between gap-2 mb-6">
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+    </div>
+
+    <!-- VERIFY -->
+    <button
+      id="verify-btn"
+      onclick="verifyOTP()"
+      class="w-full bg-[#00D2B1] hover:bg-[#00b8a1] transition text-white font-bold py-3 rounded-xl mb-4 active:scale-[0.98]"
+    >
       Verify OTP
     </button>
 
-    <p class="text-center text-sm text-gray-600">Didn't receive code?
-      <button onclick="resendOTP()" class="text-[#00D2B1] font-medium hover:underline">Resend</button>
+    <!-- RESEND -->
+    <p class="text-center text-sm text-gray-600">
+      Didn’t receive code?
+      <button
+        id="resend-btn"
+        onclick="resendOTP()"
+        class="text-[#00D2B1] font-medium hover:underline ml-1"
+      >
+        Resend
+      </button>
     </p>
 
-    <p id="status" class="text-center text-sm mt-4 text-red-500"></p>
+    <!-- STATUS -->
+    <p id="status" class="text-center text-sm mt-4"></p>
+
   </div>
 
+
+  <!-- FALLBACK STYLES (in case Tailwind fails) -->
   <style>
+    .otp-box {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .otp-box:focus {
+      border-color: #00D2B1;
+      box-shadow: 0 0 0 2px rgba(0,210,177,0.2);
+    }
+
     .animate-fade-in {
       animation: fadeIn 0.3s ease-in-out;
     }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
 
-<script src="otp.js"></script>
-</body>
 
+  <!-- SCRIPT -->
+  <script src="./otp.js"></script>
+
+</body>
 </html>

@@ -37,25 +37,48 @@
    ============================================================ */
 
 .nav-glow {
-  box-shadow: 0 -5px 20px rgba(0,210,177,0.2);
+  box-shadow: 0 -5px 20px rgba(0, 210, 177, 0.2);
   z-index: 100;
 }
 
+/* Tab Button */
 .tab-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  color: white;
-  transition: color 0.3s ease;
+  justify-content: center;
+  gap: 4px; /* uniform spacing */
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s ease;
 }
 
-.tab-btn i,
+/* Icon container (fixes uneven icon alignment) */
+.tab-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon itself */
+.tab-icon i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Label */
 .tab-btn span {
-  transition: color 0.3s ease;
+  font-size: 11px;
+  font-weight: 400;
 }
 
-.tab-btn.active-tab,
+/* Active state */
+.tab-btn.active-tab {
+  color: #00D2B1;
+}
+
 .tab-btn.active-tab i,
 .tab-btn.active-tab span {
   color: #00D2B1;
@@ -761,3 +784,25 @@
 .overview-cycle-card {
   min-height: 260px;
 }
+
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.account-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.account-item i {
+  color: #00D2B1;
+}
+
+
+
+

@@ -25,17 +25,16 @@
 
     <!-- Initials Avatar -->
     <div id="user-initials"
-      class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold 
-            border border-[#00D2B1] bg-black/40 backdrop-blur-md">
+      class="w-12 h-12 rounded-full bg-black border  border-[#00D2B1] flex items-center justify-center text-lg font-bold">
       GV
     </div>
 
     <!-- Text Info -->
     <div class="leading-tight">
-      <p id="user-email" class="text-sm font-semibold">
+      <p id="user-email" class="font-semibold">
         user@example.com</span>
       </p>
-      <p class="text-sm tracking-wide font-light text-white">
+      <p class="text-xs text-white/50">
         ID: <span id="glorivest-id">GV000000</span>
       </p>
     </div>
@@ -493,7 +492,7 @@
       
 
     <!-- Earn tab -->
-    <section id="tab-earn" class="tab-section py-6 px-2">
+    <section id="tab-earn" class="tab-section pt-6 pb-24 px-2">
 
       <h1 class="text-3xl font-extrabold mb-6 text-white text-center">
         Refer & Earn
@@ -569,7 +568,7 @@
     
 <!-- TRADE TAB -->
 <section id="tab-trade"
-  class="tab-section hidden py-6 px-2 text-white space-y-6 min-h-[70vh]">
+  class="tab-section hidden pt-6 pb-24 px-2 text-white space-y-6 min-h-[70vh]">
 
   <!-- TAB NAV -->
   <div class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
@@ -941,7 +940,7 @@
     
 
     <!-- Performance tab -->
-   <section id="tab-performance" class="tab-section hidden py-6 mb-20 px-4 text-white">
+   <section id="tab-performance" class="tab-section hidden py-6 mb-20 px-2 text-white">
 
   <div class="max-w-5xl mx-auto space-y-8">
 
@@ -1017,96 +1016,143 @@
     
     <!-- Account tab -->
     <section id="tab-account" class="tab-section hidden py-6">
-      <div class="max-w-md mx-auto text-white space-y-6">
-    
-        <!-- Account Actions -->
-        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10 shadow-lg">
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="telegram">
-            <span>Join Telegram</span>
-            <i class="fa-brands fa-telegram text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="install">
-            <span>Install Web App</span>
-            <i class="fa-solid fa-download text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="profile">
-            <span>Edit Profile</span>
-            <i class="fa-solid fa-user-pen text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="kyc">
-            <span>KYC Verification</span>
-            <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded font-semibold">Pending</span>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="security">
-            <span>Security Settings</span>
-            <i class="fa-solid fa-shield-halved text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="notifications">
-            <span>Notification Preferences</span>
-            <i class="fa-solid fa-bell text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="support">
-            <span>Contact Support</span>
-            <i class="fa-solid fa-headset text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="terms">
-            <span>Terms & Policies</span>
-            <i class="fa-solid fa-file-contract text-[#00D2B1] text-lg"></i>
-          </div>
-    
-          <div class="hover:bg-white/10 transition p-4 flex justify-between items-center" data-action="logout">
-            <span class="text-red-500 font-bold">Log Out</span>
-            <i class="fa-solid fa-arrow-right-from-bracket text-red-500 text-lg"></i>
-          </div>
-        </div>
-    
-        <!-- Logo -->
-        <div class="flex flex-col items-center space-y-2 pt-4">
-          <img class="w-48" src="glorivest-logo.png" alt="Glorivest Logo">
-        </div>
-    
-        <!-- App Info -->
-        <div class="text-xs text-white/50 text-center pb-10">
-          Glorivest v1.0.0 • Last updated: Aug 2025<br>
-          Invest smarter. Powered by AI.
-        </div>
+  <div class="max-w-md mx-auto text-white space-y-6 px-2">
+
+
+    <!-- ACCOUNT -->
+    <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10 ">
+
+      <div class="px-4 py-2 text-xs text-white/40 uppercase tracking-wide">
+        Account
       </div>
-    </section>
+
+      <div class="account-item" data-action="profile">
+        <span>Edit Profile</span>
+        <i class="fa-solid fa-user-pen"></i>
+      </div>
+
+      <div class="account-item" data-action="kyc">
+        <span>KYC Verification</span>
+        <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded font-semibold">
+          Pending
+        </span>
+      </div>
+
+      <div class="account-item" data-action="security">
+        <span>Security Settings</span>
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+
+      <div class="account-item" data-action="notifications">
+        <span>Notifications</span>
+        <i class="fa-solid fa-bell"></i>
+      </div>
+
+    </div>
+
+    <!-- APP -->
+    <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10">
+
+      <div class="px-4 py-2 text-xs text-white/40 uppercase tracking-wide">
+        App
+      </div>
+
+      <div class="account-item" data-action="install">
+        <span>Install App</span>
+        <i class="fa-solid fa-download"></i>
+      </div>
+
+      <div class="account-item" data-action="telegram">
+        <span>Join Telegram</span>
+        <i class="fa-brands fa-telegram"></i>
+      </div>
+
+    </div>
+
+    <!-- SUPPORT -->
+    <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10">
+
+      <div class="px-4 py-2 text-xs text-white/40 uppercase tracking-wide">
+        Support
+      </div>
+
+      <div class="account-item" data-action="support">
+        <span>Contact Support</span>
+        <i class="fa-solid fa-headset"></i>
+      </div>
+
+      <div class="account-item" data-action="terms">
+        <span>Terms & Policies</span>
+        <i class="fa-solid fa-file-contract"></i>
+      </div>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+      <div class="account-item text-red-500" data-action="logout">
+        <span class="font-semibold">Log Out</span>
+        <i class="fa-solid fa-arrow-right-from-bracket text-red-500"></i>
+      </div>
+    </div>
+
+    <!-- LOGO -->
+    <div class="flex flex-col items-center pt-6 pb-6">
+      <img class="w-36 opacity-70" src="glorivest-logo.png">
+    </div>
+
+    <!-- APP INFO -->
+    <div class="text-xs text-white/50 text-center pb-20">
+      Glorivest v1.0.0 • Last updated: Aug 2025<br>
+      Invest smarter. Powered by AI.
+    </div>
+
+  </div>
+</section>
 
     
   </main>
 
   <!-- Bottom Nav -->
-  <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around nav-glow bg-black z-50">
-    <button data-tab="dashboard" class="tab-btn active-tab">
-      <i class="fas fa-home mb-2 text-sm"></i>
-      <span class="text-xs font-light">Dashboard</span>
-    </button>
-    <button data-tab="earn" class="tab-btn">
-      <i class="fas fa-wallet mb-2 text-sm"></i>
-      <span class="text-xs font-light">Earn</span>
-    </button>
-    <button data-tab="trade" class="tab-btn">
-      <i class="fas fa-robot mb-2 text-sm"></i>
-      <span class="text-xs font-light">Trade</span>
-    </button>
-    <button data-tab="performance" class="tab-btn">
-      <i class="fas fa-arrow-trend-up mb-2 text-sm"></i>
-      <span class="text-xs font-light">Performance</span>
-    </button>
-    <button data-tab="account" class="tab-btn">
-      <i class="fas fa-user mb-2 text-sm"></i>
-      <span class="text-xs font-light">Account</span>
-    </button>
-  </nav>
+<nav id="bottom-nav"
+     class="fixed bottom-0 left-0 w-full flex justify-around bg-black nav-glow z-50">
+
+  <button data-tab="dashboard" class="tab-btn active-tab">
+    <div class="tab-icon">
+      <i class="fas fa-home"></i>
+    </div>
+    <span>Dashboard</span>
+  </button>
+
+  <button data-tab="earn" class="tab-btn">
+    <div class="tab-icon">
+      <i class="fas fa-wallet"></i>
+    </div>
+    <span>Earn</span>
+  </button>
+
+  <button data-tab="trade" class="tab-btn">
+    <div class="tab-icon">
+      <i class="fas fa-robot"></i>
+    </div>
+    <span>Trade</span>
+  </button>
+
+  <button data-tab="performance" class="tab-btn">
+    <div class="tab-icon">
+      <i class="fas fa-arrow-trend-up"></i>
+    </div>
+    <span>Performance</span>
+  </button>
+
+  <button data-tab="account" class="tab-btn">
+    <div class="tab-icon">
+      <i class="fas fa-user"></i>
+    </div>
+    <span>Account</span>
+  </button>
+
+</nav>
   
 
   <span data-me="email"></span>

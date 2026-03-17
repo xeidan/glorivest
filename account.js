@@ -125,3 +125,76 @@
     });
   }
 })();
+
+
+document.addEventListener('click', (e) => {
+  const item = e.target.closest('[data-action]');
+  if (!item) return;
+
+  const action = item.dataset.action;
+
+  switch (action) {
+    case 'logout':
+      // logout logic
+      break;
+
+    case 'telegram':
+      window.open('https://t.me/yourlink', '_blank');
+      break;
+
+    case 'support':
+      // open support modal
+      break;
+  }
+});
+
+
+document.addEventListener('click', async (e) => {
+  const item = e.target.closest('[data-action]');
+  if (!item) return;
+
+  const action = item.dataset.action;
+
+  switch (action) {
+
+    case 'logout':
+      localStorage.removeItem('token');
+      window.location.href = '/index.html';
+      break;
+
+    case 'telegram':
+      window.open('https://t.me/your_telegram_link', '_blank');
+      break;
+
+    case 'install':
+      // already handled by your PWA logic
+      break;
+
+    case 'support':
+      window.location.href = 'mailto:support@glorivest.com';
+      break;
+
+    case 'terms':
+      window.open('/terms.html', '_blank');
+      break;
+
+    case 'profile':
+      alert('Profile editing coming soon');
+      break;
+
+    case 'kyc':
+      alert('KYC flow coming soon');
+      break;
+
+    case 'security':
+      alert('Security settings coming soon');
+      break;
+
+    case 'notifications':
+      alert('Notification settings coming soon');
+      break;
+
+    default:
+      console.warn('Unhandled action:', action);
+  }
+});

@@ -31,9 +31,10 @@ async function apiFetch(path, options = {}) {
 /** ============================================
  *                REGISTER
  * ============================================ */
-const registerForm = document.getElementById('register-form');
-if (registerForm) {
-  registerForm.addEventListener('submit', async (e) => {
+const registerFormEl = document.getElementById('register-form');
+
+if (registerFormEl) {
+  registerFormEl.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const email = document.getElementById('registerEmail').value.trim();
@@ -52,14 +53,12 @@ if (registerForm) {
         body: { email, password, referral_code: referral }
       });
 
+      // store email for OTP screen
       localStorage.setItem('otpEmail', email);
 
-      await apiFetch('/auth/send-otp', {
-        method: 'POST',
-        body: { email, purpose: 'verify' }
-      });
-
+      // redirect ONLY
       window.location.href = 'otp.html';
+
     } catch (err) {
       alert(err.message || 'Request failed');
     }
@@ -67,13 +66,15 @@ if (registerForm) {
 }
 
 
+
+
 /** ============================================
  *                LOGIN
  * ============================================ */
-const loginForm = document.getElementById('login-form');
+const loginFormEl = document.getElementById('login-form');
 
-if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
+if (loginFormEl) {
+  loginFormEl.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const email = document.getElementById('loginEmail').value.trim();
@@ -202,8 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabSlider = document.getElementById('tabSlider');
   const loginTab = document.getElementById('tabLogin');
   const registerTab = document.getElementById('tabRegister');
-  const loginForm = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
+  const registerFormEl = document.getElementById('register-form');
 
   window.toggleAuthPanel = function () {
     const isHidden = authBackdrop.classList.contains('hidden');
@@ -225,8 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.showRegister = function () {
-    registerForm.classList.remove('hidden');
-    loginForm.classList.add('hidden');
+    registerFormEl.classList.remove('hidden');
+    loginFormEl.classList.add('hidden');
 
     registerTab.classList.add('text-white');
     loginTab.classList.remove('text-white');
@@ -236,8 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.showLogin = function () {
-    loginForm.classList.remove('hidden');
-    registerForm.classList.add('hidden');
+    loginFormEl.classList.remove('hidden');
+    registerFormEl.classList.add('hidden');
 
     loginTab.classList.add('text-white');
     registerTab.classList.remove('text-white');

@@ -1,50 +1,71 @@
-// otp.js
-const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com';
+'use strict';
 
-// Get saved email from register step
+const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+
 const email = localStorage.getItem('otpEmail');
+
 if (!email) {
   alert('No email found. Please register again.');
   window.location.href = 'index.html';
 }
 
-// ---- Verify OTP ----
-async function verifyOTP() {
-  const code = document.getElementById('otp').value.trim();
-  const statusEl = document.getElementById('status');
 
-  if (!code || code.length !== 6) {
-    statusEl.textContent = 'Enter a valid 6-digit code.';
+// --------------------------------------------------
+// HELPERS
+// --------------------------------------------------
+function getOtpCode() {
+  const inputs = document.querySelectorAll('.otp-box');
+  return Array.from(inputs).map(i => i.value).join('');
+}
+
+function setStatus(message, type = 'error') {
+  const el = document.getElementById('status');
+  el.textContent = message;
+
+  el.classList.remove('text-red-500', 'text-green-600');
+
+  if (type === 'success') {
+    el.classList.add('text-green-600');
+  } else {
+    el.classList.add('text-red-500');
+  }
+}
+
+
+// --------------------------------------------------
+// VERIFY OTP
+// --------------------------------------------------
+async function verifyOTP() {
+  const code = getOtpCode();
+  const btn = document.getElementById('verify-btn');
+
+  if (code.length !== 6) {
+    setStatus('Enter full 6-digit code');
     return;
   }
+
+  btn.disabled = true;
 
   try {
     const res = await fetch(`${API_BASE}/auth/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        code,
-        purpose: 'verify'
-      })
+      body: JSON.stringify({ email, code, purpose: 'verify' })
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      statusEl.textContent = data.message || 'Invalid code';
+      setStatus(data.message || 'Invalid or expired code');
       return;
     }
 
-    // Backend returns a token for purpose=verify
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.removeItem('otpEmail');
     }
 
-    statusEl.classList.remove('text-red-500');
-    statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'Verified! Redirecting…';
+    setStatus('Verified! Redirecting...', 'success');
 
     setTimeout(() => {
       window.location.href = 'app.html';
@@ -52,36 +73,101 @@ async function verifyOTP() {
 
   } catch (err) {
     console.error(err);
-    statusEl.textContent = 'Network error. Try again.';
+    setStatus('Network error. Try again.');
+  } finally {
+    btn.disabled = false;
   }
 }
 
-// ---- Resend OTP ----
+
+// --------------------------------------------------
+// RESEND OTP
+// --------------------------------------------------
 async function resendOTP() {
-  const statusEl = document.getElementById('status');
+  const btn = document.getElementById('resend-btn');
+
+  btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/auth/resend-otp`, {
+    const res = await fetch(`${API_BASE}/auth/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        purpose: 'verify'
-      })
+      body: JSON.stringify({ email, purpose: 'verify' })
     });
+
     const data = await res.json();
 
     if (!res.ok) {
-      statusEl.textContent = data.message || 'Failed to resend OTP';
+      setStatus(data.message || 'Failed to resend');
       return;
     }
 
-    statusEl.classList.remove('text-red-500');
-    statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'Code resent to your email.';
+    setStatus('New code sent', 'success');
 
   } catch (err) {
     console.error(err);
-    statusEl.textContent = 'Error resending code.';
+    setStatus('Error resending code');
+  } finally {
+    btn.disabled = false;
   }
 }
+
+
+// --------------------------------------------------
+// INPUT BEHAVIOR (CRITICAL)
+// --------------------------------------------------
+const inputs = document.querySelectorAll('.otp-box');
+
+inputs.forEach((input, index) => {
+
+  input.addEventListener('input', (e) => {
+    let value = e.target.value;
+
+    // Allow only numbers
+    if (!/^\d$/.test(value)) {
+      e.target.value = '';
+      return;
+    }
+
+    // Move forward
+    if (index < inputs.length - 1) {
+      inputs[index + 1].focus();
+    }
+
+    // Auto verify on last
+    if (index === inputs.length - 1) {
+      verifyOTP();
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !input.value && index > 0) {
+      inputs[index - 1].focus();
+    }
+  });
+
+});
+
+
+// --------------------------------------------------
+// AUTO FOCUS FIRST BOX
+// --------------------------------------------------
+inputs[0]?.focus();
+
+
+// --------------------------------------------------
+// PASTE SUPPORT (VERY IMPORTANT UX)
+// --------------------------------------------------
+document.getElementById('otp-container')?.addEventListener('paste', (e) => {
+  const paste = (e.clipboardData || window.clipboardData).getData('text');
+
+  if (!/^\d{6}$/.test(paste)) return;
+
+  e.preventDefault();
+
+  paste.split('').forEach((digit, i) => {
+    if (inputs[i]) inputs[i].value = digit;
+  });
+
+  verifyOTP();
+});
