@@ -39,6 +39,81 @@
     document.body.classList.toggle('demo-mode', normalized === 'DEMO');
   }
 
+/* ===========================
+   ACCOUNT TOGGLE
+=========================== */
+
+function initAccountToggle() {
+
+  const demoBtn = qs('toggle-demo');
+  const liveBtn = qs('toggle-live');
+
+  const demoCard = qs('demo-card');
+  const liveCard = qs('live-card');
+  const title = qs('account-title');
+
+  if (!demoBtn || !liveBtn) return;
+
+  function activateDemo() {
+
+  setMode('DEMO');
+
+  demoBtn.classList.add('active');
+  demoBtn.classList.remove('inactive');
+
+  liveBtn.classList.remove('active');
+  liveBtn.classList.add('inactive');
+
+  if (demoCard) demoCard.classList.remove('hidden');
+  if (liveCard) liveCard.classList.add('hidden');
+
+  if (title) title.textContent = 'Demo';
+
+  const track = qs('toggle-track');
+  if (track) track.style.transform = 'translateX(0px)';
+
+  updateDemoResetVisibility();
+}
+
+ function activateLive() {
+
+  setMode('LIVE');
+
+  liveBtn.classList.add('active');
+  liveBtn.classList.remove('inactive');
+
+  demoBtn.classList.remove('active');
+  demoBtn.classList.add('inactive');
+
+  if (liveCard) liveCard.classList.remove('hidden');
+  if (demoCard) demoCard.classList.add('hidden');
+
+  if (title) title.textContent = 'Live';
+
+  const track = qs('toggle-track');
+  if (track) track.style.transform = 'translateX(50px)';
+
+  updateDemoResetVisibility();
+}
+
+  demoBtn.addEventListener('click', async () => {
+    activateDemo();
+
+    await window.loadWallets?.();
+    window.syncWalletsFromGlobal();
+    renderDashboard();
+  });
+
+  liveBtn.addEventListener('click', async () => {
+    activateLive();
+
+    await window.loadWallets?.();
+    window.syncWalletsFromGlobal();
+    renderDashboard();
+  });
+
+}
+
   /* ===========================
      WALLET SYNC
   =========================== */
@@ -89,6 +164,9 @@
       qs('live-total').textContent = fmtUSD(state.realWallet.balance_cents);
     }
 
+    if (state.realWallet && qs('live-available')) {
+      qs('live-available').textContent = fmtUSD(state.realWallet.balance_cents);
+    }
     if (state.demoWallet && qs('demo-total')) {
       qs('demo-total').textContent = fmtUSD(state.demoWallet.balance_cents);
     }
@@ -255,21 +333,29 @@
   /* ===========================
      INIT
   =========================== */
+document.addEventListener('DOMContentLoaded', async () => {
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  console.log("DOM fully loaded");
 
-    console.log("DOM fully loaded");
+  initModals();
+  initDepositTabs();
+  initWithdrawTabs();
+  initAccountToggle();
 
-    initModals();
-    initDepositTabs();
-    initWithdrawTabs();
+  qs('demo-reset')?.addEventListener('click', resetDemoBalance);
 
-    qs('demo-reset')?.addEventListener('click', resetDemoBalance);
+  setMode(getMode());
 
-    setMode(getMode());
+  await window.loadWallets?.();
+  await loadUser();
 
-    await window.loadWallets?.();
-    await loadUser();
-  });
+  // ensure correct card is shown on initial load
+  if (getMode() === 'DEMO') {
+    qs('toggle-demo')?.click();
+  } else {
+    qs('toggle-live')?.click();
+  }
+
+});
 
 })();

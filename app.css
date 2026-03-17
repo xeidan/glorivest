@@ -734,3 +734,30 @@
   color: black;
   font-weight: 600;
 }
+
+
+.bot-terminal {
+  max-height: 110px;
+  overflow: hidden;
+  background: rgba(0,0,0,.4);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 10px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bot-terminal-line {
+  color: #7CFFC4;
+  text-shadow: 0 0 4px rgba(0,210,177,.25);
+}
+
+.bg-\[\#1e1e1e\]:hover {
+  transform: translateY(-2px);
+  transition: transform .2s ease;
+}
+
+.overview-cycle-card {
+  min-height: 260px;
+}

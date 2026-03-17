@@ -4,7 +4,6 @@
 // 1. GLOBAL HELPERS & SHARED STATE
 // ======================================================
 
-'use strict';
 
 /* ---------- DOM Helper ---------- */
 const qs = (id) => document.getElementById(id);
@@ -16,23 +15,29 @@ function authHeaders() {
 
 /* ---------- Formatting ---------- */
 function fmt(cents) {
-  const value = (Number(cents || 0) / 100).toFixed(2);
+  const value = Number(cents || 0) / 100;
 
-  return window.__accountMode === 'DEMO'
-    ? `$${Number(value).toLocaleString()}`
-    : `$${value}`;
+  return `$${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 }
 
 function formatTimeRemaining(ms) {
-  if (ms <= 0) return 'Completed';
+
+  if (ms <= 0) {
+    return 'Settling...';
+  }
 
   const totalSeconds = Math.floor(ms / 1000);
+
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
 
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${minutes}m`;
+
   return `${minutes}m`;
 }
 
@@ -100,7 +105,7 @@ function unlockNewCycleUI() {
 
 /* ---------- Main Router ---------- */
 window.showTradeTabContent = function (tab) {
-  const tabs = ['overview', 'start', 'charts', 'transfer'];
+  const tabs = ['overview', 'start', 'charts'];
 
   // Cleanup when leaving Markets tab
   if (tab !== 'charts') {
@@ -146,10 +151,6 @@ window.showTradeTabContent = function (tab) {
 
     case 'charts':
       loadMarkets();
-      break;
-
-    case 'transfer':
-      loadTransferTab();
       break;
   }
 };
@@ -220,6 +221,7 @@ async function loadActiveCycles() {
 async function loadCompletedCycles() {
   try {
     const wallet = getTradeWallet();
+
     if (!wallet) {
       window.__completedCycles = [];
       return [];
@@ -236,19 +238,29 @@ async function loadCompletedCycles() {
           .filter(c => {
             if (wallet.type !== 'DEMO') return true;
             if (!resetAt) return true;
+
             return new Date(c.started_at).getTime() >= resetAt;
           })
-          .map(c =>
-            normalizeCycle({
+          .map(c => {
+            const realizedProfitCents = Number(
+              c.realized_profit_cents ??
+              c.realized_profit ??
+              0
+            );
+
+            return normalizeCycle({
               ...c,
+              realized_profit_cents: realizedProfitCents,
               wallet_type: wallet.type
-            })
-          )
+            });
+          })
       : [];
 
     return window.__completedCycles;
+
   } catch (err) {
     console.error('Completed cycles load failed:', err);
+
     window.__completedCycles = [];
     return [];
   }
@@ -257,14 +269,33 @@ async function loadCompletedCycles() {
 
 /* ---------- Cycle Normalization (Derive Progress, Expected Profit, etc) ---------- */
 function normalizeCycle(c) {
+
   const start = new Date(c.started_at);
   const end   = new Date(c.ends_at);
 
-  const totalMs = end.getTime() - start.getTime();
-  const elapsedMs = Math.max(0, Date.now() - start.getTime());
+  const startMs = start.getTime();
+  const endMs   = end.getTime();
+  const now     = Date.now();
+
+  const totalMs   = Math.max(0, endMs - startMs);
+  const elapsedMs = Math.max(0, now - startMs);
+  const remainingMs = Math.max(0, endMs - now);
 
   const progress =
     totalMs > 0 ? Math.min(1, elapsedMs / totalMs) : 0;
+
+  const totalDays =
+    totalMs > 0 ? Math.ceil(totalMs / 86400000) : 0;
+
+  const elapsedDays =
+    totalMs > 0
+      ? Math.min(totalDays, Math.floor(elapsedMs / 86400000))
+      : 0;
+
+  const remainingDays =
+    totalMs > 0
+      ? Math.max(0, Math.ceil(remainingMs / 86400000))
+      : 0;
 
   return {
     id: c.id,
@@ -278,7 +309,11 @@ function normalizeCycle(c) {
       Number(c.expected_return_pct || 0) / 100
     ),
 
-    realized_profit_cents: Number(c.realized_profit_cents || 0),
+    realized_profit_cents: Number(
+      c.realized_profit_cents ??
+      c.realized_profit ??
+      0
+    ),
 
     start_at: start,
     end_at: end,
@@ -288,11 +323,10 @@ function normalizeCycle(c) {
     progress,
     live_profit_cents: 0,
 
-    total_days: Number(c.total_days ?? 0),
-    elapsed_days: Number(c.elapsed_days ?? 0),
-    remaining_days: Number(c.remaining_days ?? 0),
+    total_days: totalDays,
+    elapsed_days: elapsedDays,
+    remaining_days: remainingDays,
 
-    // Bot terminal state
     bot_logs: [],
     bot_log_index: 0,
     pending_logs: [],
@@ -300,51 +334,21 @@ function normalizeCycle(c) {
     typing_index: 0,
     is_typing: false,
 
-    time_left_label: '',
+    time_left_label:
+  remainingMs <= 0 ? 'Settling...' : formatTimeRemaining(remainingMs),
 
     status: (c.status || 'RUNNING').toUpperCase()
   };
 }
 
-/* ---------- Overview Loader ---------- */
-async function loadTradeOverview() {
-  await Promise.all([
-    loadActiveCycles(),
-    loadCompletedCycles()
-  ]);
 
-  renderActiveCapital();
-  renderRealizedProfit();
-  renderCycleHistory();
-}
-
-/* ---------- Summary Metrics ---------- */
-function renderActiveCapital() {
-  const active = getModeFilteredCycles(window.__activeCycles);
-
-  const total = active.reduce(
-    (sum, c) => sum + c.capital_cents,
-    0
-  );
-
-  qs('summary-total-capital').textContent = fmt(total);
-}
-
-function renderRealizedProfit() {
-  const completed = getModeFilteredCycles(window.__completedCycles);
-
-  const total = completed.reduce(
-    (sum, c) => sum + c.realized_profit_cents,
-    0
-  );
-
-  qs('summary-total-earnings').textContent = fmt(total);
-}
 
 function renderActiveCount() {
   const active = getModeFilteredCycles(window.__activeCycles);
   qs('summary-active-count').textContent = active.length;
 }
+
+
 
 /* ---------- Cycle History (Completed) ---------- */
 function renderCycleHistory() {
@@ -367,15 +371,36 @@ function renderCycleHistory() {
   }
 
   completed.forEach(c => {
+
+    const isForfeited = c.status === 'CANCELLED';
+
     list.insertAdjacentHTML('beforeend', `
       <div class="bg-[#1e1e1e] border border-white/10 rounded-xl p-4">
 
         <div class="flex justify-between items-center">
-          <span class="text-sm text-white/70">
-            ${c.total_days} Day Cycle
-          </span>
-          <span class="font-bold text-[#00D2B1]">
-            +${fmt(c.realized_profit_cents)}
+
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-white/70">
+              ${c.total_days} Day Cycle
+            </span>
+
+            <span class="text-xs px-2 py-1 rounded ${
+              isForfeited
+                ? 'bg-red-500/20 text-red-400'
+                : 'bg-green-500/20 text-green-400'
+            }">
+              ${isForfeited ? 'FORFEITED' : 'COMPLETED'}
+            </span>
+          </div>
+
+          <span class="font-bold ${
+            isForfeited ? 'text-red-400' : 'text-[#00D2B1]'
+          }">
+            ${
+              isForfeited
+                ? 'FORFEITED'
+                : `+${fmt(c.realized_profit_cents)}`
+            }
           </span>
         </div>
 
@@ -388,6 +413,8 @@ function renderCycleHistory() {
     `);
   });
 }
+
+
 
 /* ---------- Active Cycles (Overview Cards) ---------- */
 function renderOverviewActiveCycles() {
@@ -402,17 +429,16 @@ function renderOverviewActiveCycles() {
   if (!active.length) {
     container.innerHTML = `
       <div class="text-sm text-white/50 text-center py-6">
-        No active cycles in this account
+        No active cycles
+
+Start a cycle from the "New Cycle" tab to begin automated trading.
       </div>
     `;
     return;
   }
 
   active.forEach(c => {
-    const progress = Math.min(
-      100,
-      Math.floor((c.elapsed_days / c.total_days) * 100)
-    );
+    const progress = Math.floor(c.progress * 100);
 
     container.insertAdjacentHTML('beforeend', `
       <div class="bg-[#1e1e1e] border border-white/10 rounded-2xl p-5 space-y-4">
@@ -461,7 +487,7 @@ function renderOverviewActiveCycles() {
         </div>
 
         <!-- Bot Activity Terminal -->
-        <div class="bot-terminal mt-3" data-bot-terminal="${c.id}">
+        <div class="bot-terminal mt-3 bg-black/40 border border-white/5 rounded-lg p-3 font-mono text-[12px] leading-5" data-bot-terminal="${c.id}">
           <div class="flex justify-between text-xs text-white/40 mb-1">
             <span>BOT ACTIVITY</span>
             <span>${c.time_left_label}</span>
@@ -495,6 +521,46 @@ function renderOverviewActiveCycles() {
   });
 }
 
+
+/* ---------- Portfolio Summary (Top Metrics) ---------- */
+function renderPortfolioSummary() {
+
+  const wallet = getTradeWallet();
+  const active = getModeFilteredCycles(window.__activeCycles);
+  const completed = getModeFilteredCycles(window.__completedCycles);
+
+  const walletBalance = wallet ? Number(wallet.balance_cents || 0) : 0;
+
+  const lockedCapital = active.reduce(
+    (sum, c) => sum + Number(c.capital_cents || 0),
+    0
+  );
+
+  const activePnL = active.reduce(
+    (sum, c) => sum + Number(c.live_profit_cents || 0),
+    0
+  );
+
+  const completedPnL = completed.reduce(
+    (sum, c) => sum + Number(c.realized_profit_cents || 0),
+    0
+  );
+
+  const availableEl = qs('summary-available-capital');
+  if (availableEl) availableEl.textContent = fmt(walletBalance);
+
+  const lockedEl = qs('summary-locked-capital');
+  if (lockedEl) lockedEl.textContent = fmt(lockedCapital);
+
+  const activePnlEl = qs('summary-live-profit');
+  if (activePnlEl) activePnlEl.textContent = fmt(activePnL);
+
+  const completedEl = qs('summary-total-earnings');
+  if (completedEl) completedEl.textContent = fmt(completedPnL);
+
+  const activeCountEl = qs('summary-active-count');
+  if (activeCountEl) activeCountEl.textContent = active.length;
+}
 
 
 
@@ -707,9 +773,7 @@ function renderMarketActiveCycles() {
   }
 
   window.__activeCycles.forEach(c => {
-    const progress = Math.floor(
-      (c.elapsed_days / c.total_days) * 100
-    );
+    const progress = Math.floor(c.progress * 100);
 
     container.innerHTML += `
       <div class="bg-[#1e1e1e] border border-white/10 rounded-xl p-4 space-y-2">
@@ -727,6 +791,7 @@ function renderMarketActiveCycles() {
 /* ---------- Refresh Trade State (After Actions) ---------- */
 async function refreshTradeState({ wallet = true, cycles = true } = {}) {
   try {
+
     if (wallet) {
       await loadWallets();
     }
@@ -738,13 +803,13 @@ async function refreshTradeState({ wallet = true, cycles = true } = {}) {
       ]);
     }
 
-    renderActiveCapital();
-    renderRealizedProfit();
+    renderPortfolioSummary();
     renderCycleHistory();
     renderOverviewActiveCycles();
     renderMarketActiveCycles();
 
     startProfitTicker();
+
   } catch (err) {
     console.error('Trade state refresh failed:', err);
   }
@@ -854,10 +919,18 @@ function renderBotTerminal(c) {
 let profitTicker = null;
 
 function startProfitTicker() {
-  if (profitTicker) return;
+
+  if (profitTicker) {
+    clearInterval(profitTicker);
+  }
 
   profitTicker = setInterval(() => {
     const now = Date.now();
+
+    if (!window.__activeCycles.length) {
+      stopProfitTicker();
+      return;
+    }
 
     window.__activeCycles.forEach(c => {
       const startMs = c.start_at.getTime();
@@ -902,7 +975,8 @@ function renderLiveProfitUI() {
     0
   );
 
-  qs('summary-total-earnings').textContent = fmt(totalLive);
+  const pnlEl = qs('summary-live-profit');
+if (pnlEl) pnlEl.textContent = fmt(totalLive);
 
   window.__activeCycles.forEach(c => {
     const profitEl = document.querySelector(
@@ -1203,119 +1277,8 @@ window.addEventListener('resize', () => {
 
 
 
-
-
-
-
 // ======================================================
-// 7. TRANSFER TAB
-// ======================================================
-
-function loadTransferTab() {
-  const cycles = Array.isArray(window.__completedCycles)
-    ? window.__completedCycles
-    : [];
-
-  // Sum withdrawable profits (display only)
-  const profits = cycles.reduce(
-    (sum, c) => sum + Number(c.realized_profit_cents || 0),
-    0
-  );
-
-  // Available profits
-  const profitEl = qs('withdrawable-bot-earnings-display');
-  if (profitEl) {
-    profitEl.textContent = fmt(profits);
-  }
-
-  // Projected wallet balance (display only)
-  const wallet = getTradeWallet();
-  const currentBalance = wallet ? Number(wallet.balance_cents || 0) : 0;
-
-  const projectedEl = qs('projected-main-wallet-balance');
-  if (projectedEl) {
-    projectedEl.textContent = fmt(currentBalance + profits);
-  }
-
-  // Enable / disable transfer button
-  const btn = qs('transfer-bot-earnings-btn');
-  if (btn) {
-    const disabled = profits <= 0;
-    btn.disabled = disabled;
-    btn.classList.toggle('opacity-50', disabled);
-    btn.classList.toggle('cursor-not-allowed', disabled);
-  }
-}
-
-
-
-
-/* ---------- Transfer Profits Handler ---------- */
-async function transferProfits() {
-  const btn = qs('transfer-bot-earnings-btn');
-  if (!btn) return;
-
-  const token = getAuthToken();
-  if (!token) {
-    alert('Not authenticated');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-  try {
-    const res = await fetch(`${API_BASE}/transfer/profits`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
-
-    if (!res.ok) {
-      alert(data.error || 'Transfer failed');
-      return;
-    }
-
-    alert(`Transferred ${fmt(data.transferred)} successfully`);
-
-    // non-fatal UI refresh
-    await Promise.allSettled([
-      loadWallet(),
-      loadCompletedCycles()
-    ]);
-
-    loadTransferTab();
-
-  } catch (err) {
-    console.error(err);
-    alert('Network error');
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-  }
-}
-
-
-
-
-
-// Wire button
-const transferBtn = qs('transfer-bot-earnings-btn');
-if (transferBtn) {
-  transferBtn.addEventListener('click', transferProfits);
-}
-
-
-
-
-
-// ======================================================
-// 8. GLOBAL EVENT BINDINGS & INIT
+// 7. GLOBAL EVENT BINDINGS & INIT
 // ======================================================
 
 // ------------------------------
@@ -1375,8 +1338,7 @@ document.addEventListener('demo:reset', () => {
   window.__activeCycles = [];
   window.__completedCycles = [];
 
-  renderActiveCapital();
-  renderRealizedProfit();
+  renderPortfolioSummary();
   renderCycleHistory();
   renderOverviewActiveCycles();
 });
@@ -1386,6 +1348,7 @@ document.addEventListener('demo:reset', () => {
 // Delegated stop-cycle handler
 // ------------------------------
 document.addEventListener('click', async (e) => {
+
   const btn = e.target.closest('[data-stop-cycle]');
   if (!btn) return;
 
@@ -1395,17 +1358,34 @@ document.addEventListener('click', async (e) => {
   const ok = confirm(
     'Stopping this cycle will forfeit all accrued profit.\n\nContinue?'
   );
+
   if (!ok) return;
 
+  // prevent double submission
+  if (btn.disabled) return;
+
+  btn.disabled = true;
+  btn.classList.add('opacity-50','cursor-not-allowed');
+
   try {
+
     await apiFetch('/cycle/forfeit', {
       method: 'POST',
       body: { cycleId }
     });
 
     await refreshTradeState();
+
   } catch (err) {
+
     console.error('Stop cycle failed:', err);
-    alert('Failed to stop cycle');
+    alert(err.message || 'Failed to stop cycle');
+
+  } finally {
+
+    btn.disabled = false;
+    btn.classList.remove('opacity-50','cursor-not-allowed');
+
   }
+
 });

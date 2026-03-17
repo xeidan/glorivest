@@ -588,11 +588,6 @@
    data-trade-tab="chart">
       Charts
     </button>
-    <button id="trade-tab-transfer" data-trade-tab="transfer"
-      class="flex-1 text-center text-white/60 font-semibold py-2 rounded-lg transition"
-      data-trade-tab="transfer">
-      Transfer
-    </button>
   </div>
 
   <!-- ================= OVERVIEW ================= -->
@@ -600,26 +595,45 @@
 
   <!-- HEADER -->
   <div class="flex items-center justify-between">
-    <h2 class="text-2xl font-semibold">Bot Overview</h2>
+    <h2 class="text-2xl font-semibold">Portfolio</h2>
   </div>
 
   <!-- KPI STRIP -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+    <div class="bg-[#1e1e1e] p-6 rounded-2xl border border-white/10 md:col-span-2">
+      <p class="text-xs text-white/50 uppercase tracking-wide">
+        Available Capital
+      </p>
+      <h3 id="summary-available-capital" class="mt-1 text-3xl font-bold">
+    </div>
+
 
     <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
       <p class="text-xs text-white/50 uppercase tracking-wide">
-        Active Capital
+        Locked Capital
       </p>
       <h3
-        id="summary-total-capital"
+        id="summary-locked-capital"
         class="mt-1 text-2xl font-bold">
         $0.00
       </h3>
     </div>
 
     <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
-      <p class="text-xs text-white/50 uppercase tracking-wide">
-        Bot Profit
+      <p class="text-xs text-white/50 tracking-wide">
+        RUNNING PROFIT
+      </p>
+      <h3
+        id="summary-live-profit"
+        class="mt-1 text-2xl font-bold text-[#00D2B1]">
+        $0.00
+      </h3>
+    </div>
+
+    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-white/10">
+      <p class="text-xs text-white/50  tracking-wide">
+        REALIZED PROFIT
       </p>
       <h3
         id="summary-total-earnings"
@@ -643,12 +657,10 @@
   <section class="space-y-4 pt-4">
 
     <div class="flex items-center justify-between">
-      <h3 class="text-xl font-semibold">
+      <h3 class="text-2xl font-semibold">
         Active Cycles
       </h3>
-      <span class="text-xs text-white/40">
-        Currently running
-      </span>
+      
     </div>
 
     <!-- JS injects cycle cards here -->
@@ -665,7 +677,7 @@
   <!-- COMPLETED CYCLES -->
   <section class="space-y-4 pt-6 border-t border-white/10">
 
-    <h3 class="text-xl font-semibold">
+    <h3 class="text-2xl font-semibold">
       Completed Cycles
     </h3>
 
@@ -904,37 +916,6 @@
 
 
 
-  <!-- ================= TRANSFER ================= -->
-  <div id="trade-content-transfer" class="hidden space-y-6 max-w-lg mx-auto">
-
-    <h2 class="text-2xl font-semibold text-center">Transfer Profits</h2>
-
-    <div class="bg-[#1e1e1e] p-6 rounded-xl border border-white/10 space-y-4">
-
-      <div class="flex justify-between items-center p-4 bg-black/30 rounded-lg">
-        <p class="text-sm text-white/70">Available Profits</p>
-        <h3 id="withdrawable-bot-earnings-display"
-          class="text-2xl font-bold text-[#00D2B1]">$0.00</h3>
-      </div>
-
-      <p class="text-sm text-white/60">
-        Transfer realized profits from completed cycles to your main wallet.
-      </p>
-
-      <div class="flex justify-between items-center p-3 border border-white/10 rounded-lg">
-        <p class="text-sm text-white/70">Main Wallet After Transfer</p>
-        <h3 id="projected-main-wallet-balance"
-          class="text-xl font-bold">$0.00</h3>
-      </div>
-
-      <button id="transfer-bot-earnings-btn" disabled
-        class="w-full py-3 rounded-lg bg-gray-600 text-[#00D2B1] border border-[#00D2B1] font-bold cursor-not-allowed opacity-50">
-        Transfer Profits
-      </button>
-
-    </div>
-
-  </div>
 
 
   <!-- ================= STOP MODAL ================= -->
