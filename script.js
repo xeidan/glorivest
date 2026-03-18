@@ -80,16 +80,40 @@ if (loginFormEl) {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
+    if (!email || !password) {
+      alert('Email and password are required');
+      return;
+    }
+
     try {
       const data = await apiFetch('/auth/login', {
         method: 'POST',
         body: { email, password }
       });
 
-      setToken(data.token);
-      window.location.href = 'app.html';
+      // 🔴 Validate response structure
+      if (!data?.token || !data?.user) {
+        throw new Error('Invalid login response');
+      }
+
+      // ✅ Store token (single source of truth)
+      localStorage.setItem('token', data.token);
+
+      // ✅ Store user safely
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // 🔴 Hard check for role (prevents silent failure)
+      const role = data.user.role || 'user';
+
+      // redirect
+      if (role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'app.html';
+      }
 
     } catch (err) {
+      console.error('Login error:', err);
       alert(err.message || 'Login failed');
     }
   });
