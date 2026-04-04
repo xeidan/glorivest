@@ -1,118 +1,131 @@
-const TOKEN = localStorage.getItem('token');
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 
-if (!TOKEN) {
-  alert('Unauthorized');
-  window.location.href = '/login.html';
-}
+let deposits = [];
+let page = 1;
+const LIMIT = 10;
 
+/* =========================
+   AUTH CHECK
+========================= */
+(function initAuth() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-const user = JSON.parse(localStorage.getItem('user'));
+  if (!token || user.role?.toLowerCase() !== 'admin') {
+    alert('Admin access required');
+    window.location.href = 'index.html';
+  }
+})();
 
-if (!user || user.role !== 'admin') {
-  alert('Admins only');
-  window.location.href = '/';
-}
+/* =========================
+   API
+========================= */
 async function api(path, options = {}) {
-  const res = await fetch('/api' + path, {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(BASE_URL + path, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + TOKEN
-    },
-    ...options
+      Authorization: `Bearer ${token}`
+    }
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    alert(text);
-    throw new Error(text);
+  if (res.status === 401) {
+    localStorage.clear();
+    window.location.href = 'index.html';
+    throw new Error('Unauthorized');
   }
 
-  return res.json();
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.message || 'Request failed');
+
+  return data;
 }
 
 /* =========================
-   DEPOSITS
+   LOAD DATA
 ========================= */
+async function loadData() {
+  deposits = await api('/admin/deposits');
+  renderDeposits();
+  renderStats();
+}
 
-async function loadDeposits() {
-  const data = await api('/admin/deposits');
-
+/* =========================
+   TABLE
+========================= */
+function renderDeposits() {
   const table = document.getElementById('depositsTable');
+  if (!table) return;
 
-  table.innerHTML = `
-    <tr>
-      <th>User</th>
-      <th>Amount</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  ` + data.map(d => `
+  const start = (page - 1) * LIMIT;
+  const paginated = deposits.slice(start, start + LIMIT);
+
+  table.innerHTML = paginated.map(d => `
     <tr>
       <td>${d.user_id}</td>
-      <td>${d.amount_exact_cents / 100}</td>
+      <td>$${(d.amount_exact_cents / 100).toFixed(2)}</td>
       <td>${d.status}</td>
       <td>
-        ${
-          d.status === 'USER_MARKED_PAID'
-          ? `<button onclick="approveDeposit('${d.id}')">Approve</button>`
-          : ''
-        }
+        ${d.status === 'USER_MARKED_PAID'
+          ? `<button onclick="approve('${d.id}')">Approve</button>`
+          : ''}
       </td>
     </tr>
   `).join('');
 }
 
-async function approveDeposit(id) {
+/* =========================
+   APPROVE
+========================= */
+async function approve(id) {
   await api(`/admin/deposits/${id}/approve`, {
     method: 'POST'
   });
 
-  loadDeposits();
+  loadData();
 }
 
 /* =========================
-   WITHDRAWALS
+   RATE UPDATE
 ========================= */
+async function updateRate() {
+  const rate = prompt('Enter NGN rate per USDT');
 
-async function loadWithdrawals() {
-  const data = await api('/admin/withdrawals');
+  if (!rate || Number(rate) <= 0) {
+    alert('Invalid rate');
+    return;
+  }
 
-  const table = document.getElementById('withdrawalsTable');
-
-  table.innerHTML = `
-    <tr>
-      <th>User</th>
-      <th>Amount</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  ` + data.map(w => `
-    <tr>
-      <td>${w.user_id}</td>
-      <td>${w.amount_cents / 100}</td>
-      <td>${w.status}</td>
-      <td>
-        ${
-          w.status === 'PENDING'
-          ? `<button onclick="approveWithdrawal('${w.id}')">Approve</button>`
-          : ''
-        }
-      </td>
-    </tr>
-  `).join('');
-}
-
-async function approveWithdrawal(id) {
-  await api(`/admin/withdrawals/${id}/approve`, {
-    method: 'POST'
+  await api('/rates', {
+    method: 'PUT',
+    body: JSON.stringify({ rate: Number(rate) })
   });
 
-  loadWithdrawals();
+  alert('Rate updated');
+}
+
+/* =========================
+   STATS
+========================= */
+function renderStats() {
+  const total = deposits.reduce((s, d) => s + d.amount_exact_cents, 0);
+
+  const el = document.getElementById('statDeposits');
+  if (el) el.innerText = '$' + (total / 100).toFixed(2);
 }
 
 /* =========================
    INIT
 ========================= */
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
 
-loadDeposits();
-loadWithdrawals();
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      loadData();
+    }
+  }, 10000);
+});
