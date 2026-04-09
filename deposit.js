@@ -1,295 +1,239 @@
-// deposit.js — cleaned & fixed
+// deposit.js — stable + fixed events
 
 (() => {
   'use strict';
 
-const API = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+  const API = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
   const token = () => localStorage.getItem('token');
 
   const modal = document.getElementById('modal-deposit');
-  const dynamicBox = document.getElementById('deposit-dynamic');
+  const modalBody = document.querySelector('.gv-modal-body');
   const amountInput = document.getElementById('deposit-amount');
   const continueBtn = document.getElementById('btn-submit-deposit');
-  const segment = modal?.querySelector('.gv-segment');
-  const headerTitle = modal?.querySelector('.gv-modal-header h2');
-  const closeBtn = modal?.querySelector('[data-close="modal-deposit"]');
 
   let activeDeposit = null;
-  let countdownInterval = null;
   let pollInterval = null;
-  let selectedMethod = 'BANK';
+  let countdownInterval = null;
   let rate = 0;
 
-  /* ===========================
-     UTIL
-  =========================== */
+  /* ================= UTIL ================= */
 
-  async function secureFetch(url, options = {}) {
-    const res = await fetch(`${API}${url}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token()}`
-      }
-    });
+async function secureFetch(url, options = {}) {
+  const t = token();
 
-    if (res.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login.html';
-      return;
+  console.log('TOKEN USED:', t);
+
+  const res = await fetch(`${API}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: t ? `Bearer ${t}` : ''
     }
+  });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Request failed');
-    }
-
-    return res.json();
-  }
+  return res;
+}
 
   function fmtUSD(cents) {
-    return `$${(Number(cents) / 100).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
-  }
-
-  function clearTimers() {
-    clearInterval(countdownInterval);
-    clearInterval(pollInterval);
-  }
-
-  function setHeader(method) {
-    headerTitle.textContent = method;
+    return `$${(Number(cents || 0) / 100).toFixed(2)}`;
   }
 
   async function loadRate() {
     try {
       const res = await secureFetch('/rates');
-      rate = res.rate || 0;
+      rate = Number(res.rate) || 0;
     } catch {
       rate = 0;
     }
   }
 
-  /* ===========================
-     NGN PREVIEW
-  =========================== */
+  /* ================= VALIDATION ================= */
 
-  amountInput?.addEventListener('input', () => {
-    const amount = Number(amountInput.value);
-    const preview = document.getElementById('naira-preview');
+  function getInputs() {
+    const first = document.getElementById('sender-first-name')?.value.trim();
+    const last = document.getElementById('sender-last-name')?.value.trim();
+    const number = document.getElementById('sender-account-number')?.value.trim();
+    const bank = document.getElementById('sender-bank-name')?.value.trim();
 
-    if (!amount || !rate) {
-      if (preview) preview.innerText = '';
-      return;
-    }
+    if (!/^[A-Za-z]{2,}$/.test(first)) return alert('Invalid first name'), null;
+    if (!/^[A-Za-z]{2,}$/.test(last)) return alert('Invalid last name'), null;
+    if (!/^\d{10}$/.test(number)) return alert('Account must be 10 digits'), null;
+    if (!bank || bank.length < 2) return alert('Invalid bank'), null;
 
-    const naira = amount * rate;
-    preview.innerText = `≈ ₦${naira.toLocaleString()}`;
-  });
+    const ok = confirm(
+      `IMPORTANT:\n\nSend ONLY from this account.\nName must match.\n\nContinue?`
+    );
 
-  /* ===========================
-     SESSION CONTROL
-  =========================== */
+    if (!ok) return null;
 
-  function resetToIdle() {
-    clearTimers();
-    activeDeposit = null;
-    dynamicBox.innerHTML = '';
-    amountInput.disabled = false;
-    amountInput.value = '';
-    amountInput.parentElement.style.display = '';
-    continueBtn.style.display = '';
-    segment.style.display = 'flex';
-    selectedMethod = 'BANK';
-    setHeader('Deposit');
+    return {
+      sender_account_name: `${first} ${last}`,
+      sender_account_number: number,
+      sender_bank_name: bank
+    };
   }
 
-  async function terminateSession() {
-    if (!activeDeposit) return resetToIdle();
-
-    try {
-      await secureFetch(`/deposit/${activeDeposit.id}/cancel`, {
-        method: 'POST'
-      });
-    } catch {}
-
-    resetToIdle();
-  }
-
-  function lockIntoSession(methodTitle) {
-    segment.style.display = 'none';
-    continueBtn.style.display = 'none';
-    amountInput.parentElement.style.display = 'none';
-    amountInput.disabled = true;
-    setHeader(methodTitle);
-  }
-
-  /* ===========================
-     METHOD SELECTION
-  =========================== */
-
-  segment?.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (activeDeposit) return;
-
-      segment.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const depType = btn.getAttribute('data-dep');
-      if (depType === 'direct') selectedMethod = 'BANK';
-      if (depType === 'crypto') selectedMethod = 'CRYPTO';
-      if (depType === 'p2p') selectedMethod = 'P2P';
-    });
-  });
-
-  /* ===========================
-     CREATE DEPOSIT
-  =========================== */
+  /* ================= CREATE ================= */
 
   continueBtn?.addEventListener('click', async () => {
     if (activeDeposit) return;
 
     const amount = Number(amountInput.value);
+    if (!amount || amount < 50) return alert('Minimum $50');
 
-    if (!amount || amount < 50) {
-      alert('Minimum deposit is $50');
-      return;
-    }
-
-    if (selectedMethod === 'P2P') {
-      dynamicBox.innerHTML = `<div class="text-white/60">P2P not available</div>`;
-      return;
-    }
+    const inputs = getInputs();
+    if (!inputs) return;
 
     try {
       const deposit = await secureFetch('/deposit', {
         method: 'POST',
         body: JSON.stringify({
           amount_cents: Math.round(amount * 100),
-          method: selectedMethod
+          ...inputs
         })
       });
 
       activeDeposit = deposit;
-      lockIntoSession(selectedMethod);
-      renderBankDetails(deposit);
+      renderDeposit(deposit);
 
     } catch (err) {
       alert(err.message);
     }
   });
 
-  /* ===========================
-     BANK DETAILS UI
-  =========================== */
+  /* ================= COPY ================= */
 
-  function renderBankDetails(deposit) {
-    dynamicBox.innerHTML = `
-      <div class="space-y-4 text-sm">
-
-        ${copyRow('Reference', deposit.reference)}
-        ${copyRow('Bank', 'Providus Bank')}
-        ${copyRow('Account Number', '1308556778')}
-        ${copyRow('USD', fmtUSD(deposit.amount_exact_cents))}
-        ${copyRow('NGN',
-          '₦' + ((deposit.amount_exact_cents / 100) * rate).toLocaleString()
-        )}
-
-        <div>
-          <div class="text-white/60">Time Remaining</div>
-          <div id="deposit-timer"></div>
-        </div>
-
-        <button id="confirm-payment" class="gv-primary-btn">
-          Confirm Payment
-        </button>
-
-        <button id="cancel-payment" class="cancel-card">
-          Cancel
-        </button>
-
-      </div>
-    `;
-
-    startCountdown(deposit.expires_at);
-
-    document.getElementById('confirm-payment')
-      .addEventListener('click', markPaid);
-
-    document.getElementById('cancel-payment')
-      .addEventListener('click', terminateSession);
-  }
-
-  function copyRow(label, value) {
+  function copyable(label, value) {
     return `
-      <div class="flex justify-between">
+      <div class="flex justify-between items-center">
         <div>
-          <div class="text-white/60">${label}</div>
-          <div>${value}</div>
+          <div class="text-white/50 text-xs">${label}</div>
+          <div class="font-medium">${value}</div>
         </div>
+        <button class="copy-btn text-white/60 text-lg" data-copy="${value}">
+          <i class="fa-regular fa-copy"></i>
+        </button>
       </div>
     `;
   }
 
-  function startCountdown(expiresAt) {
-    const el = document.getElementById('deposit-timer');
+  /* ================= RENDER ================= */
+
+  function renderDeposit(d) {
+    const usd = fmtUSD(d.amount_cents);
+    const ngn = Number(d.amount || 0);
+
+    const first = document.getElementById('sender-first-name').value;
+    const last = document.getElementById('sender-last-name').value;
+    const number = document.getElementById('sender-account-number').value;
+    const bank = document.getElementById('sender-bank-name').value;
+
+    modalBody.innerHTML = `
+      <div class="bg-white/5 p-4 rounded-xl space-y-2">
+        <div class="text-xs text-white/50">Your Details</div>
+        <div class="font-medium">${first} ${last}</div>
+        <div class="text-white/70">${bank} • ${number}</div>
+      </div>
+
+      <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-xs space-y-1">
+        <div>⚠ Send ONLY from your account</div>
+        <div>⚠ Copy reference before payment</div>
+        <div>⚠ Name mismatch = refund</div>
+      </div>
+
+      <div class="bg-white/5 p-4 rounded-xl space-y-4">
+        ${copyable('Reference', d.reference)}
+        ${copyable('Bank', 'Providus Bank')}
+        ${copyable('Account Number', '1308556778')}
+        ${copyable('Amount (NGN)', '₦' + ngn.toLocaleString())}
+        <div class="text-xs text-white/50">USD: ${usd}</div>
+        <div id="timer"></div>
+      </div>
+
+      <button id="confirm" class="gv-primary-btn">Confirm Payment</button>
+      <button id="cancel" class="cancel-card">Cancel</button>
+    `;
+
+    startTimer(d.expires_at);
+  }
+
+  /* ================= EVENTS (CRITICAL FIX) ================= */
+
+  modalBody.addEventListener('click', async (e) => {
+
+    // CONFIRM
+    if (e.target.closest('#confirm')) {
+      if (!activeDeposit?.id) return alert('Invalid session');
+
+      try {
+        await secureFetch(`/deposit/${activeDeposit.id}/mark-paid`, {
+          method: 'POST'
+        });
+
+        modalBody.innerHTML = `<h3>Waiting for approval...</h3>`;
+        startPolling();
+
+      } catch {
+        alert('Failed to confirm payment');
+      }
+    }
+
+    // CANCEL
+    if (e.target.closest('#cancel')) {
+      clearInterval(pollInterval);
+      clearInterval(countdownInterval);
+      activeDeposit = null;
+
+      modal.classList.add('hidden');
+    }
+
+    // COPY
+    const copyBtn = e.target.closest('.copy-btn');
+    if (copyBtn) {
+      const text = copyBtn.dataset.copy;
+
+      navigator.clipboard.writeText(text);
+
+      copyBtn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+      copyBtn.classList.add('text-green-400');
+
+      setTimeout(() => {
+        copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+        copyBtn.classList.remove('text-green-400');
+      }, 1500);
+    }
+
+  });
+
+  /* ================= TIMER ================= */
+
+  function startTimer(exp) {
+    const el = document.getElementById('timer');
 
     countdownInterval = setInterval(() => {
-      const diff = new Date(expiresAt) - new Date();
-
-      if (diff <= 0) return terminateSession();
+      const diff = new Date(exp) - new Date();
+      if (diff <= 0) return;
 
       const m = Math.floor(diff / 60000);
       const s = Math.floor((diff % 60000) / 1000);
 
-      el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+      if (el) el.textContent = `${m}:${s}`;
     }, 1000);
   }
 
-  async function markPaid() {
-    await secureFetch(`/deposit/${activeDeposit.id}/mark-paid`, {
-      method: 'POST'
-    });
-
-    renderProcessing();
-  }
-
-  function renderProcessing() {
-    dynamicBox.innerHTML = `
-      <div class="text-center">
-        <h2>Processing...</h2>
-      </div>
-    `;
-
-    startPolling();
-  }
+  /* ================= POLLING ================= */
 
   function startPolling() {
     pollInterval = setInterval(async () => {
-      const deposits = await secureFetch('/deposit');
-      const updated = deposits.find(d => d.id === activeDeposit.id);
+      const list = await secureFetch('/deposit');
+      const d = list.find(x => x.id === activeDeposit.id);
 
-      if (updated?.status === 'SUCCESS') {
-        clearTimers();
-        renderSuccess();
+      if (d?.status === 'SUCCESS') {
+        clearInterval(pollInterval);
+        modalBody.innerHTML = `<div class="text-green-400">Confirmed</div>`;
       }
     }, 8000);
   }
-
-  function renderSuccess() {
-    dynamicBox.innerHTML = `<div class="text-green-400">Deposit Confirmed</div>`;
-
-    setTimeout(() => {
-      resetToIdle();
-      modal.classList.add('hidden');
-    }, 3000);
-  }
-
-  /* ===========================
-     INIT
-  =========================== */
 
   loadRate();
 

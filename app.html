@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="app.css">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
 
@@ -321,8 +322,9 @@
 <!-- DEPOSIT MODAL -->
 <div id="modal-deposit" class="gv-modal hidden">
 
-  <div class="gv-modal-card">
+  <div class="gv-modal-card max-h-[90vh] overflow-y-auto">
 
+    <!-- Header -->
     <div class="gv-modal-header">
       <h2>Deposit Funds</h2>
       <button data-close="modal-deposit">&times;</button>
@@ -330,34 +332,61 @@
 
     <div class="gv-modal-body space-y-6">
 
-      <!-- Tabs -->
+      <!-- METHOD -->
       <div class="gv-segment">
         <button data-dep="direct" class="active">Bank</button>
         <button data-dep="crypto">Crypto</button>
         <button data-dep="p2p">P2P</button>
       </div>
 
-      <!-- Amount -->
+      <!-- AMOUNT -->
       <div class="space-y-2">
-  <label class="text-sm text-white/60">Amount (USD)</label>
-  <input id="deposit-amount"
-    type="number"
-    class="gv-input"
-    placeholder="Minimum $50">
+        <label class="text-sm text-white/60">Amount (USD)</label>
+        <input id="deposit-amount" type="number" class="gv-input" placeholder="Minimum $50">
+        <div id="naira-preview" class="text-xs text-white/50"></div>
+      </div>
 
-  <!-- NGN Preview -->
-  <div id="naira-preview" class="text-white/60 text-sm"></div>
-</div>
+      <!-- NAME -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm text-white/60">First Name</label>
+          <input id="sender-first-name" class="gv-input" placeholder="John">
+        </div>
 
-      <!-- Dynamic Content -->
-      <div id="deposit-dynamic"></div>
+        <div>
+          <label class="text-sm text-white/60">Last Name</label>
+          <input id="sender-last-name" class="gv-input" placeholder="Doe">
+        </div>
+      </div>
 
+      <!-- ACCOUNT -->
+      <div class="space-y-3">
+        <div>
+          <label class="text-sm text-white/60">Account Number</label>
+          <input id="sender-account-number" maxlength="10" class="gv-input" placeholder="0123456789">
+        </div>
+
+        <div>
+          <label class="text-sm text-white/60">Bank</label>
+          <input id="sender-bank-name" class="gv-input" placeholder="Glorivest Bank">
+        </div>
+      </div>
+
+      <!-- INFO (subtle, not loud) -->
+      <div class="text-xs text-white/40 space-y-1">
+        <div>• Deposit must come from this account</div>
+        <div>• Name mismatch may delay or reject deposit</div>
+      </div>
+
+      <!-- ACTION -->
       <button id="btn-submit-deposit" class="gv-primary-btn">
         Continue
       </button>
 
-    </div>
+      <!-- DYNAMIC -->
+      <div id="deposit-dynamic"></div>
 
+    </div>
   </div>
 </div>
 
