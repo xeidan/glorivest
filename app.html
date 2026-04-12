@@ -332,64 +332,68 @@
 
     <div class="gv-modal-body space-y-6">
 
-      <!-- METHOD -->
-      <div class="gv-segment">
-        <button data-dep="direct" class="active">Bank</button>
-        <button data-dep="crypto">Crypto</button>
-        <button data-dep="p2p">P2P</button>
-      </div>
+      <!-- ================= FORM (STEP 1) ================= -->
+      <div id="deposit-form" class="space-y-6">
 
-      <!-- AMOUNT -->
-      <div class="space-y-2">
-        <label class="text-sm text-white/60">Amount (USD)</label>
-        <input id="deposit-amount" type="number" class="gv-input" placeholder="Minimum $50">
-        <div id="naira-preview" class="text-xs text-white/50"></div>
-      </div>
-
-      <!-- NAME -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-sm text-white/60">First Name</label>
-          <input id="sender-first-name" class="gv-input" placeholder="John">
+        <!-- METHOD -->
+        <div class="gv-segment">
+          <button data-dep="direct" class="active">Bank</button>
+          <button data-dep="crypto">Crypto</button>
+          <button data-dep="p2p">P2P</button>
         </div>
 
-        <div>
-          <label class="text-sm text-white/60">Last Name</label>
-          <input id="sender-last-name" class="gv-input" placeholder="Doe">
-        </div>
-      </div>
-
-      <!-- ACCOUNT -->
-      <div class="space-y-3">
-        <div>
-          <label class="text-sm text-white/60">Account Number</label>
-          <input id="sender-account-number" maxlength="10" class="gv-input" placeholder="0123456789">
+        <!-- AMOUNT -->
+        <div class="space-y-2">
+          <label class="text-sm text-white/60">Amount (USD)</label>
+          <input id="deposit-amount" type="number" class="gv-input" placeholder="Minimum $50">
+          <div id="naira-preview" class="text-xs text-white/50"></div>
         </div>
 
-        <div>
-          <label class="text-sm text-white/60">Bank</label>
-          <input id="sender-bank-name" class="gv-input" placeholder="Glorivest Bank">
+        <!-- NAME -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-white/60">First Name</label>
+            <input id="sender-first-name" class="gv-input" placeholder="John">
+          </div>
+
+          <div>
+            <label class="text-sm text-white/60">Last Name</label>
+            <input id="sender-last-name" class="gv-input" placeholder="Doe">
+          </div>
         </div>
+
+        <!-- ACCOUNT -->
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm text-white/60">Account Number</label>
+            <input id="sender-account-number" maxlength="10" class="gv-input" placeholder="0123456789">
+          </div>
+
+          <div>
+            <label class="text-sm text-white/60">Bank</label>
+            <input id="sender-bank-name" class="gv-input" placeholder="Glorivest Bank">
+          </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="text-xs text-white/40 space-y-1">
+          <div>• Deposit must come from this account</div>
+          <div>• Name mismatch may delay or reject deposit</div>
+        </div>
+
+        <!-- ACTION -->
+        <button id="btn-submit-deposit" class="gv-primary-btn">
+          Continue
+        </button>
+
       </div>
 
-      <!-- INFO (subtle, not loud) -->
-      <div class="text-xs text-white/40 space-y-1">
-        <div>• Deposit must come from this account</div>
-        <div>• Name mismatch may delay or reject deposit</div>
-      </div>
-
-      <!-- ACTION -->
-      <button id="btn-submit-deposit" class="gv-primary-btn">
-        Continue
-      </button>
-
-      <!-- DYNAMIC -->
-      <div id="deposit-dynamic"></div>
+      <!-- ================= DYNAMIC (STEP 2) ================= -->
+      <div id="deposit-dynamic" class="space-y-4"></div>
 
     </div>
   </div>
 </div>
-
 
 
 <!-- WITHDRAW MODAL -->
