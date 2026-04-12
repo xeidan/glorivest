@@ -332,172 +332,6 @@ function renderP2PMatchState() {
 
 
 
-
-  /* ===========================
-     CRYPTO FLOW
-  =========================== */
-
-  async function handleCrypto() {
-    try {
-      const amount = Number(amountInput.value);
-
-      if (!amount || amount < 50) {
-        return alert('Minimum deposit is $50');
-      }
-
-      const deposit = await secureFetch('/deposit', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount_cents: Math.round(amount * 100),
-          method: 'CRYPTO'
-        })
-      });
-
-      activeDeposit = deposit;
-      renderCrypto(deposit);
-
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'Crypto deposit failed');
-    }
-  }
-
- /* ===========================
-   CRYPTO UI
-=========================== */
-
-  function renderCrypto(d) {
-    if (formBox) formBox.style.display = 'none';
-
-    const wallet = 'TXYZ1234567890ABCDEF1234567890';
-
-    dynamicBox.innerHTML = `
-      <div class="space-y-4 pb-1 max-h-[70vh] overflow-y-auto pr-1">
-
-        <div class="bg-white/5 p-4 rounded-2xl space-y-4 text-center">
-
-          <div>
-            <div class="text-xs text-white/40">Amount</div>
-            <div class="text-xl font-semibold">${formatUSD(d.amount_cents)}</div>
-          </div>
-
-          <div>
-            <div class="text-xs text-white/40 mb-2">Wallet Address</div>
-
-            <div class="bg-black/40 rounded-xl p-3 flex gap-3 items-center justify-between">
-              <div class="text-xs break-all text-left flex-1">${wallet}</div>
-
-              <button class="copy-btn text-white/50" data-copy="${wallet}">
-                <i class="fa-regular fa-copy"></i>
-              </button>
-            </div>
-          </div>
-
-          <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${wallet}"
-            class="mx-auto rounded-xl bg-white p-2"
-            alt="QR"
-          />
-
-          <div class="text-xs text-white/50">Network: TRC20</div>
-        </div>
-
-        <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-xs">
-          ⚠ Wrong network may result in permanent loss of funds
-        </div>
-
-        <div class="space-y-3 mt-2">
-          <button id="confirm-btn" class="gv-primary-btn w-full">
-            I Have Sent Crypto
-          </button>
-
-          <button id="cancel-btn" class="cancel-card w-full">
-            Cancel
-          </button>
-        </div>
-
-      </div>
-    `;
-
-    attachCopyHandlers();
-    document.getElementById('confirm-btn').onclick = confirmPayment;
-    document.getElementById('cancel-btn').onclick = cancelDeposit;
-  }
-
-  /* ===========================
-     P2P FLOW
-  =========================== */
-
-  async function handleP2P() {
-    try {
-      const amount = Number(amountInput.value);
-
-      if (!amount || amount < 50) {
-        return alert('Minimum deposit is $50');
-      }
-
-      const deposit = await secureFetch('/deposit', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount_cents: Math.round(amount * 100),
-          method: 'P2P'
-        })
-      });
-
-      activeDeposit = deposit;
-      renderP2P(deposit);
-
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'P2P deposit failed');
-    }
-  }
-
-  /* ===========================
-    P2P UI
-  =========================== */
-
-  function renderP2P(d) {
-    if (formBox) formBox.style.display = 'none';
-
-    dynamicBox.innerHTML = `
-      <div class="space-y-4 pb-1 max-h-[70vh] overflow-y-auto pr-1">
-
-        <div class="bg-white/5 p-4 rounded-2xl space-y-2">
-          <div class="text-xs text-white/40">Order Amount</div>
-          <div class="text-xl font-semibold">${formatUSD(d.amount_cents)}</div>
-        </div>
-
-        <div class="bg-white/5 p-4 rounded-2xl space-y-3">
-          <div class="text-sm font-medium">Matched Seller</div>
-
-          ${row('Name', 'John Trader')}
-          ${row('Bank', 'Access Bank')}
-          ${row('Account Number', '0123456789')}
-        </div>
-
-        <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-xs">
-          ⚠ Pay only to this seller. Wrong payment is not recoverable.
-        </div>
-
-        <div class="space-y-3 mt-2">
-          <button id="confirm-btn" class="gv-primary-btn w-full">
-            I Have Paid Seller
-          </button>
-
-          <button id="cancel-btn" class="cancel-card w-full">
-            Cancel
-          </button>
-        </div>
-
-      </div>
-    `;
-
-    attachCopyHandlers();
-    document.getElementById('confirm-btn').onclick = confirmPayment;
-    document.getElementById('cancel-btn').onclick = cancelDeposit;
-  }
-
   /* ===========================
      BANK LOCKED UI
   =========================== */
@@ -701,12 +535,68 @@ function renderP2PMatchState() {
     return `₦${Number(amount || 0).toLocaleString()}`;
   }
 
-})();
-
-
-function resetDepositUI() {
+  function resetDepositUI() {
   activeDeposit = null;
   dynamicBox.innerHTML = '';
   formBox.style.display = 'block';
   updateMethodUI();
 }
+
+async function handleBankDeposit() {
+  const amount = Number(amountInput.value);
+
+  if (!amount || amount < 50) {
+    return alert('Minimum deposit is $50');
+  }
+
+  const first = document.getElementById('sender-first-name')?.value?.trim();
+  const last = document.getElementById('sender-last-name')?.value?.trim();
+  const number = document.getElementById('sender-account-number')?.value?.trim();
+  const bank = document.getElementById('sender-bank-name')?.value?.trim();
+
+  if (!first || !last) return alert('Enter full name');
+  if (first.length < 2 || last.length < 2) {
+    return alert('Names must be at least 2 letters');
+  }
+
+  if (!/^\d{10}$/.test(number)) {
+    return alert('Account number must be 10 digits');
+  }
+
+  if (!bank) return alert('Enter bank name');
+
+  const ok = confirm(
+    'Send ONLY from this account.\nName must match.\n\nContinue?'
+  );
+
+  if (!ok) return;
+
+  const formattedName = toTitleCase(`${first} ${last}`);
+  const formattedBank = toTitleCase(bank);
+
+  const deposit = await secureFetch('/deposit', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount_cents: Math.round(amount * 100),
+      method: 'BANK',
+      sender_account_name: formattedName,
+      sender_account_number: number,
+      sender_bank_name: formattedBank
+    })
+  });
+
+  activeDeposit = deposit;
+
+  renderLockedState({
+    ...deposit,
+    user: {
+      name: formattedName,
+      bank: formattedBank,
+      number
+    }
+  });
+}
+
+})();
+
+
