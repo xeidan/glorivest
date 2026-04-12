@@ -199,7 +199,7 @@
     }
 
     if (selectedMethod === 'CRYPTO') {
-      return renderCryptoWalletState();
+      return await handleCryptoDeposit();
     }
 
     if (selectedMethod === 'P2P') {
@@ -212,18 +212,41 @@
   }
 }
 
+async function handleCryptoDeposit() {
+  const amount = Number(amountInput.value);
 
-function renderCryptoWalletState() {
+  if (!amount || amount < 50) {
+    return alert('Minimum deposit is $50');
+  }
+
+  const data = await secureFetch('/deposit', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount_cents: Math.round(amount * 100),
+      method: 'CRYPTO'
+    })
+  });
+
+  activeDeposit = data;
+  renderCryptoWalletState(data);
+}
+
+
+function renderCryptoWalletState(d = {}) {
   formBox.style.display = 'none';
 
+  const address = d.address || d.wallet_address || 'Unavailable';
+  const network = d.network || 'TRON';
+  const tokenName = d.token || 'USDT';
+
   dynamicBox.innerHTML = `
-    <div class="space-y-4 pb-1">
+    <div class="space-y-4 pb-1 max-h-[70vh] overflow-y-auto pr-1">
 
       <div class="bg-white/5 rounded-2xl p-5 space-y-3">
         <div class="text-lg font-semibold">Crypto Deposit</div>
 
         <div class="text-sm text-white/70">
-          Send only <span class="text-cyan-400 font-semibold">USDT (TRC20)</span>
+          Send only <span class="text-cyan-400 font-semibold">${tokenName} (${network})</span>
           to the wallet below.
         </div>
       </div>
@@ -232,18 +255,16 @@ function renderCryptoWalletState() {
 
         <div>
           <div class="text-xs text-white/50 mb-1">Wallet Address</div>
-          <div class="font-mono break-all text-cyan-300">
-            TYx9r...dF82
-          </div>
+          <div class="font-mono break-all text-cyan-300">${address}</div>
         </div>
 
-        <button class="gv-primary-btn copy-btn" data-copy="TYx9r...dF82">
+        <button class="gv-primary-btn copy-btn" data-copy="${address}">
           Copy Address
         </button>
 
         <div class="bg-white rounded-xl p-3 flex justify-center">
           <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=TYx9r...dF82"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(address)}"
             class="w-44 h-44 rounded-lg"
           >
         </div>
@@ -255,7 +276,7 @@ function renderCryptoWalletState() {
 
       <div class="space-y-3 mt-2">
         <button id="confirm-btn" class="gv-primary-btn">
-          Mark as Paid
+          I Have Sent Payment
         </button>
 
         <button id="cancel-btn" class="cancel-card">
@@ -268,11 +289,8 @@ function renderCryptoWalletState() {
 
   attachCopyHandlers();
 
-  document.getElementById('confirm-btn').onclick = () => {
-    alert('Payment submitted. Awaiting blockchain confirmation.');
-  };
-
-  document.getElementById('cancel-btn').onclick = resetDepositUI;
+  document.getElementById('confirm-btn').onclick = confirmPayment;
+  document.getElementById('cancel-btn').onclick = cancelDeposit;
 }
 
 function renderP2PMatchState() {
