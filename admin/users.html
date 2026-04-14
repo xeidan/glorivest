@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Users</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<div class="flex min-h-screen">
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 p-6">
+    <div class="mb-10">
+      <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-2xl font-semibold mt-2">Admin</h1>
+    </div>
+
+    <nav class="space-y-2 text-sm">
+      <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Dashboard</a>
+      <a href="./deposits.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Deposits</a>
+      <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
+      <a href="./cycles.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Cycles</a>
+      <a href="./users.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Users</a>
+      <a href="./wallets.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Wallets</a>
+      <a href="./audit.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Audit Logs</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-8 space-y-6 overflow-auto">
+    <section>
+      <h2 class="text-3xl font-semibold">Users</h2>
+      <p class="text-slate-400 mt-2">Manage active and archived users.</p>
+      <p id="userCount" class="text-sm text-blue-400 mt-2">0 users</p>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-4">
+      <input id="searchInput" placeholder="Search user id or email" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none">
+
+      <select id="statusFilter" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3">
+        <option value="">All Users</option>
+        <option value="active">Active</option>
+        <option value="archived">Archived</option>
+      </select>
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-900 text-slate-300">
+            <tr>
+              <th class="text-left px-4 py-4">User ID</th>
+              <th class="text-left px-4 py-4">Email</th>
+              <th class="text-left px-4 py-4">Role</th>
+              <th class="text-left px-4 py-4">Status</th>
+              <th class="text-left px-4 py-4">Joined</th>
+              <th class="text-left px-4 py-4">Deleted</th>
+              <th class="text-left px-4 py-4">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+let users = [];
+
+function guardAdmin() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token || (user.role || '').toLowerCase() !== 'admin') {
+    location.href = './login.html';
+  }
+}
+
+async function api(path, options = {}) {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(BASE_URL + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (res.status === 401) {
+    localStorage.clear();
+    location.href = './login.html';
+    return;
+  }
+
+  return await res.json();
+}
+
+async function loadUsers() {
+  users = await api('/admin/users');
+  renderUsers();
+}
+
+function getStatus(user) {
+  if (user.is_active === false || user.deleted_at) {
+    return 'Archived';
+  }
+  return 'Active';
+}
+
+function renderUsers() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const tbody = document.getElementById('tableBody');
+
+  const filtered = users.filter(user => {
+    const text = JSON.stringify(user).toLowerCase();
+    const matchSearch = text.includes(search);
+
+    const userStatus = getStatus(user).toLowerCase();
+    const matchStatus = !status || userStatus === status;
+
+    return matchSearch && matchStatus;
+  });
+
+  document.getElementById('userCount').innerText = `${filtered.length} users`;
+
+  tbody.innerHTML = filtered.map(user => {
+    const archived = getStatus(user) === 'Archived';
+
+    return `
+      <tr class="border-t border-white/5">
+        <td class="px-4 py-4">${user.id}</td>
+        <td class="px-4 py-4">${user.email}</td>
+        <td class="px-4 py-4">${user.role || 'user'}</td>
+        <td class="px-4 py-4">
+          <span class="px-2 py-1 rounded-xl text-xs ${archived ? 'bg-amber-600/20 text-amber-300' : 'bg-emerald-600/20 text-emerald-300'}">
+            ${getStatus(user)}
+          </span>
+        </td>
+        <td class="px-4 py-4">${new Date(user.created_at).toLocaleString()}</td>
+        <td class="px-4 py-4">${user.deleted_at ? new Date(user.deleted_at).toLocaleString() : '-'}</td>
+        <td class="px-4 py-4">
+          ${archived ? '' : `<button onclick="deleteUser('${user.id}')" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">Delete</button>`}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function deleteUser(id) {
+  const confirmed = confirm('Delete this user?');
+  if (!confirmed) return;
+
+  const result = await api('/admin/users/' + id, {
+    method: 'DELETE'
+  });
+
+  alert(result.message || 'Done');
+  await loadUsers();
+}
+
+document.getElementById('searchInput').addEventListener('input', renderUsers);
+document.getElementById('statusFilter').addEventListener('change', renderUsers);
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  location.href = './login.html';
+});
+
+guardAdmin();
+loadUsers();
+</script>
+
+</body>
+</html>

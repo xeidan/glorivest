@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Audit Logs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<div class="flex min-h-screen">
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 p-6">
+    <div class="mb-10">
+      <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-2xl font-semibold mt-2">Admin</h1>
+    </div>
+
+    <nav class="space-y-2 text-sm">
+      <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Dashboard</a>
+      <a href="./deposits.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Deposits</a>
+      <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
+      <a href="./cycles.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Cycles</a>
+      <a href="./audit.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Audit Logs</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-8 space-y-6 overflow-auto">
+    <section>
+      <h2 class="text-3xl font-semibold">Audit Logs</h2>
+      <p class="text-slate-400 mt-2">Track all sensitive admin actions.</p>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-4">
+      <input id="searchInput" placeholder="Search action / target / metadata" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none">
+      <select id="actionFilter" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3">
+        <option value="">All Actions</option>
+      </select>
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-900 text-slate-300">
+            <tr>
+              <th class="text-left px-4 py-4">ID</th>
+              <th class="text-left px-4 py-4">Admin</th>
+              <th class="text-left px-4 py-4">Action</th>
+              <th class="text-left px-4 py-4">Target</th>
+              <th class="text-left px-4 py-4">Metadata</th>
+              <th class="text-left px-4 py-4">Date</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+let rows = [];
+
+function guardAdmin() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token || (user.role || '').toLowerCase() !== 'admin') {
+    location.href = './login.html';
+  }
+}
+
+async function api(path) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(BASE_URL + path, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (res.status === 401) {
+    localStorage.clear();
+    location.href = './login.html';
+    return;
+  }
+
+  return await res.json();
+}
+
+async function loadRows() {
+  rows = await api('/admin/audit-logs');
+  buildActionFilter();
+  renderTable();
+}
+
+function buildActionFilter() {
+  const select = document.getElementById('actionFilter');
+  const actions = [...new Set(rows.map(item => item.action).filter(Boolean))];
+
+  select.innerHTML = '<option value="">All Actions</option>' +
+    actions.map(action => `<option value="${action}">${action}</option>`).join('');
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const action = document.getElementById('actionFilter').value;
+
+  const filtered = rows.filter(item => {
+    const blob = JSON.stringify(item).toLowerCase();
+    const matchSearch = !search || blob.includes(search);
+    const matchAction = !action || item.action === action;
+    return matchSearch && matchAction;
+  });
+
+  tbody.innerHTML = filtered.map(item => `
+    <tr class="border-t border-white/5 align-top">
+      <td class="px-4 py-4">${item.id}</td>
+      <td class="px-4 py-4">${item.admin_user_id}</td>
+      <td class="px-4 py-4">${item.action}</td>
+      <td class="px-4 py-4">${item.target_type}:${item.target_id || '-'}</td>
+      <td class="px-4 py-4"><pre class="text-xs whitespace-pre-wrap text-slate-300">${JSON.stringify(item.meta, null, 2)}</pre></td>
+      <td class="px-4 py-4">${new Date(item.created_at).toLocaleString()}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('actionFilter').addEventListener('change', renderTable);
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  location.href = './login.html';
+});
+
+guardAdmin();
+loadRows();
+</script>
+
+</body>
+</html>

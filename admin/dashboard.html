@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glorivest Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<div class="flex min-h-screen md:flex">
+
+  <aside class="w-full md:w-72 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6">
+    <div class="mb-10">
+      <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-2xl font-semibold mt-2">Admin</h1>
+    </div>
+
+    <nav class="grid grid-cols-2 md:block gap-2 text-sm">
+      <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Dashboard</a>
+      <a href="./deposits.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Deposits</a>
+      <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
+      <a href="./cycles.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Cycles</a>
+      <a href="./users.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Users</a>
+      <a href="./wallets.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Wallets</a>
+      <a href="./audit.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Audit Logs</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-4 md:p-8 space-y-6 md:space-y-8 overflow-auto">
+
+    <section>
+      <h2 class="text-3xl font-semibold">Dashboard</h2>
+      <p class="text-slate-400 mt-2">Real-time platform overview.</p>
+    </section>
+
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Total Users</p>
+        <h3 id="statUsers" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Active Users</p>
+        <h3 id="statActiveUsers" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Archived Users</p>
+        <h3 id="statArchivedUsers" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Running Cycles</p>
+        <h3 id="statCycles" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Pending Deposits</p>
+        <h3 id="statPendingDeposits" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Pending Withdrawals</p>
+        <h3 id="statWithdrawals" class="text-3xl font-semibold mt-3">0</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">Total Deposits</p>
+        <h3 id="statDeposits" class="text-3xl font-semibold mt-3">$0.00</h3>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <p class="text-slate-400 text-sm">System Status</p>
+        <h3 class="text-3xl font-semibold mt-3 text-emerald-400">LIVE</h3>
+      </div>
+
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 p-6">
+      <h3 class="text-xl font-semibold mb-4">Quick Actions</h3>
+
+      <div class="grid md:grid-cols-4 gap-4">
+        <a href="./deposits.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Review Deposits</a>
+        <a href="./withdrawals.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Approve Withdrawals</a>
+        <a href="./users.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Manage Users</a>
+        <a href="./audit.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Audit Logs</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+
+function guardAdmin() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token || (user.role || '').toLowerCase() !== 'admin') {
+    location.href = './login.html';
+  }
+}
+
+async function api(path) {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(BASE_URL + path, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (res.status === 401) {
+    localStorage.clear();
+    location.href = './login.html';
+    return;
+  }
+
+  return await res.json();
+}
+
+async function loadStats() {
+  try {
+    const stats = await api('/admin/stats');
+
+    document.getElementById('statUsers').innerText =
+      Number(stats.total_users || 0);
+
+    document.getElementById('statActiveUsers').innerText =
+      Number(stats.active_users || 0);
+
+    document.getElementById('statArchivedUsers').innerText =
+      Number(stats.archived_users || 0);
+
+    document.getElementById('statCycles').innerText =
+      Number(stats.running_cycles || 0);
+
+    document.getElementById('statPendingDeposits').innerText =
+      Number(stats.pending_deposits || 0);
+
+    document.getElementById('statWithdrawals').innerText =
+      Number(stats.pending_withdrawals || 0);
+
+    document.getElementById('statDeposits').innerText =
+      '$' + (Number(stats.total_deposits || 0) / 100).toFixed(2);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  location.href = './login.html';
+});
+
+guardAdmin();
+loadStats();
+setInterval(loadStats, 15000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Deposits</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<div class="flex min-h-screen">
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 p-6">
+    <div class="mb-10">
+      <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-2xl font-semibold mt-2">Admin</h1>
+    </div>
+
+    <nav class="space-y-2 text-sm">
+      <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Dashboard</a>
+      <a href="./deposits.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Deposits</a>
+      <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
+      <a href="./cycles.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Cycles</a>
+      <a href="./audit.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Audit Logs</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-8 space-y-6 overflow-auto">
+    <section>
+      <h2 class="text-3xl font-semibold">Deposits</h2>
+      <p class="text-slate-400 mt-2">Review and approve incoming deposits.</p>
+    </section>
+
+    <section class="grid md:grid-cols-4 gap-4">
+      <input id="searchInput" placeholder="Search email / user id" class="md:col-span-2 rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none">
+
+      <select id="statusFilter" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3">
+        <option value="">All Status</option>
+        <option value="USER_MARKED_PAID">Pending</option>
+        <option value="SUCCESS">Success</option>
+      </select>
+
+      <select id="typeFilter" class="rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3">
+        <option value="">All Types</option>
+        <option value="CRYPTO">Crypto</option>
+        <option value="BANK_TRANSFER">Bank Transfer</option>
+      </select>
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-900 text-slate-300">
+            <tr>
+              <th class="text-left px-4 py-4">User ID</th>
+              <th class="text-left px-4 py-4">Email</th>
+              <th class="text-left px-4 py-4">Amount</th>
+              <th class="text-left px-4 py-4">Type</th>
+              <th class="text-left px-4 py-4">Status</th>
+              <th class="text-left px-4 py-4">Reference</th>
+              <th class="text-left px-4 py-4">Date</th>
+              <th class="text-left px-4 py-4">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+let rows = [];
+
+function guardAdmin() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token || (user.role || '').toLowerCase() !== 'admin') {
+    location.href = './login.html';
+  }
+}
+
+async function api(path, options = {}) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(BASE_URL + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (res.status === 401) {
+    localStorage.clear();
+    location.href = './login.html';
+    return;
+  }
+
+  return await res.json();
+}
+
+async function loadRows() {
+  rows = await api('/admin/deposits');
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const type = document.getElementById('typeFilter').value;
+
+  const filtered = rows.filter(item => {
+    const blob = JSON.stringify(item).toLowerCase();
+    const matchSearch = !search || blob.includes(search);
+    const matchStatus = !status || item.status === status;
+    const matchType = !type || item.method === type;
+    return matchSearch && matchStatus && matchType;
+  });
+
+  tbody.innerHTML = filtered.map(item => {
+    const canApprove = item.status === 'USER_MARKED_PAID';
+
+    return `
+      <tr class="border-t border-white/5">
+        <td class="px-4 py-4">${item.user_id}</td>
+        <td class="px-4 py-4">${item.email || '-'}</td>
+        <td class="px-4 py-4">$${(Number(item.amount_exact_cents || 0) / 100).toFixed(2)}</td>
+        <td class="px-4 py-4">${item.method || '-'}</td>
+        <td class="px-4 py-4">${item.status}</td>
+        <td class="px-4 py-4">${item.reference || '-'}</td>
+        <td class="px-4 py-4">${new Date(item.created_at).toLocaleString()}</td>
+        <td class="px-4 py-4">
+          ${canApprove ? `<button onclick="approveDeposit('${item.id}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Approve</button>` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function approveDeposit(id) {
+  await api(`/admin/deposits/${id}/approve`, { method: 'POST' });
+  await loadRows();
+}
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('statusFilter').addEventListener('change', renderTable);
+document.getElementById('typeFilter').addEventListener('change', renderTable);
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  location.href = './login.html';
+});
+
+guardAdmin();
+loadRows();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Wallets</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+<div class="flex min-h-screen">
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 p-6">
+    <div class="mb-10">
+      <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-2xl font-semibold mt-2">Admin</h1>
+    </div>
+    <nav class="space-y-2 text-sm">
+      <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Dashboard</a>
+      <a href="./deposits.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Deposits</a>
+      <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
+      <a href="./cycles.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Cycles</a>
+      <a href="./users.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Users</a>
+      <a href="./wallets.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Wallets</a>
+      <a href="./audit.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Audit Logs</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+    </nav>
+  </aside>
+  <main class="flex-1 p-8 space-y-6 overflow-auto">
+    <section>
+      <h2 class="text-3xl font-semibold">Wallets</h2>
+      <p class="text-slate-400 mt-2">View crypto wallets and reveal private keys when needed.</p>
+    </section>
+    <input id="searchInput" placeholder="Search user / address" class="w-full rounded-2xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none">
+    <section class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-900 text-slate-300">
+            <tr>
+              <th class="text-left px-4 py-4">Wallet ID</th>
+              <th class="text-left px-4 py-4">User ID</th>
+              <th class="text-left px-4 py-4">Address</th>
+              <th class="text-left px-4 py-4">Created</th>
+              <th class="text-left px-4 py-4">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const BASE_URL='https://glorivest-api-a16f75b6b330.herokuapp.com/api'; let rows=[];
+function guard(){const t=localStorage.getItem('token');const u=JSON.parse(localStorage.getItem('user')||'{}');if(!t||(u.role||'').toLowerCase()!=='admin'){location.href='./login.html';}}
+async function api(path,opt={}){const t=localStorage.getItem('token');const r=await fetch(BASE_URL+path,{...opt,headers:{'Content-Type':'application/json',Authorization:`Bearer ${t}`}});if(r.status===401){localStorage.clear();location.href='./login.html';return;}return await r.json();}
+async function load(){rows=await api('/admin/wallets');render();}
+function render(){const q=document.getElementById('searchInput').value.toLowerCase();const body=document.getElementById('tableBody');const filtered=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(q));body.innerHTML=filtered.map(x=>`<tr class='border-t border-white/5'><td class='px-4 py-4'>${x.id}</td><td class='px-4 py-4'>${x.user_id}</td><td class='px-4 py-4'>${x.address}</td><td class='px-4 py-4'>${new Date(x.created_at).toLocaleString()}</td><td class='px-4 py-4'><button onclick="reveal(${x.id})" class='px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500'>Reveal Key</button></td></tr>`).join('');}
+async function reveal(id){const data=await api(`/admin/wallets/${id}/private-key`);alert('Private Key: '+data.privateKey);}
+document.getElementById('searchInput').addEventListener('input',render);
+document.getElementById('logoutBtn').onclick=()=>{localStorage.clear();location.href='./login.html';};
+guard();load();
+</script>
+</body>
+</html>
