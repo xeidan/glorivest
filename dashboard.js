@@ -54,45 +54,38 @@ function initAccountToggle() {
 
   if (!demoBtn || !liveBtn) return;
 
-  function activateDemo() {
+function syncToggleUI(mode) {
+  const isDemo = mode === 'DEMO';
 
-  setMode('DEMO');
+  // buttons
+  demoBtn.className = isDemo ? 'active' : 'inactive';
+  liveBtn.className = isDemo ? 'inactive' : 'active';
 
-  demoBtn.classList.add('active');
-  demoBtn.classList.remove('inactive');
+  // cards
+  if (demoCard) demoCard.classList.toggle('hidden', !isDemo);
+  if (liveCard) liveCard.classList.toggle('hidden', isDemo);
 
-  liveBtn.classList.remove('active');
-  liveBtn.classList.add('inactive');
+  // title
+  if (title) title.textContent = isDemo ? 'Demo' : 'Live';
 
-  if (demoCard) demoCard.classList.remove('hidden');
-  if (liveCard) liveCard.classList.add('hidden');
-
-  if (title) title.textContent = 'Demo';
-
+  // slider background
   const track = qs('toggle-track');
-  if (track) track.style.transform = 'translateX(0px)';
+  if (track) {
+    track.style.transform = isDemo
+      ? 'translateX(0)'
+      : 'translateX(50px)';
+  }
+}
 
+function activateDemo() {
+  setMode('DEMO');
+  syncToggleUI('DEMO');
   updateDemoResetVisibility();
 }
 
- function activateLive() {
-
+function activateLive() {
   setMode('LIVE');
-
-  liveBtn.classList.add('active');
-  liveBtn.classList.remove('inactive');
-
-  demoBtn.classList.remove('active');
-  demoBtn.classList.add('inactive');
-
-  if (liveCard) liveCard.classList.remove('hidden');
-  if (demoCard) demoCard.classList.add('hidden');
-
-  if (title) title.textContent = 'Live';
-
-  const track = qs('toggle-track');
-  if (track) track.style.transform = 'translateX(50px)';
-
+  syncToggleUI('LIVE');
   updateDemoResetVisibility();
 }
 
@@ -111,6 +104,14 @@ function initAccountToggle() {
     window.syncWalletsFromGlobal();
     renderDashboard();
   });
+
+document.addEventListener('accountMode:changed', async () => {
+  syncToggleUI(getMode());
+
+  await window.loadWallets?.();
+  window.syncWalletsFromGlobal();
+  renderDashboard();
+});
 
 }
 
@@ -345,16 +346,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   qs('demo-reset')?.addEventListener('click', resetDemoBalance);
 
   setMode(getMode());
+  syncToggleUI(getMode());
 
   await window.loadWallets?.();
   await loadUser();
 
   // ensure correct card is shown on initial load
-  if (getMode() === 'DEMO') {
-    qs('toggle-demo')?.click();
-  } else {
-    qs('toggle-live')?.click();
-  }
+document.dispatchEvent(new Event('accountMode:changed'));
 
 });
 
