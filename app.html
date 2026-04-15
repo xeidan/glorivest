@@ -322,76 +322,37 @@
 <!-- DEPOSIT MODAL -->
 <div id="modal-deposit" class="gv-modal hidden">
 
-  <div class="gv-modal-card max-h-[90vh] overflow-y-auto">
+  <div class="gv-modal-card max-h-[90vh] overflow-hidden">
 
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="gv-modal-header">
       <h2>Deposit Funds</h2>
-      <button data-close="modal-deposit">&times;</button>
+
+      <button
+        type="button"
+        data-close="modal-deposit"
+        class="text-white/70 hover:text-white text-3xl leading-none"
+        aria-label="Close"
+      >
+        &times;
+      </button>
     </div>
 
-    <div class="gv-modal-body space-y-6">
+    <!-- BODY -->
+    <div class="gv-modal-body overflow-y-auto max-h-[calc(90vh-72px)] pr-1">
 
-      <!-- ================= FORM (STEP 1) ================= -->
-      <div id="deposit-form" class="space-y-6">
-
-        <!-- METHOD -->
-        <div class="gv-segment">
-          <button data-dep="direct" class="active">Bank</button>
-          <button data-dep="crypto">Crypto</button>
-          <button data-dep="p2p">P2P</button>
-        </div>
-
-        <!-- AMOUNT -->
-        <div class="space-y-2">
-          <label class="text-sm text-white/60">Amount (USD)</label>
-          <input id="deposit-amount" type="number" class="gv-input" placeholder="Minimum $50">
-          <div id="naira-preview" class="text-xs text-white/50"></div>
-        </div>
-
-        <!-- NAME -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-sm text-white/60">First Name</label>
-            <input id="sender-first-name" class="gv-input" placeholder="John">
-          </div>
-
-          <div>
-            <label class="text-sm text-white/60">Last Name</label>
-            <input id="sender-last-name" class="gv-input" placeholder="Doe">
-          </div>
-        </div>
-
-        <!-- ACCOUNT -->
-        <div class="space-y-3">
-          <div>
-            <label class="text-sm text-white/60">Account Number</label>
-            <input id="sender-account-number" maxlength="10" class="gv-input" placeholder="0123456789">
-          </div>
-
-          <div>
-            <label class="text-sm text-white/60">Bank</label>
-            <input id="sender-bank-name" class="gv-input" placeholder="Glorivest Bank">
-          </div>
-        </div>
-
-        <!-- INFO -->
-        <div class="text-xs text-white/40 space-y-1">
-          <div>• Deposit must come from this account</div>
-          <div>• Name mismatch may delay or reject deposit</div>
-        </div>
-
-        <!-- ACTION -->
-        <button id="btn-submit-deposit" class="gv-primary-btn">
-          Continue
-        </button>
-
+      <!-- METHOD SWITCH -->
+      <div class="gv-segment mb-6">
+        <button type="button" data-dep="direct" class="active">Bank</button>
+        <button type="button" data-dep="crypto">Crypto</button>
+        <button type="button" data-dep="p2p">P2P</button>
       </div>
 
-      <!-- ================= DYNAMIC (STEP 2) ================= -->
-      <div id="deposit-dynamic" class="space-y-4"></div>
+      <!-- FULLY RENDERED CONTENT GOES HERE -->
+      <div id="deposit-content" class="space-y-5"></div>
 
     </div>
+
   </div>
 </div>
 
@@ -399,33 +360,29 @@
 <!-- WITHDRAW MODAL -->
 <div id="modal-withdraw" class="gv-modal hidden">
 
-  <div class="gv-modal-card">
+  <div class="gv-modal-card max-h-[90vh] overflow-hidden">
 
     <div class="gv-modal-header">
       <h2>Withdraw Funds</h2>
-      <button data-close="modal-withdraw">&times;</button>
+
+      <button
+  type="button"
+  data-close="modal-withdraw"
+  class="text-white/70 hover:text-white text-3xl leading-none"
+  aria-label="Close"
+>
+  &times;
+</button>
     </div>
 
-    <div class="gv-modal-body space-y-6">
+    <div class="gv-modal-body overflow-y-auto max-h-[calc(90vh-72px)] pr-1">
 
-      <div class="gv-segment">
-        <button data-wd="bank" class="active">Bank</button>
-        <button data-wd="crypto">Crypto</button>
+      <div class="gv-segment gv-segment-2 mb-6">
+        <button type="button" data-wd="bank" class="active">Bank</button>
+        <button type="button" data-wd="crypto">Crypto</button>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-sm text-white/60">Amount</label>
-        <input id="withdraw-amount"
-          type="number"
-          class="gv-input"
-          placeholder="Minimum $10">
-      </div>
-
-      <div id="withdraw-dynamic"></div>
-
-      <button id="btn-submit-withdraw" class="gv-primary-btn">
-        Withdraw
-      </button>
+      <div id="withdraw-content" class="space-y-5"></div>
 
     </div>
 
@@ -437,49 +394,52 @@
 <!-- TRANSACTIONS MODAL -->
 <div id="modal-transactions" class="gv-modal hidden">
 
-  <div class="gv-modal-card wide">
+  <div class="gv-modal-card wide max-h-[92vh] overflow-hidden">
 
     <!-- HEADER -->
-    <div class="gv-modal-header">
+    <div class="gv-modal-header sticky top-0 z-10 bg-[#0b0b0b] pb-4">
       <h2>Transactions</h2>
-      <button data-close="modal-transactions">&times;</button>
+
+      <button
+        type="button"
+        data-close="modal-transactions"
+        class="text-white/70 hover:text-white text-3xl leading-none w-10 h-10 flex items-center justify-center"
+        aria-label="Close"
+      >
+        &times;
+      </button>
     </div>
 
     <!-- BODY -->
-    <div class="gv-modal-body flex flex-col gap-4">
+    <div class="gv-modal-body flex flex-col gap-4 h-[78vh]">
 
       <!-- FILTER BAR -->
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
         <!-- TYPE FILTER -->
-        <select id="filter-type" class="gv-input text-sm md:w-48">
-          <option value="all">All</option>
+        <select
+          id="filter-type"
+          class="gv-input text-sm md:w-48"
+        >
+          <option value="all">All Transactions</option>
           <option value="deposit">Deposits</option>
           <option value="withdrawal">Withdrawals</option>
         </select>
 
-        <!-- DATE PRESETS
-        <div id="tx-range-bar"
-            class="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
-
-          <button data-range="7" class="tx-range-btn">7D</button>
-          <button data-range="30" class="tx-range-btn active">30D</button>
-          <button data-range="90" class="tx-range-btn">90D</button>
-          <button data-range="all" class="tx-range-btn">All</button>
-
-        </div> -->
-
       </div>
 
       <!-- SCROLL AREA -->
-      <div id="transaction-scroll" class="flex-1 overflow-y-auto">
+      <div
+        id="transaction-scroll"
+        class="flex-1 overflow-y-auto pr-1"
+      >
 
         <!-- DESKTOP TABLE -->
         <div class="hidden md:block">
 
           <table class="w-full text-sm">
 
-            <thead class="text-white/50 border-b border-white/10">
+            <thead class="text-white/50 border-b border-white/10 sticky top-0 bg-[#0b0b0b]">
               <tr>
                 <th class="text-left py-3">Type</th>
                 <th class="text-right py-3">Amount</th>
@@ -488,33 +448,44 @@
               </tr>
             </thead>
 
-            <tbody id="transaction-table-body"
-                   class="divide-y divide-white/5">
-            </tbody>
+            <tbody
+              id="transaction-table-body"
+              class="divide-y divide-white/5"
+            ></tbody>
 
           </table>
 
         </div>
 
         <!-- MOBILE STACK -->
-        <div id="transaction-mobile-list"
-             class="space-y-3 md:hidden">
-        </div>
+        <div
+          id="transaction-mobile-list"
+          class="space-y-3 md:hidden"
+        ></div>
 
       </div>
 
       <!-- PAGINATION -->
       <div class="flex justify-between items-center pt-3 border-t border-white/10 text-sm">
 
-        <button id="tx-prev"
-                class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+        <button
+          id="tx-prev"
+          type="button"
+          class="px-4 py-2 bg-white/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+        >
           Prev
         </button>
 
-        <span id="tx-page-info" class="text-white/50"></span>
+        <span
+          id="tx-page-info"
+          class="text-white/50 text-xs md:text-sm"
+        ></span>
 
-        <button id="tx-next"
-                class="px-3 py-1 bg-white/10 rounded-lg disabled:opacity-30">
+        <button
+          id="tx-next"
+          type="button"
+          class="px-4 py-2 bg-white/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+        >
           Next
         </button>
 
@@ -523,6 +494,7 @@
     </div>
 
   </div>
+
 </div>
 
       

@@ -8,15 +8,34 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
 
-<div class="flex min-h-screen md:flex">
+<div class="min-h-screen md:flex">
 
-  <aside class="w-full md:w-72 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6">
-    <div class="mb-10">
+  <!-- MOBILE TOPBAR -->
+  <header class="md:hidden flex items-center justify-between px-4 py-4 bg-slate-900 border-b border-slate-800">
+    <div>
+      <p class="text-blue-400 text-[10px] tracking-[0.3em] uppercase">Glorivest</p>
+      <h1 class="text-lg font-semibold">Admin</h1>
+    </div>
+
+    <button
+      id="menuBtn"
+      class="px-3 py-2 rounded-xl bg-slate-800 text-white"
+    >
+      ☰
+    </button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside
+    id="sidebar"
+    class="hidden md:block w-full md:w-72 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6"
+  >
+    <div class="hidden md:block mb-10">
       <p class="text-blue-400 text-xs tracking-[0.3em] uppercase">Glorivest</p>
       <h1 class="text-2xl font-semibold mt-2">Admin</h1>
     </div>
 
-    <nav class="grid grid-cols-2 md:block gap-2 text-sm">
+    <nav class="space-y-2 text-sm">
       <a href="./dashboard.html" class="block px-4 py-3 rounded-2xl bg-blue-600">Dashboard</a>
       <a href="./deposits.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Deposits</a>
       <a href="./withdrawals.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Withdrawals</a>
@@ -24,18 +43,26 @@
       <a href="./users.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Users</a>
       <a href="./wallets.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Wallets</a>
       <a href="./audit.html" class="block px-4 py-3 rounded-2xl hover:bg-slate-800">Audit Logs</a>
-      <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800">Logout</button>
+
+      <button
+        id="logoutBtn"
+        class="w-full text-left px-4 py-3 rounded-2xl text-rose-400 hover:bg-slate-800"
+      >
+        Logout
+      </button>
     </nav>
   </aside>
 
+  <!-- MAIN -->
   <main class="flex-1 p-4 md:p-8 space-y-6 md:space-y-8 overflow-auto">
 
     <section>
-      <h2 class="text-3xl font-semibold">Dashboard</h2>
+      <h2 class="text-2xl md:text-3xl font-semibold">Dashboard</h2>
       <p class="text-slate-400 mt-2">Real-time platform overview.</p>
     </section>
 
-    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <!-- STATS -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
 
       <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
         <p class="text-slate-400 text-sm">Total Users</p>
@@ -76,13 +103,35 @@
         <p class="text-slate-400 text-sm">System Status</p>
         <h3 class="text-3xl font-semibold mt-3 text-emerald-400">LIVE</h3>
       </div>
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+  <p class="text-slate-400 text-sm">USDT / NGN Rate</p>
+
+  <h3 id="currentRate" class="text-3xl font-semibold mt-3">0</h3>
+
+  <div class="mt-4 space-y-2">
+    <input
+      id="rateInput"
+      type="number"
+      placeholder="Enter new rate"
+      class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 outline-none"
+    />
+
+    <button
+      onclick="updateRate()"
+      class="w-full px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500"
+    >
+      Update Rate
+    </button>
+  </div>
+</div>
 
     </section>
 
-    <section class="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <!-- QUICK ACTIONS -->
+    <section class="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
       <h3 class="text-xl font-semibold mb-4">Quick Actions</h3>
 
-      <div class="grid md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <a href="./deposits.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Review Deposits</a>
         <a href="./withdrawals.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Approve Withdrawals</a>
         <a href="./users.html" class="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">Manage Users</a>
@@ -153,14 +202,82 @@ async function loadStats() {
   }
 }
 
+
+async function loadRate() {
+  try {
+    const data = await api('/rates');
+
+    document.getElementById('currentRate').innerText =
+      Number(data.rate || 0).toLocaleString();
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function updateRate() {
+  try {
+    const value = Number(
+      document.getElementById('rateInput').value
+    );
+
+    if (!value || value <= 0) {
+      alert('Invalid rate');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+
+    const res = await fetch(BASE_URL + '/rates', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        rate: value
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || 'Failed');
+      return;
+    }
+
+    document.getElementById('rateInput').value = '';
+
+    await loadRate();
+
+    alert('Rate updated');
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/* MOBILE MENU */
+document.getElementById('menuBtn').addEventListener('click', () => {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('hidden');
+});
+
+/* LOGOUT */
 document.getElementById('logoutBtn').addEventListener('click', () => {
   localStorage.clear();
   location.href = './login.html';
 });
 
 guardAdmin();
+
 loadStats();
-setInterval(loadStats, 15000);
+loadRate();
+
+setInterval(() => {
+  loadStats();
+  loadRate();
+}, 15000);
 </script>
 
 </body>

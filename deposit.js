@@ -1,225 +1,237 @@
 (() => {
   'use strict';
 
-  function toTitleCase(str) {
-    return str
-      .toLowerCase()
-      .trim()
-      .split(/\s+/)
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-  }
+  /* ==================================
+     CONFIG
+  ================================== */
 
   const API = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
-  const token = () => localStorage.getItem('token');
 
-  let modal, dynamicBox, formBox, amountInput, continueBtn;
-  let activeDeposit = null;
-  let pollInterval = null;
-  let countdownInterval = null;
-  let selectedMethod = 'BANK';
+  const state = {
+    method: 'BANK',
+    activeDeposit: null,
+    countdownInterval: null,
+    pollInterval: null
+  };
 
-  /* ===========================
+  const el = {};
+
+  /* ==================================
      INIT
-  =========================== */
+  ================================== */
 
   window.addEventListener('load', init);
 
   function init() {
-    modal = document.getElementById('modal-deposit');
-    dynamicBox = document.getElementById('deposit-dynamic');
-    formBox = document.getElementById('deposit-form');
-    amountInput = document.getElementById('deposit-amount');
-    continueBtn = document.getElementById('btn-submit-deposit');
+    el.modal = document.getElementById('modal-deposit');
+    el.content = document.getElementById('deposit-content');
+    el.tabs = document.querySelectorAll('[data-dep]');
 
-    if (!continueBtn) {
-      console.error('Deposit button not found');
+    if (!el.content) {
+      console.error('deposit-content not found');
       return;
     }
 
-    continueBtn.addEventListener('click', handleContinue);
+    bindTabs();
+    renderCurrentView();
+  }
 
-    document.querySelectorAll('[data-dep]').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('[data-dep]').forEach(b => {
-          b.classList.remove('active');
-        });
-
+  function bindTabs() {
+    el.tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        el.tabs.forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
 
         const type = btn.dataset.dep;
 
-        if (type === 'direct') selectedMethod = 'BANK';
-        if (type === 'crypto') selectedMethod = 'CRYPTO';
-        if (type === 'p2p') selectedMethod = 'P2P';
+        if (type === 'direct') state.method = 'BANK';
+        if (type === 'crypto') state.method = 'CRYPTO';
+        if (type === 'p2p') state.method = 'P2P';
 
-        updateMethodUI();
-      };
+        resetStateView();
+        renderCurrentView();
+      });
     });
   }
 
-  /* ===========================
-     API
-  =========================== */
+  /* ==================================
+     RENDER ROUTER
+  ================================== */
 
-  async function secureFetch(url, options = {}) {
-    const res = await fetch(`${API}${url}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token()}`
-      }
-    });
-
-    if (res.status === 401) {
-      alert('Session expired. Login again.');
-      localStorage.removeItem('token');
-      location.reload();
-      return;
-    }
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Request failed');
-    }
-
-    return res.json();
+  function renderCurrentView() {
+    if (state.method === 'BANK') return renderBankForm();
+    if (state.method === 'CRYPTO') return renderCryptoForm();
+    if (state.method === 'P2P') return renderP2PForm();
   }
 
-  /* ===========================
-     METHOD UI
-  =========================== */
-
-  function updateMethodUI() {
-  if (!formBox) return;
-
-  clearIntervals();
-  dynamicBox.innerHTML = '';
-  activeDeposit = null;
-
-  /* ---------------------------
+  /* ==================================
      BANK
-  --------------------------- */
-  if (selectedMethod === 'BANK') {
-    formBox.style.display = 'block';
+  ================================== */
 
-    const bankFields = formBox.querySelectorAll(
-      '#sender-first-name, #sender-last-name, #sender-account-number, #sender-bank-name'
-    );
+  function renderBankForm() {
+    el.content.innerHTML = `
+      <div class="space-y-5">
 
-    bankFields.forEach(el => {
-      const wrap = el.closest('div');
-      if (wrap) wrap.style.display = '';
-    });
+        ${amountField()}
 
-    return;
-  }
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-white/60">First Name</label>
+            <input id="first-name" class="gv-input" placeholder="John">
+          </div>
 
-  /* ---------------------------
-     CRYPTO
-  --------------------------- */
-  if (selectedMethod === 'CRYPTO') {
-    formBox.style.display = 'block';
-
-    const bankFields = formBox.querySelectorAll(
-      '#sender-first-name, #sender-last-name, #sender-account-number, #sender-bank-name'
-    );
-
-    bankFields.forEach(el => {
-      const wrap = el.closest('div');
-      if (wrap) wrap.style.display = 'none';
-    });
-
-    dynamicBox.innerHTML = `
-      <div class="bg-white/5 rounded-2xl p-5 space-y-4">
-
-        <div class="text-sm text-white/80 leading-relaxed">
-          Deposit with <span class="text-cyan-400 font-semibold">USDT (TRC20)</span>.
-          Use only the TRON network.
+          <div>
+            <label class="text-sm text-white/60">Last Name</label>
+            <input id="last-name" class="gv-input" placeholder="Doe">
+          </div>
         </div>
 
-        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed">
-          We only accept USDT TRC20 on the TRON network.
-          Sending through any other network may result in permanent loss of funds.
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm text-white/60">Account Number</label>
+            <input id="account-number" maxlength="10" class="gv-input" placeholder="0123456789">
+          </div>
+
+          <div>
+            <label class="text-sm text-white/60">Bank</label>
+            <input id="bank-name" class="gv-input" placeholder="Glorivest Bank">
+          </div>
         </div>
 
-        <div class="text-xs text-white/50">
-          Enter amount above, then click Continue to generate your wallet address and QR code.
+        <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-3 text-xs text-yellow-300 leading-7">
+          ⚠ Deposit must come from this account<br>
+          ⚠ Name mismatch may delay or reject deposit
         </div>
+
+        <button id="continue-btn" class="gv-primary-btn">
+          Continue
+        </button>
 
       </div>
     `;
 
-    return;
+
+    $('#continue-btn').onclick = handleBankDeposit;
   }
 
-  /* ---------------------------
+  /* ==================================
+     CRYPTO
+  ================================== */
+
+  function renderCryptoForm() {
+    el.content.innerHTML = `
+      <div class="space-y-5">
+
+        ${amountField()}
+
+        <div class="text-xs text-white/50 leading-6">
+          Enter amount above, then click Continue to generate wallet address.
+        </div>
+
+        <div class="bg-white/5 rounded-2xl p-5 space-y-4">
+          <div class="text-sm text-white/80 leading-relaxed">
+            Deposit with
+            <span class="text-cyan-400 font-semibold">USDT (TRC20)</span>.
+            Use only TRON network.
+          </div>
+
+          <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-3 text-xs text-yellow-300 leading-7">
+            ⚠ We only accept USDT TRC20 on TRON<br>
+            ⚠ Wrong network may permanently lose funds
+          </div>
+        </div>
+
+        <button id="continue-btn" class="gv-primary-btn">
+          Continue
+        </button>
+
+      </div>
+    `;
+
+
+    $('#continue-btn').onclick = handleCryptoDeposit;
+  }
+
+  /* ==================================
      P2P
-  --------------------------- */
-  if (selectedMethod === 'P2P') {
-    formBox.style.display = 'block';
+  ================================== */
 
-    const bankFields = formBox.querySelectorAll(
-      '#sender-first-name, #sender-last-name, #sender-account-number, #sender-bank-name'
-    );
+  function renderP2PForm() {
+    el.content.innerHTML = `
+      <div class="space-y-5">
 
-    bankFields.forEach(el => {
-      const wrap = el.closest('div');
-      if (wrap) wrap.style.display = 'none';
-    });
+        ${amountField()}
 
-    dynamicBox.innerHTML = `
-      <div class="bg-white/5 rounded-2xl p-5 space-y-4">
-
-        <div class="text-sm text-white/80">
-          Deposit through verified peer-to-peer sellers.
-        </div>
-
-        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-xs text-yellow-300">
-          Only pay the seller assigned to your order.
-        </div>
-
-        <div class="text-xs text-white/50">
+        <div class="text-xs text-white/50 leading-6">
           Enter amount above, then click Continue to get matched.
         </div>
 
+        <div class="bg-white/5 rounded-2xl p-5 space-y-4">
+          <div class="text-sm text-white/80">
+            Deposit through verified peer-to-peer sellers.
+          </div>
+
+          <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-3 text-xs text-yellow-300 leading-7">
+            ⚠ Only pay the seller assigned to your order
+          </div>
+        </div>
+
+        <button id="continue-btn" class="gv-primary-btn">
+          Continue
+        </button>
+
       </div>
     `;
+
+
+    $('#continue-btn').onclick = handleP2PDeposit;
   }
-}
 
-  /* ===========================
-     CONTINUE
-  =========================== */
+  /* ==================================
+     ACTIONS 
+  ================================== */
 
-  async function handleContinue() {
-  try {
-    if (selectedMethod === 'BANK') {
-      return await handleBankDeposit();
-    }
-
-    if (selectedMethod === 'CRYPTO') {
-      return await handleCryptoDeposit();
-    }
-
-    if (selectedMethod === 'P2P') {
-      return renderP2PMatchState();
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert(err.message || 'Something went wrong');
-  }
-}
-
-async function handleCryptoDeposit() {
-  const amount = Number(amountInput.value);
+async function handleBankDeposit() {
+  const amount = Number($('#amount')?.value);
 
   if (!amount || amount < 50) {
     return alert('Minimum deposit is $50');
   }
 
-  const data = await secureFetch('/deposit', {
+  const first = $('#first-name')?.value?.trim();
+  const last = $('#last-name')?.value?.trim();
+  const number = $('#account-number')?.value?.trim();
+  const bank = $('#bank-name')?.value?.trim();
+
+  if (!first || !last) return alert('Enter full name');
+  if (!/^\d{10}$/.test(number)) {
+    return alert('Account number must be 10 digits');
+  }
+  if (!bank) return alert('Enter bank name');
+
+  const deposit = await secureFetch('/deposit', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount_cents: Math.round(amount * 100),
+      method: 'BANK',
+      sender_account_name: `${first} ${last}`,
+      sender_account_number: number,
+      sender_bank_name: bank
+    })
+  });
+
+  state.activeDeposit = deposit;
+  renderBankLocked(deposit, { first, last, number, bank });
+}
+
+async function handleCryptoDeposit() {
+  const amount = Number($('#amount')?.value);
+
+  if (!amount || amount < 50) {
+    return alert('Minimum deposit is $50');
+  }
+
+  const deposit = await secureFetch('/deposit', {
     method: 'POST',
     body: JSON.stringify({
       amount_cents: Math.round(amount * 100),
@@ -227,394 +239,440 @@ async function handleCryptoDeposit() {
     })
   });
 
-  activeDeposit = data;
-  renderCryptoWalletState(data);
+  state.activeDeposit = deposit;
+  renderCryptoWallet(deposit);
+}
+
+async function handleP2PDeposit() {
+  renderP2PMatch();
+}
+
+  /* ==================================
+     COMPONENTS
+  ================================== */
+
+function amountField() {
+  return `
+    <div class="space-y-2">
+      <label class="text-sm text-white/60">Amount (USD)</label>
+
+      <input
+        id="amount"
+        type="number"
+        min="50"
+        step="0.01"
+        class="gv-input"
+        placeholder="Minimum $50"
+      >
+    </div>
+  `;
 }
 
 
-function renderCryptoWalletState(d = {}) {
-  formBox.style.display = 'none';
+/* ==================================
+   BANK LOCKED VIEW
+================================== */
+  function renderBankLocked(d, user) {
+  el.content.innerHTML = `
+    <div class="space-y-5">
 
-  const address = d.address || d.wallet_address || 'Unavailable';
-  const network = d.network || 'TRON';
-  const tokenName = d.token || 'USDT';
+      <div class="bg-white/5 rounded-2xl p-4 space-y-1">
+        <div class="text-xs text-white/40">Your Details</div>
+        <div class="font-semibold">${user.first} ${user.last}</div>
+        <div class="text-sm text-white/60">
+          ${user.bank} • ${user.number}
+        </div>
+      </div>
 
-  dynamicBox.innerHTML = `
-    <div class="space-y-4 pb-1 max-h-[70vh] overflow-y-auto pr-1">
+      <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-3 text-xs text-yellow-300 leading-7">
+        ⚠ Send ONLY from your account<br>
+        ⚠ Copy reference before payment<br>
+        ⚠ Name mismatch = refund
+      </div>
+
+      <div class="bg-white/5 rounded-2xl p-4 space-y-4">
+
+        ${copyRow('Reference', d.reference)}
+        ${copyRow('Bank', 'Providus Bank')}
+        ${copyRow('Account Number', '1308556778')}
+        ${copyRow('Amount (NGN)', formatNGN(d.amount))}
+        
+        <div class="text-sm text-white/55">
+          USD: ${formatUSD(d.amount_cents)}
+        </div>
+
+        <div id="timer" class="text-xs text-white/40"></div>
+      </div>
+
+      <button id="confirm-btn" class="gv-primary-btn">
+        Confirm Payment
+      </button>
+
+      <button id="cancel-btn"
+        class="w-full h-14 rounded-2xl border border-red-500/25 text-red-400 bg-red-500/5">
+        Cancel
+      </button>
+
+    </div>
+  `;
+
+  attachCopy();
+  startTimer(d.expires_at);
+
+  $('#confirm-btn').onclick = confirmPayment;
+  $('#cancel-btn').onclick = cancelDeposit;
+}
+
+function renderCryptoWallet(d) {
+  const address = d.address || 'Unavailable';
+
+  el.content.innerHTML = `
+    <div class="space-y-5">
 
       <div class="bg-white/5 rounded-2xl p-5 space-y-3">
         <div class="text-lg font-semibold">Crypto Deposit</div>
 
-        <div class="text-sm text-white/70">
-          Send only <span class="text-cyan-400 font-semibold">${tokenName} (${network})</span>
+        <div class="text-sm text-white/65">
+          Send only <span class="text-cyan-400 font-semibold">USDT (TRC20)</span>
           to the wallet below.
         </div>
       </div>
 
-      <div class="bg-white/5 rounded-2xl p-5 space-y-4">
+      <div class="bg-white/5 rounded-2xl p-5 space-y-5">
 
         <div>
-          <div class="text-xs text-white/50 mb-1">Wallet Address</div>
-          <div class="font-mono break-all text-cyan-300">${address}</div>
+          <div class="text-xs text-white/45 mb-2">Wallet Address</div>
+
+          <div class="rounded-xl bg-black/20 border border-white/5 p-4">
+            <div class="font-mono text-cyan-300 break-all text-sm leading-6">
+              ${address}
+            </div>
+          </div>
         </div>
 
-        <button class="gv-primary-btn copy-btn" data-copy="${address}">
+        <button id="copy-address-btn"
+          class="w-full h-12 rounded-xl border border-white/10 bg-white/5 text-white/85">
           Copy Address
         </button>
 
-        <div class="bg-white rounded-xl p-3 flex justify-center">
+        <div class="rounded-2xl bg-white p-4 flex justify-center">
           <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(address)}"
-            class="w-44 h-44 rounded-lg"
-          >
+            src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(address)}"
+            class="w-48 h-48 rounded-xl"
+          />
         </div>
 
-        <div class="text-sm leading-relaxed text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-          Wrong network may lead to permanent loss of funds.
+        <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-4 text-sm text-yellow-300 leading-7">
+          ⚠ Wrong network may lead to permanent loss of funds.
         </div>
+
+        <div id="timer" class="text-xs text-white/40"></div>
+
       </div>
 
-      <div class="space-y-3 mt-2">
-        <button id="confirm-btn" class="gv-primary-btn">
-          I Have Sent Payment
-        </button>
+      <button id="confirm-btn" class="gv-primary-btn">
+        I Have Sent Payment
+      </button>
 
-        <button id="cancel-btn" class="cancel-card">
-          Cancel
-        </button>
-      </div>
+      <button id="cancel-btn"
+        class="w-full h-14 rounded-2xl border border-red-500/25 text-red-400 bg-red-500/5">
+        Cancel
+      </button>
 
     </div>
   `;
 
-  attachCopyHandlers();
+  $('#copy-address-btn').onclick = async () => {
+    await navigator.clipboard.writeText(address);
+    const btn = $('#copy-address-btn');
+    btn.textContent = 'Copied';
+    btn.className =
+      'w-full h-12 rounded-xl bg-[#18d2c3] text-black font-medium';
 
-  document.getElementById('confirm-btn').onclick = confirmPayment;
-  document.getElementById('cancel-btn').onclick = cancelDeposit;
+    setTimeout(() => {
+      btn.textContent = 'Copy Address';
+      btn.className =
+        'w-full h-12 rounded-xl border border-white/10 bg-white/5 text-white/85';
+    }, 1500);
+  };
+
+  startTimer(d.expires_at);
+
+  $('#confirm-btn').onclick = confirmPayment;
+  $('#cancel-btn').onclick = cancelDeposit;
 }
 
-function renderP2PMatchState() {
-  formBox.style.display = 'none';
+function renderP2PMatch() {
+  el.content.innerHTML = `
+    <div class="space-y-5">
 
-  dynamicBox.innerHTML = `
-    <div class="space-y-4 pb-1">
-
-      <div class="bg-white/5 rounded-2xl p-4 space-y-2">
-        <div class="text-lg font-semibold">P2P Deposit</div>
-        <div class="text-sm text-white/70">
+      <div class="bg-white/5 rounded-2xl p-5">
+        <div class="text-lg font-semibold mb-1">P2P Deposit</div>
+        <div class="text-sm text-white/65">
           You’ve been matched with a verified seller.
         </div>
       </div>
 
-      <div class="bg-white/5 rounded-2xl p-5 space-y-3">
-        <div>
-          <div class="text-xs text-white/50">Seller</div>
-          <div class="font-medium">Rave Trader 01</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-white/50">Bank</div>
-          <div class="font-medium">Opay</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-white/50">Account Number</div>
-          <div class="font-medium">8123456789</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-white/50">Name</div>
-          <div class="font-medium">David Johnson</div>
-        </div>
+      <div class="bg-white/5 rounded-2xl p-5 space-y-4">
+        <div><div class="text-xs text-white/40">Seller</div><div>Rave Trader 01</div></div>
+        <div><div class="text-xs text-white/40">Bank</div><div>Glorivest Bank</div></div>
+        <div><div class="text-xs text-white/40">Account Number</div><div>8123456789</div></div>
+        <div><div class="text-xs text-white/40">Name</div><div>David Johnson</div></div>
       </div>
 
-      <div class="text-sm leading-relaxed text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-        Pay only to the assigned seller.
+      <div class="rounded-2xl bg-yellow-500/10 border border-yellow-400/20 p-3 text-xs text-yellow-300 leading-7">
+        ⚠ Pay only to the assigned seller
       </div>
 
-      <div class="space-y-3 mt-2">
-        <button class="gv-primary-btn">
-          I Have Paid
-        </button>
+      <button id="confirm-btn" class="gv-primary-btn">
+        I Have Paid
+      </button>
 
-        <button id="cancel-btn" class="cancel-card">
-          Cancel
-        </button>
-      </div>
+      <button id="cancel-btn"
+        class="w-full h-14 rounded-2xl border border-red-500/25 text-red-400 bg-red-500/5">
+        Cancel
+      </button>
 
     </div>
   `;
 
-  document.getElementById('cancel-btn').onclick = resetDepositUI;
+  $('#confirm-btn').onclick = () => alert('Next: P2P confirmation');
+  $('#cancel-btn').onclick = renderCurrentView;
 }
 
 
+async function secureFetch(url, options = {}) {
+  const res = await fetch(`${API}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
 
-  /* ===========================
-     BANK LOCKED UI
-  =========================== */
-
-  function renderLockedState(d) {
-    if (formBox) formBox.style.display = 'none';
-
-    dynamicBox.innerHTML = `
-      <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
-
-        <div class="bg-white/5 p-4 rounded-2xl">
-          <div class="text-xs text-white/40">Your Details</div>
-          <div class="text-base font-semibold">${d.user.name}</div>
-          <div class="text-sm text-white/60">${d.user.bank} • ${d.user.number}</div>
-        </div>
-
-        <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-sm space-y-1">
-          <div>⚠ Send ONLY from your account</div>
-          <div>⚠ Copy reference before payment</div>
-          <div>⚠ Name mismatch = refund</div>
-        </div>
-
-        <div class="bg-white/5 p-4 rounded-2xl space-y-4">
-          ${row('Reference', d.reference)}
-          ${row('Bank', 'Providus Bank')}
-          ${row('Account Number', '1308556778')}
-          ${row('Amount (NGN)', formatNGN(d.amount))}
-          <div class="text-sm text-white/50">
-            USD: ${formatUSD(d.amount_cents)}
-          </div>
-          <div id="timer" class="text-xs text-white/40"></div>
-        </div>
-
-        <div class="space-y-3 mt-2">
-          <button id="confirm-btn" class="gv-primary-btn w-full">
-            Confirm Payment
-          </button>
-
-          <button id="cancel-btn" class="cancel-card w-full">
-            Cancel
-          </button>
-        </div>
-
-      </div>
-    `;
-
-    attachCopyHandlers();
-    startTimer(d.expires_at);
-
-    document.getElementById('confirm-btn').onclick = confirmPayment;
-    document.getElementById('cancel-btn').onclick = cancelDeposit;
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    location.reload();
+    return;
   }
 
-  /* ===========================
-     ROW + COPY
-  =========================== */
+  const data = await res.json().catch(() => ({}));
 
-  function row(label, value) {
-    return `
-      <div class="flex justify-between items-center gap-3">
-        <div>
-          <div class="text-xs text-white/40">${label}</div>
-          <div class="font-medium">${value || '—'}</div>
-        </div>
-
-        <button class="copy-btn text-white/50" data-copy="${value}">
-          <i class="fa-regular fa-copy"></i>
-        </button>
-      </div>
-    `;
+  if (!res.ok) {
+    throw new Error(data.message || 'Request failed');
   }
 
-  function attachCopyHandlers() {
-    document.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.onclick = async () => {
-        try {
-          const val = btn.getAttribute('data-copy');
-          await navigator.clipboard.writeText(val);
+  return data;
+}
 
-          btn.classList.add('text-green-400', 'scale-110');
+/* =========================
+   PAYMENT ACTIONS
+========================= */
 
-          setTimeout(() => {
-            btn.classList.remove('text-green-400', 'scale-110');
-          }, 1000);
+async function confirmPayment() {
+  if (!state.activeDeposit?.id) return;
 
-        } catch {
-          alert('Copy failed');
-        }
-      };
+  try {
+    await secureFetch(`/deposit/${state.activeDeposit.id}/mark-paid`, {
+      method: 'POST'
     });
+
+    renderSuccess();
+
+  } catch (err) {
+    alert(err.message || 'Failed');
   }
-
-  /* ===========================
-     TIMER
-  =========================== */
-
-  function startTimer(expiry) {
-    clearInterval(countdownInterval);
-
-    const el = document.getElementById('timer');
-
-    countdownInterval = setInterval(() => {
-      const diff = new Date(expiry) - new Date();
-
-      if (diff <= 0) {
-        clearInterval(countdownInterval);
-        if (el) el.textContent = 'Expired';
-        return;
-      }
-
-      const m = Math.floor(diff / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-
-      if (el) {
-        el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-      }
-    }, 1000);
-  }
-
-  function clearIntervals() {
-    clearInterval(countdownInterval);
-    clearInterval(pollInterval);
-  }
-
-  /* ===========================
-     ACTIONS
-  =========================== */
-
-  async function confirmPayment() {
-    if (!activeDeposit) return;
-
-    try {
-      await secureFetch(`/deposit/${activeDeposit.id}/mark-paid`, {
-        method: 'POST'
-      });
-
-      renderSuccess();
-
-    } catch (err) {
-      console.error(err);
-      alert('Failed to confirm payment');
-    }
-  }
-
-  async function cancelDeposit() {
-    if (!activeDeposit) return;
-
-    try {
-      await secureFetch(`/deposit/${activeDeposit.id}/cancel`, {
-        method: 'POST'
-      });
-
-      location.reload();
-
-    } catch (err) {
-      console.error(err);
-      alert('Cancel failed');
-    }
-  }
-
-  /* ===========================
-     SUCCESS
-  =========================== */
-
-  function renderSuccess() {
-    clearIntervals();
-
-    dynamicBox.innerHTML = `
-      <div class="text-center py-8 space-y-4">
-
-        <div class="text-green-400 text-lg font-semibold">
-          Payment Submitted
-        </div>
-
-        <div class="text-sm text-white/50">
-          Awaiting admin confirmation (up to 24 hours)
-        </div>
-
-        <button id="close-deposit-modal" class="gv-primary-btn mt-3">
-          Done
-        </button>
-
-      </div>
-    `;
-
-    document.getElementById('close-deposit-modal').onclick = () => {
-      modal.classList.add('hidden');
-      location.reload();
-    };
-  }
-
-  /* ===========================
-     FORMAT
-  =========================== */
-
-  function formatUSD(cents) {
-    return `$${(Number(cents || 0) / 100).toFixed(2)}`;
-  }
-
-  function formatNGN(amount) {
-    return `₦${Number(amount || 0).toLocaleString()}`;
-  }
-
-  function resetDepositUI() {
-  activeDeposit = null;
-  dynamicBox.innerHTML = '';
-  formBox.style.display = 'block';
-  updateMethodUI();
 }
 
-async function handleBankDeposit() {
-  const amount = Number(amountInput.value);
-
-  if (!amount || amount < 50) {
-    return alert('Minimum deposit is $50');
+async function cancelDeposit() {
+  if (!state.activeDeposit?.id) {
+    renderCurrentView();
+    return;
   }
 
-  const first = document.getElementById('sender-first-name')?.value?.trim();
-  const last = document.getElementById('sender-last-name')?.value?.trim();
-  const number = document.getElementById('sender-account-number')?.value?.trim();
-  const bank = document.getElementById('sender-bank-name')?.value?.trim();
+  try {
+    await secureFetch(`/deposit/${state.activeDeposit.id}/cancel`, {
+      method: 'POST'
+    });
 
-  if (!first || !last) return alert('Enter full name');
-  if (first.length < 2 || last.length < 2) {
-    return alert('Names must be at least 2 letters');
+    state.activeDeposit = null;
+    renderCurrentView();
+
+  } catch (err) {
+    alert(err.message || 'Cancel failed');
   }
+}
 
-  if (!/^\d{10}$/.test(number)) {
-    return alert('Account number must be 10 digits');
-  }
+function renderSuccess() {
+  clearTimers();
 
-  if (!bank) return alert('Enter bank name');
+  el.content.innerHTML = `
+    <div class="text-center py-8 space-y-5">
 
-  const ok = confirm(
-    'Send ONLY from this account.\nName must match.\n\nContinue?'
+      <div class="text-lg font-semibold text-[#18d2c3]">
+        Payment Submitted
+      </div>
+
+      <div class="text-sm text-white/55 leading-7">
+        Awaiting admin confirmation.<br>
+        This may take up to 24 hours.
+      </div>
+
+      <button id="done-btn" class="gv-primary-btn">
+        Done
+      </button>
+
+    </div>
+  `;
+
+  $('#done-btn').onclick = () => {
+    document.getElementById('modal-deposit')
+      ?.classList.add('hidden');
+
+    location.reload();
+  };
+}
+
+/* =========================
+   COPY
+========================= */
+
+function copyRow(label, value) {
+  return `
+    <div class="flex items-center justify-between gap-3">
+
+      <div>
+        <div class="text-xs text-white/40">${label}</div>
+        <div class="font-medium">${value || '-'}</div>
+      </div>
+
+      <button
+        class="copy-mini text-white/45"
+        data-copy="${value}"
+        type="button"
+      >
+        <i class="fa-regular fa-copy"></i>
+      </button>
+
+    </div>
+  `;
+}
+
+function attachCopy() {
+  document.querySelectorAll('.copy-mini').forEach(btn => {
+    btn.onclick = async () => {
+      const text = btn.dataset.copy || '';
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        btn.classList.add('text-[#18d2c3]');
+
+        setTimeout(() => {
+          btn.classList.remove('text-[#18d2c3]');
+        }, 1000);
+
+      } catch {
+        alert('Copy failed');
+      }
+    };
+  });
+}
+
+/* =========================
+   TIMER
+========================= */
+
+function startTimer(expiresAt) {
+  clearTimers();
+
+  const box = $('#timer');
+  if (!box || !expiresAt) return;
+
+  state.countdownInterval = setInterval(() => {
+    const diff = new Date(expiresAt) - new Date();
+
+    if (diff <= 0) {
+      clearTimers();
+      box.textContent = 'Expired';
+      return;
+    }
+
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+
+    box.textContent =
+      `${mins}:${String(secs).padStart(2, '0')} remaining`;
+
+  }, 1000);
+}
+
+function clearTimers() {
+  clearInterval(state.countdownInterval);
+  clearInterval(state.pollInterval);
+}
+
+/* =========================
+   FORMAT
+========================= */
+
+function formatUSD(cents) {
+  return '$' + (Number(cents || 0) / 100).toFixed(2);
+}
+
+function formatNGN(v) {
+  return '₦' + Number(v || 0).toLocaleString();
+}
+
+/* =========================
+   MODAL
+========================= */
+
+bindModalClose();
+
+function bindModalClose() {
+  const modal = document.getElementById('modal-deposit');
+  const closeBtn = modal?.querySelector('[data-close="modal-deposit"]');
+
+  closeBtn?.addEventListener('click', closeDepositModal);
+
+  modal?.addEventListener('click', e => {
+    if (e.target === modal) closeDepositModal();
+  });
+}
+
+function closeDepositModal() {
+  clearTimers();
+
+  state.activeDeposit = null;
+  state.method = 'BANK';
+
+  document.querySelectorAll('[data-dep]').forEach(b =>
+    b.classList.remove('active')
   );
 
-  if (!ok) return;
+  document.querySelector('[data-dep="direct"]')
+    ?.classList.add('active');
 
-  const formattedName = toTitleCase(`${first} ${last}`);
-  const formattedBank = toTitleCase(bank);
+  renderCurrentView();
 
-  const deposit = await secureFetch('/deposit', {
-    method: 'POST',
-    body: JSON.stringify({
-      amount_cents: Math.round(amount * 100),
-      method: 'BANK',
-      sender_account_name: formattedName,
-      sender_account_number: number,
-      sender_bank_name: formattedBank
-    })
-  });
-
-  activeDeposit = deposit;
-
-  renderLockedState({
-    ...deposit,
-    user: {
-      name: formattedName,
-      bank: formattedBank,
-      number
-    }
-  });
+  document.getElementById('modal-deposit')
+    ?.classList.add('hidden');
 }
 
+
+  /* ==================================
+     HELPERS
+  ================================== */
+
+  function resetStateView() {
+    clearInterval(state.countdownInterval);
+    clearInterval(state.pollInterval);
+    state.activeDeposit = null;
+  }
+
+  function $(selector) {
+    return document.querySelector(selector);
+  }
+
 })();
-
-
