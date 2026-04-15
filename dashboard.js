@@ -160,22 +160,38 @@ document.addEventListener('accountMode:changed', async () => {
     updateDemoResetVisibility();
   }
 
-  function renderBalances() {
-    if (state.realWallet && qs('live-total')) {
-      qs('live-total').textContent = fmtUSD(state.realWallet.balance_cents);
-    }
+function renderBalances() {
+  const wallets = window.getAllWallets?.() || [];
 
-    if (state.realWallet && qs('live-available')) {
-      qs('live-available').textContent = fmtUSD(state.realWallet.balance_cents);
-    }
-    if (state.demoWallet && qs('demo-total')) {
-      qs('demo-total').textContent = fmtUSD(state.demoWallet.balance_cents);
-    }
+  const realWallet =
+    wallets.find(w => w.type === 'REAL') || null;
 
-    if (state.referralWallet && qs('live-referral')) {
-      qs('live-referral').textContent = fmtUSD(state.referralWallet.balance_cents);
-    }
+  const demoWallet =
+    wallets.find(w => w.type === 'DEMO') || null;
+
+  const referralWallet =
+    wallets.find(w => w.type === 'REFERRAL') || null;
+
+  state.realWallet = realWallet;
+  state.demoWallet = demoWallet;
+  state.referralWallet = referralWallet;
+
+  if (realWallet && qs('live-total')) {
+    qs('live-total').textContent = fmtUSD(realWallet.balance_cents);
   }
+
+  if (realWallet && qs('live-available')) {
+    qs('live-available').textContent = fmtUSD(realWallet.balance_cents);
+  }
+
+  if (demoWallet && qs('demo-total')) {
+    qs('demo-total').textContent = fmtUSD(demoWallet.balance_cents);
+  }
+
+  if (referralWallet && qs('live-referral')) {
+    qs('live-referral').textContent = fmtUSD(referralWallet.balance_cents);
+  }
+}
 
   /* ===========================
      DEMO RESET
@@ -336,17 +352,16 @@ document.addEventListener('accountMode:changed', async () => {
   =========================== */
 document.addEventListener('DOMContentLoaded', async () => {
 
-  console.log("DOM fully loaded");
+
 
   initModals();
-  initDepositTabs();
-  initWithdrawTabs();
-  initAccountToggle();
+initDepositTabs();
+initWithdrawTabs();
 
   qs('demo-reset')?.addEventListener('click', resetDemoBalance);
 
   setMode(getMode());
-  syncToggleUI(getMode());
+  initAccountToggle();
 
   await window.loadWallets?.();
   await loadUser();
