@@ -2,32 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify OTP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <title>Verify Code | Glorivest</title>
+  <meta
+    name="description"
+    content="Verify your password reset code and continue securing access to your Glorivest account."
+  />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0B0B0B" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <link href="output.css" rel="stylesheet" />
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
+<body class="min-h-screen bg-black text-white font-[Inter] overflow-hidden">
 
-  <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
-    <h2 class="text-2xl font-bold text-center mb-2">Enter OTP</h2>
-    <p class="text-sm text-gray-600 text-center mb-6">We sent a 6-digit OTP to your email</p>
-
-    <input id="otp" type="text" maxlength="6" placeholder="Enter OTP"
-      class="w-full border rounded-lg px-4 py-3 mb-4 text-center text-xl focus:outline-none focus:ring-2 focus:ring-[#00D2B1]"/>
-
-    <button onclick="verifyResetOTP()"
-      class="w-full bg-[#00D2B1] text-white py-3 rounded-lg mb-3 hover:bg-[#00b8a1]">
-      Verify OTP
-    </button>
-
-    <button onclick="resendResetOTP()"
-      class="w-full text-[#00D2B1] font-semibold">
-      Resend OTP
-    </button>
-
-    <p id="status" class="text-center text-sm mt-4 text-red-500"></p>
+  <!-- Ambient Background -->
+  <div class="fixed inset-0 pointer-events-none">
+    <div class="absolute top-20 left-10 w-56 h-56 rounded-full bg-[#00D2B1]/10 blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-[#00D2B1]/10 blur-3xl"></div>
   </div>
+
+  <main class="relative min-h-screen flex items-center justify-center px-4 py-10">
+
+    <section class="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <img
+          src="glorivest-logo.png"
+          alt="Glorivest"
+          width="180"
+          height="44"
+          class="mx-auto mb-6"
+        />
+
+        <p class="text-sm text-white/45">Verification</p>
+
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight mt-2">
+          Enter your code
+        </h1>
+
+        <p class="mt-3 text-sm sm:text-base text-white/55 leading-relaxed">
+          We sent a 6-digit verification code to your email address.
+        </p>
+      </div>
+
+      <!-- OTP Input -->
+      <div class="space-y-4">
+
+        <input
+          id="otp"
+          type="text"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="one-time-code"
+          placeholder="000000"
+          class="w-full h-14 px-4 rounded-2xl bg-white/[0.04] border border-white/10 text-center text-2xl tracking-[0.35em] placeholder-white/20 focus:outline-none focus:border-[#00D2B1] transition"
+        />
+
+        <button
+          onclick="verifyResetOTP()"
+          class="w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold hover:brightness-110 transition"
+        >
+          Verify Code
+        </button>
+
+        <button
+          onclick="resendResetOTP()"
+          class="w-full h-12 rounded-2xl border border-white/10 bg-white/[0.03] text-white font-medium hover:bg-white/[0.06] transition"
+        >
+          Resend Code
+        </button>
+
+        <p
+          id="status"
+          class="min-h-[20px] text-center text-sm text-white/45"
+        ></p>
+
+      </div>
+
+      <div class="mt-6 text-center">
+        <a
+          href="forgot-password.html"
+          class="text-sm text-white/45 hover:text-white transition"
+        >
+          Back
+        </a>
+      </div>
+
+    </section>
+  </main>
 
   <script src="otp-reset.js"></script>
 </body>

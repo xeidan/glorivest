@@ -154,7 +154,12 @@ window.showTab = function (tab) {
   }
 };
 
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-refer-now]');
+  if (!btn) return;
 
+  window.showTab('earn');
+});
 
 
 // Auto activate dashboard on page load
@@ -305,8 +310,17 @@ btnNotif?.addEventListener("click", () => {
 });
 
 btnGuide?.addEventListener("click", () => {
+  const notifOpen = !sheetNotif?.classList.contains("hidden");
+
   closeGlobalSheet(sheetNotif, sheetNotifBg, sheetNotifPanel, btnNotif);
-  setTimeout(() => openGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide), 120);
+
+  if (notifOpen) {
+    setTimeout(() => {
+      openGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide);
+    }, 180);
+  } else {
+    openGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide);
+  }
 });
 
 
@@ -344,19 +358,6 @@ window.showToast = function (msg = "", timeout = 2500) {
 
 
 
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-refer-now]');
-  if (!btn) return;
-
-  showTab('earn');
-
-  document.querySelectorAll('[data-tab]').forEach(nav => {
-    nav.classList.toggle('active-tab', nav.dataset.tab === 'earn');
-  });
-});
-
-
-
 
 // ===============================
 // GLOBAL ACCOUNT MODE
@@ -375,42 +376,51 @@ window.setAccountMode = function (mode) {
 
 
 
+document.addEventListener('accountMode:changed', updateAccountModeTag);
+
+
+
 function updateAccountModeTag() {
-  const label = qs('account-mode-label');
+  const toggle = qs('account-mode-toggle');
   const balance = qs('account-mode-balance');
-  const dot = qs('account-mode-dot');
 
-  if (!label || !balance || !dot) return;
+  if (!toggle || !balance) return;
 
-  const wallets = window.__wallets;
-  if (!Array.isArray(wallets) || wallets.length === 0) return;
+  const wallets = window.__wallets || [];
 
-  if (window.__accountMode === 'DEMO') {
-    const wallet = wallets.find(w => w.type === 'DEMO');
-    if (!wallet) return;
+  const wallet =
+    window.__accountMode === 'DEMO'
+      ? wallets.find(w => w.type === 'DEMO')
+      : wallets.find(w => w.type === 'REAL');
 
-    const cents = Number(wallet.balance_cents || 0);
+  toggle.classList.remove('is-demo', 'is-live');
+  toggle.classList.add(
+    window.__accountMode === 'DEMO' ? 'is-demo' : 'is-live'
+  );
 
-    label.textContent = 'DEMO';
-    balance.textContent = `$${(cents / 100).toLocaleString()}`;
-    dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-gray-400';
+  const cents = Number(wallet?.balance_cents || 0);
 
-  } else {
-    const wallet = wallets.find(w => w.type === 'REAL');
-    if (!wallet) return;
-
-    const cents = Number(wallet.balance_cents || 0);
-
-    label.textContent = 'LIVE';
-    balance.textContent = `$${(cents / 100).toLocaleString()}`;
-    dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-[#00D2B1]';
-  }
+  balance.textContent = `$${(cents / 100).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  })}`;
 }
 
-document.addEventListener('accountMode:changed', () => {
-  updateAccountModeTag();
-});
 
+
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('account-mode-toggle');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    const next =
+      window.__accountMode === 'LIVE'
+        ? 'DEMO'
+        : 'LIVE';
+
+    window.setAccountMode(next);
+  });
+});
 
 
 // ===============================
@@ -471,13 +481,7 @@ Object.defineProperty(window, 'loadWallets', {
   configurable: false
 });
 
-document.addEventListener('click', (e) => {
-  const tag = e.target.closest('#account-mode-tag');
-  if (!tag) return;
 
-  const next = window.__accountMode === 'LIVE' ? 'DEMO' : 'LIVE';
-  window.setAccountMode(next);
-});
 
 
 window.__demoResetAt = Number(localStorage.getItem('demoResetAt') || 0);
@@ -485,3 +489,6 @@ window.__demoResetAt = Number(localStorage.getItem('demoResetAt') || 0);
 
 
 
+window.addEventListener('DOMContentLoaded', () => {
+  updateAccountModeTag();
+});

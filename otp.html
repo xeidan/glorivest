@@ -2,95 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-  <title>Verify OTP</title>
+  <title>Verify Email | Glorivest</title>
+  <meta
+    name="description"
+    content="Verify your email address and activate your Glorivest account securely."
+  />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0B0B0B" />
 
-  <!-- Tailwind Output -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <link href="./output.css" rel="stylesheet" />
 </head>
 
-<body class="bg-white min-h-screen flex items-center justify-center px-4">
+<body class="min-h-screen bg-black text-white font-[Inter] overflow-hidden">
 
-  <div class="bg-white border border-gray-200 rounded-2xl max-w-md w-full p-8 animate-fade-in">
-
-    <!-- HEADER -->
-    <h2 class="text-3xl font-bold text-gray-800 text-center mb-2">
-      Verify Your Email
-    </h2>
-
-    <p class="text-sm text-gray-500 text-center mb-6">
-      Enter the 6-digit code sent to your email
-    </p>
-
-    <!-- OTP BOXES -->
-    <div id="otp-container" class="flex justify-between gap-2 mb-6">
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-    </div>
-
-    <!-- VERIFY -->
-    <button
-      id="verify-btn"
-      onclick="verifyOTP()"
-      class="w-full bg-[#00D2B1] hover:bg-[#00b8a1] transition text-white font-bold py-3 rounded-xl mb-4 active:scale-[0.98]"
-    >
-      Verify OTP
-    </button>
-
-    <!-- RESEND -->
-    <p class="text-center text-sm text-gray-600">
-      Didn’t receive code?
-      <button
-        id="resend-btn"
-        onclick="resendOTP()"
-        class="text-[#00D2B1] font-medium hover:underline ml-1"
-      >
-        Resend
-      </button>
-    </p>
-
-    <!-- STATUS -->
-    <p id="status" class="text-center text-sm mt-4"></p>
-
+  <!-- Ambient Glow -->
+  <div class="fixed inset-0 pointer-events-none">
+    <div class="absolute top-16 left-8 w-56 h-56 rounded-full bg-[#00D2B1]/10 blur-3xl"></div>
+    <div class="absolute bottom-10 right-8 w-72 h-72 rounded-full bg-[#00D2B1]/10 blur-3xl"></div>
   </div>
 
+  <main class="relative min-h-screen flex items-center justify-center px-4 py-10">
 
-  <!-- FALLBACK STYLES (in case Tailwind fails) -->
+    <section class="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <img
+          src="glorivest-logo.png"
+          alt="Glorivest"
+          width="180"
+          height="44"
+          class="mx-auto mb-6"
+        />
+
+        <p class="text-sm text-white/45">Email verification</p>
+
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight mt-2">
+          Verify your email
+        </h1>
+
+        <p class="mt-3 text-sm sm:text-base text-white/55 leading-relaxed">
+          Enter the 6-digit code sent to your email address.
+        </p>
+      </div>
+
+      <!-- OTP Boxes -->
+      <div id="otp-container" class="grid grid-cols-6 gap-2 sm:gap-3 mb-5">
+        <input class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" />
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-3">
+        <button
+          id="verify-btn"
+          onclick="verifyOTP()"
+          class="w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold hover:brightness-110 transition"
+        >
+          Verify Email
+        </button>
+
+        <button
+          id="resend-btn"
+          onclick="resendOTP()"
+          class="w-full h-12 rounded-2xl border border-white/10 bg-white/[0.03] text-white font-medium hover:bg-white/[0.06] transition"
+        >
+          Resend Code
+        </button>
+
+        <p
+          id="status"
+          class="min-h-[20px] text-center text-sm text-white/45"
+        ></p>
+      </div>
+
+      <div class="mt-6 text-center">
+        <a
+          href="index.html"
+          class="text-sm text-white/45 hover:text-white transition"
+        >
+          Back to home
+        </a>
+      </div>
+
+    </section>
+  </main>
+
   <style>
     .otp-box {
-      width: 48px;
       height: 56px;
+      border-radius: 1rem;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      color: #fff;
       text-align: center;
-      font-size: 22px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
+      font-size: 1.35rem;
+      font-weight: 600;
       outline: none;
-      transition: all 0.2s ease;
+      transition: all .2s ease;
     }
 
     .otp-box:focus {
       border-color: #00D2B1;
-      box-shadow: 0 0 0 2px rgba(0,210,177,0.2);
-    }
-
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      box-shadow: 0 0 0 2px rgba(0,210,177,.15);
     }
   </style>
 
-
-  <!-- SCRIPT -->
   <script src="./otp.js"></script>
-
 </body>
 </html>

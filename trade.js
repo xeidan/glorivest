@@ -374,43 +374,61 @@ function renderCycleHistory() {
 
     const isForfeited = c.status === 'CANCELLED';
 
-    list.insertAdjacentHTML('beforeend', `
-      <div class="bg-[#1e1e1e] border border-white/10 rounded-xl p-4">
+list.insertAdjacentHTML('beforeend', `
+  <div class="rounded-3xl border border-white/10 bg-[#121212] p-5 space-y-4">
 
-        <div class="flex justify-between items-center">
+    <!-- Top Row -->
+    <div class="flex items-start justify-between gap-3">
 
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-white/70">
-              ${c.total_days} Day Cycle
-            </span>
+      <div>
+        <p class="text-sm font-medium text-white/85">
+          ${c.total_days} Day Cycle
+        </p>
 
-            <span class="text-xs px-2 py-1 rounded ${
-              isForfeited
-                ? 'bg-red-500/20 text-red-400'
-                : 'bg-green-500/20 text-green-400'
-            }">
-              ${isForfeited ? 'FORFEITED' : 'COMPLETED'}
-            </span>
-          </div>
-
-          <span class="font-bold ${
-            isForfeited ? 'text-red-400' : 'text-[#00D2B1]'
-          }">
-            ${
-              isForfeited
-                ? 'FORFEITED'
-                : `+${fmt(c.realized_profit_cents)}`
-            }
-          </span>
-        </div>
-
-        <div class="flex justify-between text-xs text-white/40 mt-1">
-          <span>Capital: ${fmt(c.capital_cents)}</span>
-          <span>${c.end_at.toLocaleString()}</span>
-        </div>
-
+        <p class="text-[11px] text-white/35 mt-1">
+          Closed ${c.end_at.toLocaleString()}
+        </p>
       </div>
-    `);
+
+      <span class="text-[11px] px-3 py-1 rounded-full font-medium ${
+        isForfeited
+          ? 'bg-red-500/15 text-red-400'
+          : 'bg-[#00D2B1]/15 text-[#00D2B1]'
+      }">
+        ${isForfeited ? 'FORFEITED' : 'COMPLETED'}
+      </span>
+
+    </div>
+
+    <!-- Metrics -->
+    <div class="grid grid-cols-2 gap-4">
+
+      <div>
+        <p class="text-[11px] uppercase tracking-wide text-white/35">
+          Capital
+        </p>
+
+        <p class="mt-1 text-lg font-semibold text-white">
+          ${fmt(c.capital_cents)}
+        </p>
+      </div>
+
+      <div class="text-right">
+        <p class="text-[11px] uppercase tracking-wide text-white/35">
+          Result
+        </p>
+
+        <p class="mt-1 text-lg font-semibold ${
+          isForfeited ? 'text-red-400' : 'text-[#00D2B1]'
+        }">
+          ${isForfeited ? 'Forfeited' : `+${fmt(c.realized_profit_cents)}`}
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+`);
   });
 }
 
@@ -440,84 +458,95 @@ Start a cycle from the "New Cycle" tab to begin automated trading.
   active.forEach(c => {
     const progress = Math.floor(c.progress * 100);
 
-    container.insertAdjacentHTML('beforeend', `
-      <div class="bg-[#1e1e1e] border border-white/10 rounded-2xl p-5 space-y-4">
+ container.insertAdjacentHTML('beforeend', `
+  <div class="rounded-3xl border border-white/10 bg-[#121212] p-5 space-y-4">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-          <div class="flex gap-2">
-            <span class="text-xs px-2 py-1 rounded bg-white/10">
-              ${c.wallet_type === 'REAL' ? 'LIVE' : 'DEMO'}
-            </span>
-            <span class="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">
-              RUNNING
-            </span>
-          </div>
-          <span class="text-xs text-white/40">
-            Started ${c.start_at.toLocaleString()}
-          </span>
-        </div>
+    <!-- Top Row -->
+    <div class="flex items-start justify-between gap-3">
 
-        <!-- Capital -->
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-white/60">Capital</span>
-          <span class="font-bold">${fmt(c.capital_cents)}</span>
-        </div>
+      <div class="flex gap-2 flex-wrap">
+        <span class="text-[11px] px-3 py-1 rounded-full bg-white/10 text-white/80">
+          ${c.wallet_type === 'REAL' ? 'LIVE' : 'DEMO'}
+        </span>
 
-        <!-- Expected Profit -->
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-white/60">Expected Profit</span>
-          <span class="font-mono text-green-400">
-            +${fmt(c.expected_profit_cents)}
-          </span>
-        </div>
-
-        <!-- Progress -->
-        <div class="space-y-1">
-          <div class="w-full h-2 bg-white/10 rounded overflow-hidden">
-            <div
-              class="h-full bg-[#00D2B1] transition-all duration-700"
-              style="width:${progress}%">
-            </div>
-          </div>
-          <div class="flex justify-between text-xs text-white/40">
-            <span>${c.elapsed_days} days elapsed</span>
-            <span>${c.remaining_days} days left</span>
-          </div>
-        </div>
-
-        <!-- Bot Activity Terminal -->
-        <div class="bot-terminal mt-3 bg-black/40 border border-white/5 rounded-lg p-3 font-mono text-[12px] leading-5" data-bot-terminal="${c.id}">
-          <div class="flex justify-between text-xs text-white/40 mb-1">
-            <span>BOT ACTIVITY</span>
-            <span>${c.time_left_label}</span>
-          </div>
-
-          ${c.bot_logs.map(l =>
-            `<div class="bot-terminal-line">${l}</div>`
-          ).join('')}
-
-          <div class="bot-terminal-line text-green-400">▌</div>
-        </div>
-
-        <div class="w-full h-1 bg-white/10 rounded overflow-hidden mt-2">
-          <div
-            class="h-full bg-purple-400 transition-all duration-700"
-            style="width:${c.bot_pulse}%">
-          </div>
-        </div>
-
-        <!-- Stop Action -->
-        <button
-          data-stop-cycle="${c.id}"
-          class="w-full mt-2 py-2 rounded-lg
-                 border border-red-500/40 text-red-400 text-sm
-                 hover:bg-red-500/10 transition">
-          Stop Cycle (Forfeit Profit)
-        </button>
-
+        <span class="text-[11px] px-3 py-1 rounded-full bg-[#00D2B1]/15 text-[#00D2B1] font-semibold">
+          RUNNING
+        </span>
       </div>
-    `);
+
+      <span class="text-[11px] text-white/35 text-right leading-4">
+        ${c.time_left_label}
+      </span>
+
+    </div>
+
+    <!-- Main Metrics -->
+<div class="flex items-start justify-between gap-4">
+
+     <div class="min-w-0">
+  <p class="text-[11px] uppercase tracking-wide text-white/35">
+    Capital
+  </p>
+
+  <p class="mt-1 text-xl font-semibold text-white">
+    ${fmt(c.capital_cents)}
+  </p>
+</div>
+
+<div class="text-right shrink-0">
+  <p class="text-[11px] uppercase tracking-wide text-white/35">
+    Expected Profit
+  </p>
+
+  <p class="mt-1 text-xl font-semibold text-[#00D2B1]">
+    +${fmt(c.expected_profit_cents)}
+  </p>
+</div>
+
+    </div>
+
+    <!-- Progress -->
+    <div class="space-y-2">
+
+      <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+        <div
+          class="h-full bg-[#00D2B1] transition-all duration-700"
+          style="width:${progress}%">
+        </div>
+      </div>
+
+      <div class="flex justify-between text-[11px] text-white/35">
+        <span>${c.elapsed_days} days elapsed</span>
+        <span>${c.remaining_days} days left</span>
+      </div>
+
+    </div>
+
+    <!-- Terminal -->
+    <div
+      class="bot-terminal rounded-2xl border border-white/5 bg-black/40 p-3 font-mono text-[11px] leading-5"
+      data-bot-terminal="${c.id}">
+
+      <div class="text-white/35 mb-2 uppercase tracking-wide text-[10px]">
+        Bot Activity
+      </div>
+
+      ${c.bot_logs.map(l =>
+        `<div class="bot-terminal-line text-white/70">${l}</div>`
+      ).join('')}
+
+      <div class="bot-terminal-line text-[#00D2B1]">▌</div>
+    </div>
+
+    <!-- Stop -->
+    <button
+      data-stop-cycle="${c.id}"
+      class="w-full h-11 rounded-2xl border border-red-500/35 text-red-400 text-sm font-medium hover:bg-red-500/10 transition">
+      Stop Cycle
+    </button>
+
+  </div>
+`);
   });
 }
 
@@ -1044,15 +1073,19 @@ async function loadMarkets() {
   const tab = qs('trade-content-charts');
   const container = qs('vix75-chart');
 
-  if (!tab || !container || tab.classList.contains('hidden')) return;
+  if (!tab || !container) return;
+
+  tab.classList.remove('hidden');
+
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   resetMarket();
   initChart();
 
   if (!MARKET.candleSeries) return;
 
-  await loadHistoricalCandles(); // REST first
-  startBinanceWS();              // WS after
+  await loadHistoricalCandles();
+  startBinanceWS();
 }
 
 // ======================================================

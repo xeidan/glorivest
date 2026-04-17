@@ -54,34 +54,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!copyBtn || !codeEl) return;
 
-  copyBtn.addEventListener("click", async () => {
-    const code = codeEl.textContent.trim();
-    if (!code || code === "LOADING...") return;
+copyBtn.addEventListener("click", async () => {
+  const code = codeEl.textContent.trim();
+  if (!code || code === "LOADING...") return;
 
-    try {
-      await navigator.clipboard.writeText(code);
+  try {
+    await navigator.clipboard.writeText(code);
 
-      // Change button text
-      const original = copyBtn.textContent;
-      copyBtn.textContent = "Copied";
-      copyBtn.disabled = true;
+    copyBtn.classList.remove("text-white/55", "border-white/10", "bg-white/5");
+    copyBtn.classList.add(
+      "text-[#00D2B1]",
+      "border-[#00D2B1]/30",
+      "bg-[#00D2B1]/10"
+    );
 
-      if (statusEl) {
-        statusEl.classList.remove("hidden");
-      }
+    setTimeout(() => {
+      copyBtn.classList.remove(
+        "text-[#00D2B1]",
+        "border-[#00D2B1]/30",
+        "bg-[#00D2B1]/10"
+      );
 
-      setTimeout(() => {
-        copyBtn.textContent = original;
-        copyBtn.disabled = false;
-        if (statusEl) {
-          statusEl.classList.add("hidden");
-        }
-      }, 1500);
+      copyBtn.classList.add(
+        "text-white/55",
+        "border-white/10",
+        "bg-white/5"
+      );
+    }, 1500);
 
-    } catch (err) {
-      console.error("Copy failed:", err);
-    }
-  });
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+});
 });
 
 
@@ -104,35 +108,73 @@ function renderLeaderboard(users) {
 
   if (!Array.isArray(users) || users.length === 0) {
     list.innerHTML = `
-      <li class="py-4 text-center text-white/50 text-sm">
+      <li class="py-6 text-center text-white/45 text-sm">
         No leaderboard data
       </li>
     `;
     return;
   }
 
-  // Sort highest earners first (authoritative)
   const sorted = [...users].sort((a, b) => {
-    const aEarn = Number(a.referral_earnings_cents || 0);
-    const bEarn = Number(b.referral_earnings_cents || 0);
-    return bEarn - aEarn;
+    return Number(b.referral_earnings_cents || 0) -
+           Number(a.referral_earnings_cents || 0);
   });
 
+const rankStyle = (rank) => {
+  if (rank === 1) {
+    return "bg-yellow-400/15 text-yellow-300 border border-yellow-300/25";
+  }
+
+  if (rank === 2) {
+    return "bg-slate-300/15 text-slate-200 border border-slate-200/20";
+  }
+
+  if (rank === 3) {
+    return "bg-orange-500/15 text-orange-300 border border-orange-300/25";
+  }
+
+  return "bg-white/5 text-white/70 border border-white/5";
+};
+
   sorted.forEach((user, index) => {
-    const earned =
-      Number(user.referral_earnings_cents || 0) / 100;
+    const rank = index + 1;
+    const earned = Number(user.referral_earnings_cents || 0) / 100;
 
     const li = document.createElement("li");
-    li.className = "flex justify-between items-center py-3";
+    li.className = "px-4 py-4";
 
     li.innerHTML = `
-      <div class="flex items-center gap-3">
-        <span class="font-bold text-[#00D2B1]">#${index + 1}</span>
-        <span>${maskEmail(user.email)}</span>
+      <div class="rounded-2xl border border-white/5 bg-black/20 px-4 py-3 flex items-center justify-between gap-3">
+
+        <div class="flex items-center gap-3 min-w-0">
+
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${rankStyle(rank)}">
+            #${rank}
+          </div>
+
+          <div class="min-w-0">
+            <p class="text-white font-medium truncate">
+              ${maskEmail(user.email)}
+            </p>
+
+            <p class="text-white/40 text-xs mt-0.5">
+              ${rank <= 3 ? "Top Referrer" : "Community Member"}
+            </p>
+          </div>
+
+        </div>
+
+        <div class="text-right shrink-0">
+          <p class="text-white font-semibold">
+            $${earned.toFixed(2)}
+          </p>
+
+          <p class="text-white/35 text-[11px] mt-0.5">
+            earned
+          </p>
+        </div>
+
       </div>
-      <span class="font-semibold text-white/90">
-        $${earned.toFixed(2)}
-      </span>
     `;
 
     list.appendChild(li);

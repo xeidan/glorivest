@@ -72,7 +72,7 @@
     const total = computeSimulatedTotal();
 
     els.summary.innerHTML = `
-      <div class="bg-black/40 p-4 rounded-lg">
+      <div class="rounded-3xl border border-white/10 bg-[#121212] p-5">
         <div class="text-white/60 text-xs">Bot PnL</div>
         <div class="text-emerald-400 text-lg font-bold">
           $${fmt(total)}
@@ -175,12 +175,14 @@ function renderChart(trades) {
   /* ============================================
      BACKEND POSITIONS TABLE (REAL DATA)
   ============================================ */
-
- async function loadPositions() {
-  if (!els.tbody || tableLoaded) return;
+async function loadPositions() {
+  if (tableLoaded) return;
 
   const token = localStorage.getItem('token');
   if (!token) return;
+
+  const tbody = document.getElementById('perf-tbody');
+  const cards = document.getElementById('perf-cards');
 
   try {
     const res = await fetch(`${window.API_BASE}/performance`, {
@@ -191,52 +193,158 @@ function renderChart(trades) {
 
     const json = await res.json();
 
-    // 🔥 HANDLE REAL RESPONSE SHAPE
     const rows =
       Array.isArray(json) ? json :
       Array.isArray(json.data) ? json.data :
       Array.isArray(json.positions) ? json.positions :
       [];
-window.__perfTrades = rows;
+
+    window.__perfTrades = rows;
 
     if (!rows.length) {
-      els.tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="p-4 text-center text-white/60">
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="px-4 py-8 text-center text-white/40">
+              No performance data yet.
+            </td>
+          </tr>
+        `;
+      }
+
+      if (cards) {
+        cards.innerHTML = `
+          <div class="rounded-3xl border border-white/10 bg-[#121212] p-5 text-center text-white/40">
             No performance data yet.
-          </td>
-        </tr>
-      `;
+          </div>
+        `;
+      }
+
       return;
     }
 
-    els.tbody.innerHTML = rows.map(p => `
-      <tr class="hover:bg-black/20 transition">
-        <td class="p-4 text-xs text-white/80">
-          ${new Date(p.opened_at).toLocaleString()}
-        </td>
-        <td class="p-4 text-white/90">${p.symbol}</td>
-        <td class="p-4 text-white/90">${p.side}</td>
-        <td class="text-right p-4 text-white/90">
-          ${Number(p.size).toFixed(4)}
-        </td>
-        <td class="text-right p-4 text-white/90">
-          ${Number(p.entry_price).toFixed(2)}
-        </td>
-        <td class="text-right p-4 text-white/90">
-          ${p.exit_price ? Number(p.exit_price).toFixed(2) : '—'}
-        </td>
-        <td class="p-4 font-semibold ${
-          Number(p.pnl) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-        }">
-          ${Number(p.pnl) >= 0 ? 'WIN' : 'LOSS'}
-        </td>
+    /* DESKTOP TABLE */
+    if (tbody) {
+      tbody.innerHTML = rows.map(p => {
+        const pnl = Number(p.pnl || 0);
+        const win = pnl >= 0;
 
-        <td class="p-4 text-white/70">${p.status}</td>
-      </tr>
-    `).join('');
+        return `
+          <tr class="border-t border-white/5">
+            <td class="px-4 py-3 text-xs text-white/55 whitespace-nowrap">
+              ${new Date(p.opened_at).toLocaleString()}
+            </td>
+
+            <td class="px-4 py-3 text-white font-medium">${p.symbol}</td>
+
+            <td class="px-4 py-3 ${p.side === 'LONG' ? 'text-[#00D2B1]' : 'text-rose-400'}">
+              ${p.side}
+            </td>
+
+            <td class="px-4 py-3 text-right text-white/80">
+              ${Number(p.size).toFixed(4)}
+            </td>
+
+            <td class="px-4 py-3 text-right text-white/80">
+              ${Number(p.entry_price).toFixed(2)}
+            </td>
+
+            <td class="px-4 py-3 text-right text-white/80">
+              ${p.exit_price ? Number(p.exit_price).toFixed(2) : '—'}
+            </td>
+
+            <td class="px-4 py-3 text-right font-semibold ${win ? 'text-[#00D2B1]' : 'text-rose-400'}">
+              ${pnl.toFixed(2)}
+            </td>
+
+            <td class="px-4 py-3 text-white/55">
+              ${p.status}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* MOBILE CARDS */
+    if (cards) {
+      cards.innerHTML = rows.map(p => {
+        const pnl = Number(p.pnl || 0);
+        const win = pnl >= 0;
+
+        return `
+          <div class="rounded-3xl border border-white/10 bg-[#121212] p-5 space-y-4">
+
+            <div class="flex items-start justify-between gap-3">
+
+              <div class="min-w-0">
+                <h3 class="text-xl font-semibold text-white truncate">
+                  ${p.symbol}
+                </h3>
+
+                <p class="text-xs text-white/40 mt-1">
+                  ${new Date(p.opened_at).toLocaleString()}
+                </p>
+              </div>
+
+              <span class="px-3 h-8 inline-flex items-center rounded-full text-xs font-semibold ${
+                p.side === 'LONG'
+                  ? 'bg-[#00D2B1]/15 text-[#00D2B1]'
+                  : 'bg-rose-500/15 text-rose-400'
+              }">
+                ${p.side}
+              </span>
+
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+
+              <div>
+                <p class="text-[11px] uppercase tracking-wide text-white/35">Entry</p>
+                <p class="mt-1 text-white">${Number(p.entry_price).toFixed(2)}</p>
+              </div>
+
+              <div>
+                <p class="text-[11px] uppercase tracking-wide text-white/35">Exit</p>
+                <p class="mt-1 text-white">
+                  ${p.exit_price ? Number(p.exit_price).toFixed(2) : '—'}
+                </p>
+              </div>
+
+              <div>
+                <p class="text-[11px] uppercase tracking-wide text-white/35">Size</p>
+                <p class="mt-1 text-white">${Number(p.size).toFixed(4)}</p>
+              </div>
+
+              <div>
+                <p class="text-[11px] uppercase tracking-wide text-white/35">Status</p>
+                <p class="mt-1 text-white">${p.status}</p>
+              </div>
+
+            </div>
+
+            <div class="pt-4 border-t border-white/5 flex items-center justify-between">
+
+              <span class="text-sm font-semibold ${
+                win ? 'text-[#00D2B1]' : 'text-rose-400'
+              }">
+                ${win ? 'WIN' : 'LOSS'}
+              </span>
+
+              <span class="text-base font-bold ${
+                win ? 'text-[#00D2B1]' : 'text-rose-400'
+              }">
+                ${win ? '+' : ''}${pnl.toFixed(2)}
+              </span>
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
 
     tableLoaded = true;
+    sync();
 
   } catch (err) {
     console.error('Position load failed:', err);

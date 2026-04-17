@@ -5,75 +5,62 @@ const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 const email = localStorage.getItem('resetEmail');
 const resetCode = localStorage.getItem('resetCode');
 
+const passwordInput = document.getElementById('password');
+const resetBtn = document.getElementById('reset-btn');
+const statusEl = document.getElementById('status');
+const loginLink = document.getElementById('login-link');
+
 if (!email || !resetCode) {
-  alert('Invalid reset session. Start again.');
   window.location.href = 'forgot-password.html';
 }
 
+function setStatus(message, type = 'default') {
+  statusEl.textContent = message;
+  statusEl.className = 'min-h-[20px] text-center text-sm';
 
-// --------------------------------------------------
-// HELPERS
-// --------------------------------------------------
-function setStatus(message, type = 'error') {
-  const el = document.getElementById('status');
-
-  el.textContent = message;
-  el.classList.remove('text-red-500', 'text-green-600');
-
-  if (type === 'success') {
-    el.classList.add('text-green-600');
+  if (type === 'error') {
+    statusEl.classList.add('text-red-400');
+  } else if (type === 'success') {
+    statusEl.classList.add('text-[#00D2B1]');
   } else {
-    el.classList.add('text-red-500');
+    statusEl.classList.add('text-white/45');
   }
 }
 
+function isStrongPassword(password) {
+  return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
+}
 
-// --------------------------------------------------
-// PASSWORD TOGGLE
-// --------------------------------------------------
+/* Password Toggle */
 document.getElementById('toggle-password')?.addEventListener('click', () => {
-  const input = document.getElementById('password');
   const icon = document.getElementById('eye-icon');
+  const hidden = passwordInput.type === 'password';
 
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
+  passwordInput.type = hidden ? 'text' : 'password';
 
   icon.classList.toggle('fa-eye');
   icon.classList.toggle('fa-eye-slash');
 });
 
-
-// --------------------------------------------------
-// VALIDATION (MATCH BACKEND RULE)
-// --------------------------------------------------
-function isStrongPassword(password) {
-  return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
-}
-
-
-// --------------------------------------------------
-// RESET PASSWORD
-// --------------------------------------------------
 async function resetPassword() {
-  const passwordInput = document.getElementById('password');
-  const btn = document.getElementById('reset-btn');
-  const loginLink = document.getElementById('login-link');
-
   const newPassword = passwordInput.value.trim();
 
   if (!newPassword) {
-    setStatus('Password cannot be empty');
+    setStatus('Password cannot be empty.', 'error');
+    passwordInput.focus();
     return;
   }
 
   if (!isStrongPassword(newPassword)) {
-    setStatus('Password must be 8+ chars with letter, number, and symbol');
+    setStatus('Use 8+ characters with letter, number, and symbol.', 'error');
     return;
   }
 
-  btn.disabled = true;
+  resetBtn.disabled = true;
 
   try {
+    setStatus('Updating password...');
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
@@ -93,28 +80,31 @@ async function resetPassword() {
     const data = await res.json();
 
     if (!res.ok) {
-      setStatus(data.message || 'Reset failed');
+      setStatus(data.message || 'Reset failed.', 'error');
       return;
     }
 
-    // SUCCESS
-    setStatus('Password updated successfully', 'success');
-
-    loginLink.classList.remove('hidden');
-
-    // cleanup
     localStorage.removeItem('resetEmail');
     localStorage.removeItem('resetCode');
 
-  } catch (err) {
-    console.error(err);
+    setStatus('Password updated successfully.', 'success');
+    loginLink.classList.remove('hidden');
 
-    if (err.name === 'AbortError') {
-      setStatus('Request timeout. Try again.');
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1200);
+
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      setStatus('Request timed out. Try again.', 'error');
     } else {
-      setStatus('Network error. Try again.');
+      setStatus('Network error. Try again.', 'error');
     }
   } finally {
-    btn.disabled = false;
+    resetBtn.disabled = false;
   }
 }
+
+passwordInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') resetPassword();
+});

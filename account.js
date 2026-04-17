@@ -127,26 +127,7 @@
 })();
 
 
-document.addEventListener('click', (e) => {
-  const item = e.target.closest('[data-action]');
-  if (!item) return;
 
-  const action = item.dataset.action;
-
-  switch (action) {
-    case 'logout':
-      // logout logic
-      break;
-
-    case 'telegram':
-      window.open('https://t.me/yourlink', '_blank');
-      break;
-
-    case 'support':
-      // open support modal
-      break;
-  }
-});
 
 
 document.addEventListener('click', async (e) => {
@@ -157,10 +138,11 @@ document.addEventListener('click', async (e) => {
 
   switch (action) {
 
-    case 'logout':
-      localStorage.removeItem('token');
-      window.location.href = '/index.html';
-      break;
+case 'logout':
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = '/index.html';
+  break;
 
     case 'telegram':
       window.open('https://t.me/your_telegram_link', '_blank');
@@ -197,4 +179,15 @@ document.addEventListener('click', async (e) => {
     default:
       console.warn('Unhandled action:', action);
   }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#logout-btn');
+    if (!btn) return;
+
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/index.html';
+  });
 });

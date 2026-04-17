@@ -1,24 +1,40 @@
 // otp-reset.js
-const API_BASE = 'https://glorivest-api.herokuapp.com';
+const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 
-// email stored earlier
+const otpInput = document.getElementById('otp');
+const statusEl = document.getElementById('status');
+
 const email = localStorage.getItem('resetEmail');
+
 if (!email) {
-  alert('No email found. Start the reset process again.');
   window.location.href = 'forgot-password.html';
 }
 
-// ---- Verify OTP for password reset ----
-async function verifyResetOTP() {
-  const code = document.getElementById('otp').value.trim();
-  const statusEl = document.getElementById('status');
+function setStatus(message, type = 'default') {
+  statusEl.textContent = message;
+  statusEl.className = 'min-h-[20px] text-center text-sm';
 
-  if (!code || code.length !== 6) {
-    statusEl.textContent = 'Enter a valid 6-digit OTP.';
+  if (type === 'error') {
+    statusEl.classList.add('text-red-400');
+  } else if (type === 'success') {
+    statusEl.classList.add('text-[#00D2B1]');
+  } else {
+    statusEl.classList.add('text-white/45');
+  }
+}
+
+async function verifyResetOTP() {
+  const code = otpInput.value.replace(/\D/g, '').trim();
+
+  if (code.length !== 6) {
+    setStatus('Enter a valid 6-digit code.', 'error');
+    otpInput.focus();
     return;
   }
 
   try {
+    setStatus('Verifying...');
+
     const res = await fetch(`${API_BASE}/auth/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,33 +48,28 @@ async function verifyResetOTP() {
     const data = await res.json();
 
     if (!res.ok) {
-      statusEl.textContent = data.message || 'Invalid or expired OTP';
+      setStatus(data.message || 'Invalid or expired code.', 'error');
       return;
     }
 
-    // 🔥 THE MISSING LINE
     localStorage.setItem('resetCode', code);
 
-    statusEl.classList.remove('text-red-500');
-    statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'OTP verified. Redirecting…';
+    setStatus('Verified. Redirecting...', 'success');
 
     setTimeout(() => {
       window.location.href = 'reset-password.html';
-    }, 600);
+    }, 700);
 
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Network error. Try again.';
+  } catch (error) {
+    setStatus('Network error. Try again.', 'error');
   }
 }
 
-// ---- Resend OTP for password reset ----
 async function resendResetOTP() {
-  const statusEl = document.getElementById('status');
-
   try {
-    const res = await fetch(`${API_BASE}/auth/resend-otp`, {
+    setStatus('Sending new code...');
+
+    const res = await fetch(`${API_BASE}/auth/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,16 +81,21 @@ async function resendResetOTP() {
     const data = await res.json();
 
     if (!res.ok) {
-      statusEl.textContent = data.message || 'Failed to resend OTP';
+      setStatus(data.message || 'Failed to resend code.', 'error');
       return;
     }
 
-    statusEl.classList.remove('text-red-500');
-    statusEl.classList.add('text-green-600');
-    statusEl.textContent = 'A new OTP has been sent to your email.';
+    setStatus('A new code has been sent.', 'success');
 
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Network error. Try again.';
+  } catch (error) {
+    setStatus('Network error. Try again.', 'error');
   }
 }
+
+otpInput?.addEventListener('input', () => {
+  otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
+});
+
+otpInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') verifyResetOTP();
+});
