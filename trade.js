@@ -1181,16 +1181,14 @@ function initChart() {
     crosshair: { mode: 1 }
   });
 
-  MARKET.candleSeries = MARKET.chart.addSeries(
-    LightweightCharts.CandlestickSeries,
-    {
-      upColor: '#00D2B1',
-      downColor: '#ef4444',
-      wickUpColor: '#00D2B1',
-      wickDownColor: '#ef4444',
-      borderVisible: false
-    }
-  );
+MARKET.candleSeries = MARKET.chart.addCandlestickSeries({
+  upColor: '#00D2B1',
+  downColor: '#ef4444',
+  wickUpColor: '#00D2B1',
+  wickDownColor: '#ef4444',
+  borderUpColor: '#00D2B1',
+  borderDownColor: '#ef4444'
+});
 
   MARKET.chart.timeScale().fitContent();
 }
@@ -1228,7 +1226,9 @@ async function loadHistoricalCandles() {
     `&limit=500`;
 
   const res = await fetch(url);
-  const data = await res.json();
+  if (!res.ok) throw new Error('Failed candles');
+const data = await res.json();
+if (!Array.isArray(data)) return;
   if (!MARKET.candleSeries) return;
 
   const candles = data.map(k => ({
@@ -1240,6 +1240,9 @@ async function loadHistoricalCandles() {
   }));
 
   MARKET.candleSeries.setData(candles);
+  requestAnimationFrame(() => {
+  MARKET.chart.timeScale().fitContent();
+});
 
   const last = candles[candles.length - 1];
   if (last) updateMarketPrice(last.close);
