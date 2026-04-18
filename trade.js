@@ -1223,44 +1223,90 @@ function updateMarketPrice(price) {
 // REST — HISTORICAL CANDLES
 // ======================================================
 async function loadHistoricalCandles() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+
   try {
     const url =
-      `https://api.binance.com/api/v3/klines?symbol=${MARKET.symbol}&interval=${MARKET.interval}&limit=200`;
+      `https://api.binance.com/api/v3/klines` +
+      `?symbol=${encodeURIComponent(MARKET.symbol)}` +
+      `&interval=${encodeURIComponent(MARKET.interval)}` +
+      `&limit=200`;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('fetch failed');
+    const res = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('bad data');
 
-    const candles = data.map(k => ({
-      time: Math.floor(k[0] / 1000),
-      open: Number(k[1]),
-      high: Number(k[2]),
-      low: Number(k[3]),
-      close: Number(k[4])
-    }));
+    if (!Array.isArray(data) || !data.length) {
+      throw new Error('Invalid candle response');
+    }
+
+    if (!MARKET.chart || !MARKET.candleSeries) {
+      return;
+    }
+
+    const candles = data
+      .map(row => ({
+        time: Math.floor(Number(row[0]) / 1000),
+        open: Number(row[1]),
+        high: Number(row[2]),
+        low: Number(row[3]),
+        close: Number(row[4])
+      }))
+      .filter(c =>
+        Number.isFinite(c.time) &&
+        Number.isFinite(c.open) &&
+        Number.isFinite(c.high) &&
+        Number.isFinite(c.low) &&
+        Number.isFinite(c.close)
+      );
+
+    if (!candles.length) {
+      throw new Error('No valid candles');
+    }
 
     MARKET.candleSeries.setData(candles);
 
+    const last = candles[candles.length - 1];
+    MARKET.lastCandleTime = last.time;
+    updateMarketPrice(last.close);
+
     const el = qs('vix75-chart');
 
-    setTimeout(() => {
-      if (!MARKET.chart || !el) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!MARKET.chart || !el) return;
 
-      MARKET.chart.resize(
-        el.clientWidth,
-        el.clientHeight
-      );
+        MARKET.chart.resize(
+          el.clientWidth,
+          el.clientHeight || 320
+        );
 
-      MARKET.chart.timeScale().fitContent();
-    }, 50);
-
-    const last = candles[candles.length - 1];
-    if (last) updateMarketPrice(last.close);
+        MARKET.chart.timeScale().fitContent();
+      });
+    });
 
   } catch (err) {
+    clearTimeout(timeout);
     console.error('CHART LOAD ERROR:', err);
+
+    if (typeof showToast === 'function') {
+      showToast('Unable to load chart data');
+    }
   }
 }
 
