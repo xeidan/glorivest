@@ -1110,14 +1110,25 @@ async function loadMarkets() {
 
   tab.classList.remove('hidden');
 
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await new Promise(resolve =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(resolve)
+    )
+  );
 
   resetMarket();
   initChart();
 
-  if (!MARKET.candleSeries) return;
+  if (!MARKET.chart || !MARKET.candleSeries) return;
+
+  MARKET.chart.resize(
+    container.clientWidth,
+    container.clientHeight
+  );
 
   await loadHistoricalCandles();
+  MARKET.chart.timeScale().fitContent();
+
   startBinanceWS();
 }
 
@@ -1335,8 +1346,17 @@ document.querySelectorAll('[data-tf]').forEach(btn => {
 // ======================================================
 window.addEventListener('resize', () => {
   if (!MARKET.chart) return;
+
   const el = qs('vix75-chart');
-  MARKET.chart.resize(el.clientWidth, el.clientHeight);
+  if (!el) return;
+
+  requestAnimationFrame(() => {
+    MARKET.chart.resize(
+      el.clientWidth,
+      el.clientHeight
+    );
+    MARKET.chart.timeScale().fitContent();
+  });
 });
 
 

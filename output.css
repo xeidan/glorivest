@@ -701,6 +701,9 @@
   .h-\[260px\] {
     height: 260px;
   }
+  .h-\[320px\] {
+    height: 320px;
+  }
   .h-\[420px\] {
     height: 420px;
   }
@@ -3865,6 +3868,11 @@
   .sm\:h-64 {
     @media (width >= 40rem) {
       height: calc(var(--spacing) * 64);
+    }
+  }
+  .sm\:h-\[380px\] {
+    @media (width >= 40rem) {
+      height: 380px;
     }
   }
   .sm\:w-36 {
