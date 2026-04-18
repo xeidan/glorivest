@@ -1160,37 +1160,40 @@ function resetMarket() {
 // ======================================================
 function initChart() {
   const el = qs('vix75-chart');
-  const { width, height } = el.getBoundingClientRect();
-  if (!width || !height) return;
+  if (!el) return;
+
+  const width = el.clientWidth;
+  const height = el.clientHeight || 320;
+
+  if (!width) return;
 
   MARKET.chart = LightweightCharts.createChart(el, {
     width,
     height,
     layout: {
       background: { color: '#0b0f14' },
-      textColor: '#9ca3af',
-      fontFamily: 'Inter, system-ui',
-      fontSize: 12
+      textColor: '#9ca3af'
     },
     grid: {
       vertLines: { color: 'rgba(255,255,255,0.02)' },
       horzLines: { color: 'rgba(255,255,255,0.04)' }
     },
     rightPriceScale: { borderVisible: false },
-    timeScale: { borderVisible: false, timeVisible: true },
-    crosshair: { mode: 1 }
+    timeScale: {
+      borderVisible: false,
+      timeVisible: true,
+      secondsVisible: false
+    }
   });
 
-MARKET.candleSeries = MARKET.chart.addCandlestickSeries({
-  upColor: '#00D2B1',
-  downColor: '#ef4444',
-  wickUpColor: '#00D2B1',
-  wickDownColor: '#ef4444',
-  borderUpColor: '#00D2B1',
-  borderDownColor: '#ef4444'
-});
-
-  MARKET.chart.timeScale().fitContent();
+  MARKET.candleSeries = MARKET.chart.addCandlestickSeries({
+    upColor: '#00D2B1',
+    downColor: '#ef4444',
+    wickUpColor: '#00D2B1',
+    wickDownColor: '#ef4444',
+    borderUpColor: '#00D2B1',
+    borderDownColor: '#ef4444'
+  });
 }
 
 // ======================================================
@@ -1219,36 +1222,33 @@ function updateMarketPrice(price) {
 // REST — HISTORICAL CANDLES
 // ======================================================
 async function loadHistoricalCandles() {
-  const url =
-    `https://api.binance.com/api/v3/klines` +
-    `?symbol=${MARKET.symbol}` +
-    `&interval=${MARKET.interval}` +
-    `&limit=500`;
+  try {
+    const url =
+      `https://api.binance.com/api/v3/klines?symbol=${MARKET.symbol}&interval=${MARKET.interval}&limit=200`;
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed candles');
-const data = await res.json();
-if (!Array.isArray(data)) return;
-  if (!MARKET.candleSeries) return;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('fetch failed');
 
-  const candles = data.map(k => ({
-    time: k[0] / 1000,
-    open: +k[1],
-    high: +k[2],
-    low: +k[3],
-    close: +k[4]
-  }));
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('bad data');
 
-  MARKET.candleSeries.setData(candles);
-  requestAnimationFrame(() => {
-  MARKET.chart.timeScale().fitContent();
-});
+    const candles = data.map(k => ({
+      time: Math.floor(k[0] / 1000),
+      open: Number(k[1]),
+      high: Number(k[2]),
+      low: Number(k[3]),
+      close: Number(k[4])
+    }));
 
-  const last = candles[candles.length - 1];
-  if (last) updateMarketPrice(last.close);
+    MARKET.candleSeries.setData(candles);
+    MARKET.chart.timeScale().fitContent();
 
-  MARKET.lastCandleTime = last?.time;
-  
+    const last = candles[candles.length - 1];
+    if (last) updateMarketPrice(last.close);
+
+  } catch (err) {
+    console.error('CHART LOAD ERROR:', err);
+  }
 }
 
 
