@@ -1181,19 +1181,20 @@ function initChart() {
     rightPriceScale: { borderVisible: false },
     timeScale: {
       borderVisible: false,
-      timeVisible: true,
-      secondsVisible: false
+      timeVisible: true
     }
   });
 
-  MARKET.candleSeries = MARKET.chart.addCandlestickSeries({
-    upColor: '#00D2B1',
-    downColor: '#ef4444',
-    wickUpColor: '#00D2B1',
-    wickDownColor: '#ef4444',
-    borderUpColor: '#00D2B1',
-    borderDownColor: '#ef4444'
-  });
+  MARKET.candleSeries = MARKET.chart.addSeries(
+    LightweightCharts.CandlestickSeries,
+    {
+      upColor: '#00D2B1',
+      downColor: '#ef4444',
+      wickUpColor: '#00D2B1',
+      wickDownColor: '#ef4444',
+      borderVisible: false
+    }
+  );
 }
 
 // ======================================================
@@ -1241,7 +1242,19 @@ async function loadHistoricalCandles() {
     }));
 
     MARKET.candleSeries.setData(candles);
-    MARKET.chart.timeScale().fitContent();
+
+    const el = qs('vix75-chart');
+
+    setTimeout(() => {
+      if (!MARKET.chart || !el) return;
+
+      MARKET.chart.resize(
+        el.clientWidth,
+        el.clientHeight
+      );
+
+      MARKET.chart.timeScale().fitContent();
+    }, 50);
 
     const last = candles[candles.length - 1];
     if (last) updateMarketPrice(last.close);
