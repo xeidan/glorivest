@@ -550,6 +550,38 @@ Start a cycle from the "New Cycle" tab to begin automated trading.
   });
 }
 
+/* ---------- Profit Summary Update (ROI Tiers) ---------- */
+function updateProfitSummary(months) {
+  const badge = qs('profit-summary-badge');
+  const t1 = qs('roi-tier-1');
+  const t2 = qs('roi-tier-2');
+  const t3 = qs('roi-tier-3');
+
+  if (!badge || !t1 || !t2 || !t3) return;
+
+  const table = {
+    1: {
+      label: '30 Days',
+      values: ['15%', '17%', '20%']
+    },
+    3: {
+      label: '90 Days',
+      values: ['50%', '60%', '70%']
+    },
+    6: {
+      label: '180 Days',
+      values: ['110%', '125%', '150%']
+    }
+  };
+
+  const config = table[months] || table[1];
+
+  badge.textContent = config.label;
+  t1.textContent = config.values[0];
+  t2.textContent = config.values[1];
+  t3.textContent = config.values[2];
+}
+
 
 /* ---------- Portfolio Summary (Top Metrics) ---------- */
 function renderPortfolioSummary() {
@@ -616,7 +648,7 @@ function calculateExpectedReturns(amount, months) {
 
   if (months === 6) {
     if (amount < 500) rate = 1.10;
-    else if (amount < 5000) rate = 1.35;
+    else if (amount < 5000) rate = 1.25;
     else rate = 1.50;
   }
 
@@ -675,6 +707,7 @@ function loadStartCycle() {
   const btn = qs('start-new-cycle-btn');
   btn.disabled = true;
   btn.textContent = 'Enter Amount';
+  updateProfitSummary(1);
 }
 
 /* ---------- Duration Button Handling ---------- */
@@ -687,7 +720,7 @@ document.querySelectorAll('.duration-btn').forEach(btn => {
     btn.classList.add('active');
 
     selectedDurationMonths = Number(btn.dataset.months);
-
+    updateProfitSummary(selectedDurationMonths);
     recalcCycleSummary();
   });
 });
