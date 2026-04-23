@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Env files (never commit secrets like DB URLs, API keys, SendGrid keys, Kora keys, etc.)
+# Env files 
 .env
 .env.local
 .env.development.local
@@ -24,7 +24,7 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Build output (if you later build with Tailwind, React, Next.js, etc.)
+# Build output 
 dist/
 build/
 .cache/
