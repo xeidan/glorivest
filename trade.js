@@ -1093,6 +1093,10 @@ const MARKET = {
 };
 
 // ---------- PRICE STATE ----------
+
+let marketLoading = false;
+let marketLoaded = false;
+let lastLoadedKey = '';
 let lastPrice = null;
 
 const priceEl = document.getElementById('live-price');
@@ -1102,7 +1106,7 @@ const priceArrow = document.getElementById('price-arrow');
 // ======================================================
 // INIT / ENTRY
 // ======================================================
-async function loadMarkets() {
+async function loadMarkets(force = false) {
   const tab = qs('trade-content-charts');
   const container = qs('vix75-chart');
 
@@ -1110,27 +1114,60 @@ async function loadMarkets() {
 
   tab.classList.remove('hidden');
 
-  await new Promise(resolve =>
-    requestAnimationFrame(() =>
-      requestAnimationFrame(resolve)
-    )
-  );
+  const currentKey =
+    `${MARKET.symbol}_${MARKET.interval}`;
 
-  resetMarket();
-  initChart();
+  // prevent useless reloads
+  if (!force && marketLoaded && lastLoadedKey === currentKey) {
+    requestAnimationFrame(() => {
+      if (MARKET.chart) {
+        MARKET.chart.resize(
+          container.clientWidth,
+          container.clientHeight || 320
+        );
+        MARKET.chart.timeScale().fitContent();
+      }
+    });
+    return;
+  }
 
-  if (!MARKET.chart || !MARKET.candleSeries) return;
+  if (marketLoading) return;
+  marketLoading = true;
 
-  MARKET.chart.resize(
-    container.clientWidth,
-    container.clientHeight
-  );
+  try {
+    await new Promise(resolve =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(resolve)
+      )
+    );
 
-  await loadHistoricalCandles();
-  MARKET.chart.timeScale().fitContent();
+    resetMarket();
+    initChart();
 
-  startBinanceWS();
+    if (!MARKET.chart || !MARKET.candleSeries) {
+      return;
+    }
+
+    MARKET.chart.resize(
+      container.clientWidth,
+      container.clientHeight || 320
+    );
+
+    await loadHistoricalCandles();
+
+    MARKET.chart.timeScale().fitContent();
+
+    startBinanceWS();
+
+    marketLoaded = true;
+    lastLoadedKey = currentKey;
+
+  } finally {
+    marketLoading = false;
+  }
 }
+
+
 
 // ======================================================
 // CLEANUP
@@ -1141,18 +1178,21 @@ function stopBinanceWS() {
     MARKET.ws = null;
   }
 }
-
 function resetMarket() {
   stopBinanceWS();
 
-  if (MARKET.chart) {
-    MARKET.chart.remove();
-    MARKET.chart = null;
+  try {
+    if (MARKET.chart) {
+      MARKET.chart.remove();
+    }
+  } catch (err) {
+    console.warn('Chart remove skipped');
   }
 
+  MARKET.chart = null;
   MARKET.candleSeries = null;
   MARKET.lastCandleTime = null;
-  lastPrice = null;
+
 }
 
 // ======================================================
@@ -1196,6 +1236,7 @@ function initChart() {
     }
   );
 }
+console.log('chart?', !!MARKET.chart, 'series?', !!MARKET.candleSeries);
 
 // ======================================================
 // PRICE UI
@@ -1216,7 +1257,6 @@ function updateMarketPrice(price) {
     priceArrow.textContent = up ? '▲' : '▼';
   }
 
-  lastPrice = price;
 }
 
 // ======================================================
@@ -1227,11 +1267,28 @@ async function loadHistoricalCandles() {
   const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const url =
-      `https://api.binance.com/api/v3/klines` +
-      `?symbol=${encodeURIComponent(MARKET.symbol)}` +
-      `&interval=${encodeURIComponent(MARKET.interval)}` +
-      `&limit=200`;
+const tfMap = {
+  '1m': '1min',
+  '5m': '5min',
+  '15m': '15min',
+  '30m': '30min',
+  '1h': '1h',
+  '4h': '4h',
+  '1d': '1day',
+  '1w': '1week',
+  '1M': '1month'
+};
+
+const interval =
+  tfMap[MARKET.interval] || '1min';
+
+const url =
+  `${API_BASE}/market/candles` +
+  `?symbol=${MARKET.symbol}` +
+  `&interval=${interval}` +
+  `&limit=100`;
+
+  console.log(MARKET.interval, interval, url);
 
     const res = await fetch(url, {
       method: 'GET',
@@ -1279,7 +1336,9 @@ async function loadHistoricalCandles() {
       throw new Error('No valid candles');
     }
 
-    MARKET.candleSeries.setData(candles);
+if (!MARKET.chart || !MARKET.candleSeries) return;
+
+MARKET.candleSeries.setData(candles);
 
     const last = candles[candles.length - 1];
     MARKET.lastCandleTime = last.time;

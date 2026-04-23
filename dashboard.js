@@ -1055,7 +1055,13 @@ async function loadTransactions(filter = 'all') {
 
     const depRows = (Array.isArray(deposits) ? deposits : []).map(row => ({
       kind: 'deposit',
-      amount_cents: Number(row.amount_cents || 0),
+      amount_cents: Number(
+        row.amount_cents ??
+        row.amount_requested_cents ??
+        row.credited_amount_cents ??
+        row.amount ??
+        0
+      ),
       status: row.status || 'PENDING',
       created_at: row.created_at
     }));
