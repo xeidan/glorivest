@@ -845,9 +845,34 @@ dynamic.querySelector('.copy-wallet').onclick = (e) => {
 function initWithdrawTabs() {
   const buttons = document.querySelectorAll('[data-wd]');
   const dynamic = qs('withdraw-content');
+
   if (!buttons.length || !dynamic) return;
 
-  function field(ph = '', mode = 'text', cls = '') {
+  const toast = (msg, type = 'info') => {
+    if (typeof showToast === 'function') {
+      showToast(msg, type);
+      return;
+    }
+    console.log(`[${type}] ${msg}`);
+  };
+
+  const closeWithdrawModal = () => {
+    const modal = qs('modal-withdraw');
+    if (modal) modal.classList.add('hidden');
+  };
+
+  const money = (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '0.00';
+    return n.toFixed(2);
+  };
+
+  function field({
+    placeholder = '',
+    mode = 'text',
+    cls = '',
+    value = ''
+  } = {}) {
     const map = {
       decimal: 'decimal',
       numeric: 'numeric',
@@ -857,10 +882,11 @@ function initWithdrawTabs() {
     return `
       <input
         type="text"
+        value="${value}"
         inputmode="${map[mode] || 'text'}"
         autocomplete="off"
         spellcheck="false"
-        placeholder="${ph}"
+        placeholder="${placeholder}"
         class="w-full h-14 px-5 rounded-2xl border border-white/10 bg-white/5 text-white text-sm placeholder-white/30 outline-none focus:border-[#00D2B1] ${cls}"
       >
     `;
@@ -868,135 +894,248 @@ function initWithdrawTabs() {
 
   function warn(lines = []) {
     return `
-      <div class="rounded-2xl border !border-yellow-300/35 !bg-yellow-400/18 px-4 py-4 text-xs space-y-2 leading-6">
-        ${lines.map(t => `<p class="!text-[#F8E38A]">⚠ ${t}</p>`).join('')}
+      <div class="rounded-2xl border border-yellow-300/35 bg-yellow-400/15 px-4 py-4 text-xs space-y-2 leading-6">
+        ${lines.map(t => `<p class="text-[#F8E38A]">⚠ ${t}</p>`).join('')}
       </div>
     `;
   }
 
+  function actionButton(label, cls = '') {
+    return `
+      <button class="${cls} w-full h-14 rounded-2xl font-semibold transition active:scale-[.99]">
+        ${label}
+      </button>
+    `;
+  }
+
+  function validateAmount(raw) {
+    const amount = Number(raw);
+    if (!raw || !Number.isFinite(amount) || amount <= 0) {
+      toast('Enter a valid amount', 'error');
+      return null;
+    }
+    return amount;
+  }
+
+  function renderSuccess(message) {
+    dynamic.innerHTML = `
+      <div class="space-y-4">
+
+        <div class="rounded-2xl border border-[#00D2B1]/45 bg-[#00D2B1]/12 p-5">
+          <p class="text-white text-2xl font-semibold mb-2">
+            Request Submitted
+          </p>
+
+          <p class="text-white/70 text-sm leading-7">
+            ${message}
+          </p>
+        </div>
+
+        <button class="done-btn w-full h-14 rounded-2xl bg-white text-black font-semibold">
+          Done
+        </button>
+
+      </div>
+    `;
+
+    dynamic.querySelector('.done-btn').onclick = () => {
+      closeWithdrawModal();
+    };
+  }
+
+  function renderBank() {
+    dynamic.innerHTML = `
+      <div class="space-y-4">
+
+        ${field({
+          placeholder: 'Amount',
+          mode: 'decimal',
+          cls: 'wd-amount'
+        })}
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+          <p class="text-white/50 text-xs mb-2">Withdrawal Account</p>
+          <p class="text-white text-base font-semibold">Your Verified Bank</p>
+          <p class="text-white/60 text-sm mt-1">
+            Funds will be sent to your linked account
+          </p>
+        </div>
+
+        ${warn([
+          'Withdrawals are sent only to your verified bank account',
+          'Name mismatch may delay review',
+          'Processing time may vary'
+        ])}
+
+        ${actionButton(
+          'Continue',
+          'continue-btn bg-white text-black'
+        )}
+
+      </div>
+    `;
+
+    dynamic.querySelector('.continue-btn').onclick = () => {
+      const raw = dynamic.querySelector('.wd-amount').value.trim();
+      const amount = validateAmount(raw);
+      if (!amount) return;
+
+      renderBankConfirm(amount);
+    };
+  }
+
+  function renderBankConfirm(amount) {
+    dynamic.innerHTML = `
+      <div class="space-y-4">
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
+          <p class="text-white/50 text-xs">Bank Withdrawal</p>
+          <p class="text-white text-2xl font-semibold">$${money(amount)}</p>
+          <p class="text-white/60 text-sm">To your verified bank account</p>
+        </div>
+
+        ${warn([
+          'Please confirm amount before submission',
+          'Completed withdrawals may not be reversible'
+        ])}
+
+        ${actionButton(
+          'Confirm Withdrawal',
+          'submit-btn bg-[#00D2B1] text-black'
+        )}
+
+        ${actionButton(
+          'Cancel',
+          'cancel-btn border border-red-500/35 bg-red-500/10 text-red-400'
+        )}
+
+      </div>
+    `;
+
+    dynamic.querySelector('.cancel-btn').onclick = renderBank;
+
+    dynamic.querySelector('.submit-btn').onclick = async () => {
+      const btn = dynamic.querySelector('.submit-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        await new Promise(r => setTimeout(r, 700));
+
+        renderSuccess(
+          'Your bank withdrawal request has been received and is under review. Once approved, funds will be sent to your verified bank account.'
+        );
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Confirm Withdrawal';
+        toast('Withdrawal failed', 'error');
+      }
+    };
+  }
+
+  function renderCrypto() {
+    dynamic.innerHTML = `
+      <div class="space-y-4">
+
+        ${field({
+          placeholder: 'Amount',
+          mode: 'decimal',
+          cls: 'wd-amount'
+        })}
+
+        ${field({
+          placeholder: 'USDT TRC20 Wallet Address',
+          mode: 'text',
+          cls: 'wd-wallet'
+        })}
+
+        ${warn([
+          'Send only USDT on TRON (TRC20)',
+          'Wrong network may permanently lose funds',
+          'Wallet address cannot be changed after submission'
+        ])}
+
+        ${actionButton(
+          'Continue',
+          'continue-btn bg-white text-black'
+        )}
+
+      </div>
+    `;
+
+    dynamic.querySelector('.continue-btn').onclick = () => {
+      const raw = dynamic.querySelector('.wd-amount').value.trim();
+      const wallet = dynamic.querySelector('.wd-wallet').value.trim();
+
+      const amount = validateAmount(raw);
+      if (!amount) return;
+
+      if (!wallet) {
+        toast('Enter wallet address', 'error');
+        return;
+      }
+
+      renderCryptoConfirm(amount, wallet);
+    };
+  }
+
+  function renderCryptoConfirm(amount, wallet) {
+    dynamic.innerHTML = `
+      <div class="space-y-4">
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
+          <p class="text-white/50 text-xs">Crypto Withdrawal</p>
+          <p class="text-white text-2xl font-semibold">$${money(amount)}</p>
+          <p class="text-sky-400 text-sm break-all">${wallet}</p>
+          <p class="text-white/60 text-sm">Network: TRC20</p>
+        </div>
+
+        ${warn([
+          'Wallet address cannot be changed after confirmation',
+          'Wrong network may permanently lose funds'
+        ])}
+
+        ${actionButton(
+          'Confirm Withdrawal',
+          'submit-btn bg-[#00D2B1] text-black'
+        )}
+
+        ${actionButton(
+          'Cancel',
+          'cancel-btn border border-red-500/35 bg-red-500/10 text-red-400'
+        )}
+
+      </div>
+    `;
+
+    dynamic.querySelector('.cancel-btn').onclick = renderCrypto;
+
+    dynamic.querySelector('.submit-btn').onclick = async () => {
+      const btn = dynamic.querySelector('.submit-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        await new Promise(r => setTimeout(r, 700));
+
+        renderSuccess(
+          'Your crypto withdrawal request has been received and is under review. Once approved, funds will be sent to the wallet address provided.'
+        );
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Confirm Withdrawal';
+        toast('Withdrawal failed', 'error');
+      }
+    };
+  }
+
   function render(type) {
-    if (type === 'bank') {
-      dynamic.innerHTML = `
-        <div class="space-y-4">
-
-          ${field('Amount', 'decimal', 'wd-amount')}
-
-          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-            <p class="text-white/50 text-xs mb-2">Withdrawal Account</p>
-            <p class="text-white text-base font-semibold">Your Verified Bank</p>
-            <p class="text-white/60 text-sm mt-1">Funds will be sent to your linked account</p>
-          </div>
-
-          ${warn([
-            'Withdrawals are sent only to your verified bank account',
-            'Name mismatch may delay review',
-            'Processing time may vary'
-          ])}
-
-          <button class="continue-btn w-full h-14 rounded-2xl bg-white text-black font-semibold">
-            Continue
-          </button>
-
-        </div>
-      `;
-
-      dynamic.querySelector('.continue-btn').onclick = () => {
-        const amount = dynamic.querySelector('.wd-amount').value.trim();
-        if (!amount) return alert('Enter amount');
-
-        dynamic.innerHTML = `
-          <div class="space-y-4">
-
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
-              <p class="text-white/50 text-xs">Bank Withdrawal</p>
-              <p class="text-white text-2xl font-semibold">$${amount}</p>
-              <p class="text-white/60 text-sm">To your verified bank account</p>
-            </div>
-
-            ${warn([
-              'Please confirm amount before submission',
-              'Completed withdrawals may not be reversible'
-            ])}
-
-            <button class="submit-btn w-full h-14 rounded-2xl bg-[#00D2B1] text-black font-semibold">
-              Confirm Withdrawal
-            </button>
-
-            <button class="cancel-btn w-full h-14 rounded-2xl border border-red-500/35 bg-red-500/12 text-red-400 font-semibold">
-              Cancel
-            </button>
-
-          </div>
-        `;
-
-        dynamic.querySelector('.cancel-btn').onclick = () => render('bank');
-
-        dynamic.querySelector('.submit-btn').onclick = async () => {
-          alert('Bank withdrawal request submitted');
-        };
-      };
-    }
-
-    if (type === 'crypto') {
-      dynamic.innerHTML = `
-        <div class="space-y-4">
-
-          ${field('Amount', 'decimal', 'wd-amount')}
-          ${field('USDT TRC20 Wallet Address', 'text', 'wd-wallet')}
-
-          ${warn([
-            'Send only USDT on TRON (TRC20)',
-            'Wrong network may permanently lose funds',
-            'Wallet address cannot be changed after submission'
-          ])}
-
-          <button class="continue-btn w-full h-14 rounded-2xl bg-white text-black font-semibold">
-            Continue
-          </button>
-
-        </div>
-      `;
-
-      dynamic.querySelector('.continue-btn').onclick = () => {
-        const amount = dynamic.querySelector('.wd-amount').value.trim();
-        const wallet = dynamic.querySelector('.wd-wallet').value.trim();
-
-        if (!amount) return alert('Enter amount');
-        if (!wallet) return alert('Enter wallet address');
-
-        dynamic.innerHTML = `
-          <div class="space-y-4">
-
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
-              <p class="text-white/50 text-xs">Crypto Withdrawal</p>
-              <p class="text-white text-2xl font-semibold">$${amount}</p>
-              <p class="text-sky-400 text-sm break-all">${wallet}</p>
-              <p class="text-white/60 text-sm">Network: TRC20</p>
-            </div>
-
-            ${warn([
-              'Wallet address cannot be changed after confirmation',
-              'Wrong network may permanently lose funds'
-            ])}
-
-            <button class="submit-btn w-full h-14 rounded-2xl bg-[#00D2B1] text-black font-semibold">
-              Confirm Withdrawal
-            </button>
-
-            <button class="cancel-btn w-full h-14 rounded-2xl border border-red-500/35 bg-red-500/12 text-red-400 font-semibold">
-              Cancel
-            </button>
-
-          </div>
-        `;
-
-        dynamic.querySelector('.cancel-btn').onclick = () => render('crypto');
-
-        dynamic.querySelector('.submit-btn').onclick = async () => {
-          alert('Crypto withdrawal request submitted');
-        };
-      };
-    }
+    if (type === 'bank') return renderBank();
+    if (type === 'crypto') return renderCrypto();
   }
 
   buttons.forEach(btn => {

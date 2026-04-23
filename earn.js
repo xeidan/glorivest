@@ -213,6 +213,95 @@ async function loadLeaderboard() {
 }
 
 
+
+/* =========================================================
+   MODALS
+========================================================= */
+function earnNotice(title, message) {
+  const wrap = document.createElement("div");
+
+  wrap.className =
+    "fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4";
+
+  wrap.innerHTML = `
+    <div class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
+      <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+        <h3 class="text-white text-lg font-semibold">${title}</h3>
+        <button class="text-white/50 hover:text-white text-xl close-btn">&times;</button>
+      </div>
+
+      <div class="p-5">
+        <p class="text-white/70 text-sm leading-6">${message}</p>
+
+        <button class="mt-5 w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold ok-btn">
+          OK
+        </button>
+      </div>
+    </div>
+  `;
+
+  const close = () => wrap.remove();
+
+  wrap.querySelector(".close-btn").onclick = close;
+  wrap.querySelector(".ok-btn").onclick = close;
+  wrap.onclick = (e) => { if (e.target === wrap) close(); };
+
+  document.body.appendChild(wrap);
+}
+
+function earnTransferModal() {
+  return new Promise((resolve) => {
+    const wrap = document.createElement("div");
+
+    wrap.className =
+      "fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4";
+
+    wrap.innerHTML = `
+      <div class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
+        <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+          <h3 class="text-white text-lg font-semibold">Transfer Funds</h3>
+          <button class="text-white/50 hover:text-white text-xl close-btn">&times;</button>
+        </div>
+
+        <div class="p-5">
+          <label class="block text-white/60 text-sm mb-2">Amount (USD)</label>
+
+          <input
+            id="earn-amount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            class="w-full h-12 rounded-2xl bg-white/5 border border-white/10 px-4 text-white outline-none"
+          />
+
+          <button class="mt-5 w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold submit-btn">
+            Continue
+          </button>
+        </div>
+      </div>
+    `;
+
+    const close = (value = null) => {
+      wrap.remove();
+      resolve(value);
+    };
+
+    wrap.querySelector(".close-btn").onclick = () => close(null);
+
+    wrap.querySelector(".submit-btn").onclick = () => {
+      const val = wrap.querySelector("#earn-amount").value.trim();
+      close(val);
+    };
+
+    wrap.onclick = (e) => { if (e.target === wrap) close(null); };
+
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.querySelector("#earn-amount").focus(), 50);
+  });
+}
+
+
 /* =========================================================
    TRANSFER REFERRAL → MAIN WALLET
 ========================================================= */
@@ -220,13 +309,13 @@ async function transferReferralToMain() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  const amountStr = prompt("Enter amount to transfer (USD):", "0.00");
+  const amountStr = await earnTransferModal();
   if (!amountStr) return;
 
   const amount = Math.round(Number(amountStr) * 100);
 
   if (!Number.isInteger(amount) || amount <= 0) {
-    alert("Invalid amount");
+    earnNotice("Invalid Amount", "Enter a valid transfer amount.");
     return;
   }
 
@@ -249,18 +338,18 @@ async function transferReferralToMain() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || "Transfer failed");
+      earnNotice("Transfer Failed", data.error || "Transfer failed.");
       return;
     }
 
     await loadEarnTab();
     document.dispatchEvent(new Event("wallets:refresh"));
 
-    alert("Transfer successful");
+    earnNotice("Success", "Transfer completed successfully.");
 
   } catch (err) {
     console.error(err);
-    alert("Transfer failed");
+    earnNotice("Error", "Transfer failed.");
   }
 }
 

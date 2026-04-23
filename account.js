@@ -56,7 +56,7 @@
     const wrap = document.createElement('div');
     wrap.id = 'settings-modal';
     wrap.className =
-      'fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
+    'fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
 
     wrap.innerHTML = `
       <div class="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
@@ -68,7 +68,7 @@
           </button>
         </div>
 
-        <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
           ${bodyHtml}
         </div>
       </div>
