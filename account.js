@@ -1,193 +1,294 @@
 (() => {
   'use strict';
 
+  const API = window.API_BASE || '';
   let deferredPrompt = null;
-  const installAppAction = document.querySelector('[data-action="install"]');
-  const INSTALL_ICON_CLASS = 'text-[#00D2B1]';
-  const DEFAULT_ICON_CLASS = 'text-white/70';
 
-  /***** === PWA Device Detection & Manual Instructions === *****/
+  const installBtn = document.querySelector('[data-action="install"]');
 
-  function getInstallInstructions() {
-      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  /* ==================================================
+     UTILITIES
+  ================================================== */
 
-      // 1. iOS Detection (Safari)
-      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-          return {
-              title: "Install on iOS (iPhone/iPad)",
-              steps: [
-                  "Tap the **Share** button (box with an upward arrow) at the bottom of the screen.",
-                  "Scroll down and select **'Add to Home Screen'**.",
-                  "Tap **'Add'** in the top-right corner."
-              ],
-              icon: "fa-solid fa-share-square" // Or just use fa-solid fa-download
-          };
-      }
+  const $ = (sel, root = document) => root.querySelector(sel);
 
-      // 2. Android Detection (Chrome, etc.)
-      if (/android/i.test(userAgent)) {
-          return {
-              title: "Install on Android",
-              steps: [
-                  "Tap the **three-dot menu** (⋮) in the top-right corner of your browser.",
-                  "Select **'Install app'** or **'Add to Home screen'**."
-              ],
-              icon: "fa-solid fa-ellipsis-v"
-          };
-      }
+  function toast(msg) {
+    if (window.showToast) return window.showToast(msg);
+    alert(msg);
+  }
 
-      // 3. Desktop/Other Browsers (General Fallback)
-      return {
-          title: "Install Web App",
-          steps: [
-              "Look for a small **'Install'** icon (often a plus sign or download arrow) in your browser's address bar.",
-              "Click that icon and follow the prompts to install the app to your device."
-          ],
-          icon: "fa-solid fa-desktop"
+  function escapeHtml(str = '') {
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
+  }
+
+  function getProfile() {
+    return JSON.parse(localStorage.getItem('gv_profile') || '{}');
+  }
+
+  function saveProfile(data) {
+    localStorage.setItem('gv_profile', JSON.stringify(data));
+  }
+
+  function getPrefs() {
+    return JSON.parse(localStorage.getItem('gv_prefs') || '{}');
+  }
+
+  function savePrefs(data) {
+    localStorage.setItem('gv_prefs', JSON.stringify(data));
+  }
+
+  /* ==================================================
+     MODAL SYSTEM
+  ================================================== */
+
+  function closeModal() {
+    const modal = $('#settings-modal');
+    if (modal) modal.remove();
+  }
+
+  function openModal(title, bodyHtml) {
+    closeModal();
+
+    const wrap = document.createElement('div');
+    wrap.id = 'settings-modal';
+    wrap.className =
+      'fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
+
+    wrap.innerHTML = `
+      <div class="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h3 class="text-white text-lg font-semibold">${escapeHtml(title)}</h3>
+          <button id="settings-close"
+            class="w-10 h-10 rounded-full text-white/60 hover:bg-white/10">
+            <span class="text-2xl leading-none">&times;</span>
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+          ${bodyHtml}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(wrap);
+
+    $('#settings-close')?.addEventListener('click', closeModal);
+
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) closeModal();
+    });
+  }
+
+  /* ==================================================
+     PROFILE
+  ================================================== */
+
+  function openProfile() {
+    const profile = getProfile();
+
+    openModal(
+      'Edit Profile',
+      `
+      <input id="pf-name" placeholder="Full Name"
+        value="${escapeHtml(profile.name || '')}"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <input id="pf-phone" placeholder="Phone Number"
+        value="${escapeHtml(profile.phone || '')}"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <input id="pf-country" placeholder="Country"
+        value="${escapeHtml(profile.country || '')}"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <button id="save-profile"
+        class="w-full h-12 rounded-xl bg-[#00D2B1] text-black font-semibold">
+        Save Changes
+      </button>
+    `
+    );
+
+    $('#save-profile')?.addEventListener('click', () => {
+      const data = {
+        name: $('#pf-name').value.trim(),
+        phone: $('#pf-phone').value.trim(),
+        country: $('#pf-country').value.trim()
       };
-  }
-  
-  // Custom alert/modal function to show clear, formatted instructions
-  function showInstallModal() {
-      const instructions = getInstallInstructions();
-      let stepList = instructions.steps.map(step => `<li>${step}</li>`).join('');
 
-      alert(`
-        ${instructions.title}
-
-        To install Glorivest to your home screen, please follow these steps:
-        
-        1. ${instructions.steps[0]}
-        2. ${instructions.steps[1]}
-        ${instructions.steps.length > 2 ? `3. ${instructions.steps[2]}` : ''}
-        
-        Note: This process may vary slightly depending on your browser.
-      `);
-      // NOTE: You should replace 'alert' with a proper, formatted HTML/CSS modal for better UI.
+      saveProfile(data);
+      toast('Profile updated');
+      closeModal();
+    });
   }
 
-  /***** === PWA Event Handlers === *****/
+  /* ==================================================
+     SECURITY
+  ================================================== */
 
-  // 1. Stash the prompt when available
+  function openSecurity() {
+    openModal(
+      'Security Settings',
+      `
+      <input id="pw-current" type="password" placeholder="Current Password"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <input id="pw-new" type="password" placeholder="New Password"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <input id="pw-confirm" type="password" placeholder="Confirm New Password"
+        class="w-full h-12 px-4 rounded-xl bg-[#121212] border border-white/10 text-white">
+
+      <button id="save-password"
+        class="w-full h-12 rounded-xl bg-[#00D2B1] text-black font-semibold">
+        Update Password
+      </button>
+
+      <p class="text-xs text-white/40 text-center">
+        Backend connection can be added later.
+      </p>
+    `
+    );
+
+    $('#save-password')?.addEventListener('click', () => {
+      const next = $('#pw-new').value.trim();
+      const confirm = $('#pw-confirm').value.trim();
+
+      if (next.length < 6) return toast('Password too short');
+      if (next !== confirm) return toast('Passwords do not match');
+
+      toast('Password UI ready');
+      closeModal();
+    });
+  }
+
+  /* ==================================================
+     NOTIFICATIONS
+  ================================================== */
+
+  function openNotificationsPrefs() {
+    const prefs = getPrefs();
+
+    const row = (key, label) => `
+      <label class="flex items-center justify-between rounded-xl border border-white/10 bg-[#121212] px-4 py-3">
+        <span class="text-white">${label}</span>
+        <input type="checkbox" data-pref="${key}" ${prefs[key] ? 'checked' : ''}>
+      </label>
+    `;
+
+    openModal(
+      'Notifications',
+      `
+      <div class="space-y-3">
+        ${row('deposit', 'Deposit Alerts')}
+        ${row('withdrawal', 'Withdrawal Alerts')}
+        ${row('cycle', 'Cycle Updates')}
+        ${row('promo', 'Promotions')}
+      </div>
+
+      <button id="save-prefs"
+        class="w-full h-12 rounded-xl bg-[#00D2B1] text-black font-semibold">
+        Save Preferences
+      </button>
+    `
+    );
+
+    $('#save-prefs')?.addEventListener('click', () => {
+      const next = {};
+      document.querySelectorAll('[data-pref]').forEach((el) => {
+        next[el.dataset.pref] = el.checked;
+      });
+
+      savePrefs(next);
+      toast('Preferences saved');
+      closeModal();
+    });
+  }
+
+  /* ==================================================
+     KYC
+  ================================================== */
+
+  function openKYC() {
+    openModal(
+      'KYC Verification',
+      `
+      <div class="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center">
+        <p class="text-yellow-300 font-semibold">Pending</p>
+        <p class="text-sm text-white/60 mt-2">
+          Verification upload flow can be connected next.
+        </p>
+      </div>
+
+      <button class="w-full h-12 rounded-xl border border-white/10 text-white">
+        Upload Documents
+      </button>
+    `
+    );
+  }
+
+  /* ==================================================
+     INSTALL APP
+  ================================================== */
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
+  });
 
-    if (installAppAction) {
-        // Highlight button when the automatic prompt is ready
-        installAppAction.style.display = 'flex';
-        installAppAction.classList.add('cursor-pointer');
-        const icon = installAppAction.querySelector('i');
-        if (icon) {
-            icon.classList.add(INSTALL_ICON_CLASS);
-            icon.classList.remove(DEFAULT_ICON_CLASS);
-        }
+  async function handleInstall() {
+    if (!deferredPrompt) {
+      return toast('Use your browser menu to install the app');
+    }
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+
+  /* ==================================================
+     ACTIONS
+  ================================================== */
+
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-action]');
+    if (!item) return;
+
+    switch (item.dataset.action) {
+      case 'profile':
+        return openProfile();
+
+      case 'security':
+        return openSecurity();
+
+      case 'notifications':
+        return openNotificationsPrefs();
+
+      case 'kyc':
+        return openKYC();
+
+      case 'install':
+        return handleInstall();
+
+      case 'telegram':
+        return window.open('https://t.me/glorivest', '_blank');
+
+      case 'support':
+        return (window.location.href = 'mailto:support@glorivest.com');
+
+      case 'terms':
+        return window.open('/terms', '_blank');
+
+      case 'logout':
+        localStorage.clear();
+        sessionStorage.clear();
+        return (window.location.href = '/');
+
+      default:
+        return;
     }
   });
-
-  // 2. Handle the click event on the "Install Web App" element
-  if (installAppAction) {
-    installAppAction.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      if (deferredPrompt) {
-        // Case A: Automatic prompt is available (first try)
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          }
-          deferredPrompt = null;
-          // After attempting, revert the button's visual state
-          const icon = installAppAction.querySelector('i');
-          if (icon) {
-              icon.classList.remove(INSTALL_ICON_CLASS);
-              icon.classList.add(DEFAULT_ICON_CLASS);
-          }
-        });
-
-      } else {
-        // Case B: Automatic prompt failed or was dismissed, provide manual guidance
-        showInstallModal();
-      }
-    });
-  }
-
-  // 3. Service Worker Registration (Kept for completeness)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, err => {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-    });
-  }
 })();
-
-
-
-
-
-document.addEventListener('click', async (e) => {
-  const item = e.target.closest('[data-action]');
-  if (!item) return;
-
-  const action = item.dataset.action;
-
-  switch (action) {
-
-case 'logout':
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = '/index.html';
-  break;
-
-    case 'telegram':
-      window.open('https://t.me/your_telegram_link', '_blank');
-      break;
-
-    case 'install':
-      // already handled by your PWA logic
-      break;
-
-    case 'support':
-      window.location.href = 'mailto:support@glorivest.com';
-      break;
-
-    case 'terms':
-      window.open('/terms.html', '_blank');
-      break;
-
-    case 'profile':
-      alert('Profile editing coming soon');
-      break;
-
-    case 'kyc':
-      alert('KYC flow coming soon');
-      break;
-
-    case 'security':
-      alert('Security settings coming soon');
-      break;
-
-    case 'notifications':
-      alert('Notification settings coming soon');
-      break;
-
-    default:
-      console.warn('Unhandled action:', action);
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('#logout-btn');
-    if (!btn) return;
-
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = '/index.html';
-  });
-});

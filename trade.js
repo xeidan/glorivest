@@ -1236,7 +1236,7 @@ function initChart() {
     }
   );
 }
-console.log('chart?', !!MARKET.chart, 'series?', !!MARKET.candleSeries);
+
 
 // ======================================================
 // PRICE UI

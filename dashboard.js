@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  console.log("dashboard.js loaded");
+
 
   /* ===========================
      HELPERS
