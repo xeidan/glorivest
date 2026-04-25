@@ -434,10 +434,36 @@ async function transferReferralToMain() {
    INIT
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
-  loadEarnTab();
-  loadLeaderboard();
+  let earnRefreshing = false;
+
+  async function refreshEarnData() {
+    if (earnRefreshing) return;
+    earnRefreshing = true;
+
+    try {
+      await Promise.all([
+        loadEarnTab(),
+        loadLeaderboard()
+      ]);
+    } catch (err) {
+      console.error("earn refresh failed", err);
+    } finally {
+      earnRefreshing = false;
+    }
+  }
+
+  refreshEarnData();
+
+  setInterval(refreshEarnData, 30000);
+
+  window.addEventListener("focus", refreshEarnData);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshEarnData();
+  });
 
   const transferBtn = document.getElementById("transfer-referral-btn");
+
   if (transferBtn) {
     transferBtn.addEventListener("click", transferReferralToMain);
   }

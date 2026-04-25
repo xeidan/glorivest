@@ -910,6 +910,11 @@ function initWithdrawTabs() {
     return n.toFixed(2);
   };
 
+  const getLiveWallet = () => {
+    const wallets = window.getAllWallets?.() || [];
+    return wallets.find(w => w.type === 'REAL') || null;
+  };
+
   function field({
     placeholder = '',
     mode = 'text',
@@ -953,17 +958,18 @@ function initWithdrawTabs() {
 
   function validateAmount(raw) {
     const amount = Number(raw);
+
     if (!raw || !Number.isFinite(amount) || amount <= 0) {
       toast('Enter a valid amount', 'error');
       return null;
     }
+
     return amount;
   }
 
   function renderSuccess(message) {
     dynamic.innerHTML = `
       <div class="space-y-4">
-
         <div class="rounded-2xl border border-[#00D2B1]/45 bg-[#00D2B1]/12 p-5">
           <p class="text-white text-2xl font-semibold mb-2">
             Request Submitted
@@ -977,13 +983,66 @@ function initWithdrawTabs() {
         <button class="done-btn w-full h-14 rounded-2xl bg-white text-black font-semibold">
           Done
         </button>
-
       </div>
     `;
 
-    dynamic.querySelector('.done-btn').onclick = () => {
+    dynamic.querySelector('.done-btn').onclick = async () => {
+      try {
+        await window.loadWallets?.();
+        window.syncWalletsFromGlobal?.();
+        renderDashboard?.();
+        await safeLoadTransactions?.();
+      } catch (_) {}
+
       closeWithdrawModal();
     };
+  }
+
+  async function submitWithdrawal({
+    amount,
+    destination,
+    method,
+    btn,
+    label
+  }) {
+    try {
+      const wallet = getLiveWallet();
+
+      if (!wallet) {
+        toast('Live wallet not found', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      await window.apiFetch('/withdrawals', {
+        method: 'POST',
+        body: {
+          wallet_id: Number(wallet.id),
+          amount_usd: Number(amount),
+          destination,
+          method
+        }
+      });
+
+      renderSuccess(
+        method === 'BANK'
+          ? 'Your bank withdrawal request has been received and is under review. Once approved, funds will be sent to your verified bank account.'
+          : 'Your crypto withdrawal request has been received and is under review. Once approved, funds will be sent to the wallet address provided.'
+      );
+
+    } catch (err) {
+      console.error('withdrawal error:', err);
+      btn.disabled = false;
+      btn.textContent = label;
+
+      toast(
+        err?.message ||
+        'Withdrawal failed',
+        'error'
+      );
+    }
   }
 
   function renderBank() {
@@ -1060,21 +1119,13 @@ function initWithdrawTabs() {
     dynamic.querySelector('.submit-btn').onclick = async () => {
       const btn = dynamic.querySelector('.submit-btn');
 
-      btn.disabled = true;
-      btn.textContent = 'Processing...';
-
-      try {
-        await new Promise(r => setTimeout(r, 700));
-
-        renderSuccess(
-          'Your bank withdrawal request has been received and is under review. Once approved, funds will be sent to your verified bank account.'
-        );
-
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Confirm Withdrawal';
-        toast('Withdrawal failed', 'error');
-      }
+      await submitWithdrawal({
+        amount,
+        destination: 'Saved bank account',
+        method: 'BANK',
+        btn,
+        label: 'Confirm Withdrawal'
+      });
     };
   }
 
@@ -1124,14 +1175,14 @@ function initWithdrawTabs() {
     };
   }
 
-  function renderCryptoConfirm(amount, wallet) {
+  function renderCryptoConfirm(amount, walletAddress) {
     dynamic.innerHTML = `
       <div class="space-y-4">
 
         <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
           <p class="text-white/50 text-xs">Crypto Withdrawal</p>
           <p class="text-white text-2xl font-semibold">$${money(amount)}</p>
-          <p class="text-sky-400 text-sm break-all">${wallet}</p>
+          <p class="text-sky-400 text-sm break-all">${walletAddress}</p>
           <p class="text-white/60 text-sm">Network: TRC20</p>
         </div>
 
@@ -1158,21 +1209,13 @@ function initWithdrawTabs() {
     dynamic.querySelector('.submit-btn').onclick = async () => {
       const btn = dynamic.querySelector('.submit-btn');
 
-      btn.disabled = true;
-      btn.textContent = 'Processing...';
-
-      try {
-        await new Promise(r => setTimeout(r, 700));
-
-        renderSuccess(
-          'Your crypto withdrawal request has been received and is under review. Once approved, funds will be sent to the wallet address provided.'
-        );
-
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Confirm Withdrawal';
-        toast('Withdrawal failed', 'error');
-      }
+      await submitWithdrawal({
+        amount,
+        destination: walletAddress,
+        method: 'CRYPTO',
+        btn,
+        label: 'Confirm Withdrawal'
+      });
     };
   }
 
@@ -1192,6 +1235,29 @@ function initWithdrawTabs() {
 }
 
 
+let txLoading = false;
+let lastTxLoad = 0;
+
+async function safeLoadTransactions(filter = 'all') {
+  const now = Date.now();
+
+  if (txLoading) return;
+
+  // 5 second cooldown
+  if (now - lastTxLoad < 5000) return;
+
+  txLoading = true;
+  lastTxLoad = now;
+
+  try {
+    await loadTransactions(filter);
+  } catch (err) {
+    console.error('transactions load failed', err);
+  } finally {
+    txLoading = false;
+  }
+}
+
 /* ===========================
    TRANSACTIONS TAB SWITCHING
 =========================== */
@@ -1209,7 +1275,7 @@ function initTransactionTabs() {
       btn.className =
         'rounded-xl py-2.5 font-semibold bg-[#00D2B1] text-black transition';
 
-      loadTransactions(btn.dataset.filter);
+      safeLoadTransactions(btn.dataset.filter);
     });
   });
 
@@ -1390,27 +1456,45 @@ async function loadTransactions(filter = 'all') {
      INIT
   =========================== */
 document.addEventListener('DOMContentLoaded', async () => {
-
-
-
-
-initModals();
-initDepositTabs();
-initWithdrawTabs();
-initTransactionTabs();
+  initModals();
+  initDepositTabs();
+  initWithdrawTabs();
+  initTransactionTabs();
 
   qs('demo-reset')?.addEventListener('click', resetDemoBalance);
-document.addEventListener('accountMode:changed', () => {
-  renderDashboard();
-});
 
+  document.addEventListener('accountMode:changed', () => {
+    renderDashboard();
+  });
 
-  await window.loadWallets?.();
+let refreshing = false;
+
+async function refreshDashboardData() {
+  if (refreshing) return;
+  refreshing = true;
+
+  try {
+    await window.loadWallets?.();
+    window.syncWalletsFromGlobal?.();
+    renderDashboard?.();
+  } catch (err) {
+    console.error('background refresh failed', err);
+  } finally {
+    refreshing = false;
+  }
+}
+
   await loadUser();
+  await refreshDashboardData();
 
-  // ensure correct card is shown on initial load
-document.dispatchEvent(new Event('accountMode:changed'));
+  setInterval(refreshDashboardData, 30000);
+  window.addEventListener('focus', refreshDashboardData);
 
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshDashboardData();
+  });
+
+  document.dispatchEvent(new Event('accountMode:changed'));
 });
 
 })();

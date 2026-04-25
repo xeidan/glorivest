@@ -1524,6 +1524,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial view
   showTradeTabContent('overview');
+  backgroundTradeRefresh();
+});
+
+
+let tradeRefreshing = false;
+
+async function backgroundTradeRefresh() {
+  const tradeRoot = document.getElementById('tab-trade');
+  if (!tradeRoot) return;
+
+  // optional: skip if trade tab hidden
+  if (tradeRoot.classList.contains('hidden')) return;
+
+  if (tradeRefreshing) return;
+  tradeRefreshing = true;
+
+  try {
+    await refreshTradeState();
+  } catch (err) {
+    console.error('trade background refresh failed', err);
+  } finally {
+    tradeRefreshing = false;
+  }
+}
+
+setInterval(backgroundTradeRefresh, 20000);
+
+window.addEventListener('focus', backgroundTradeRefresh);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) backgroundTradeRefresh();
 });
 
 
