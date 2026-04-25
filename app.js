@@ -3,34 +3,7 @@
 //  Contains ONLY cross-page utilities, API helpers, tab navigation, header load,
 //  and global balance visibility logic.
 // ============================================================================
-const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
 
-const getToken = () => localStorage.getItem('token');
-const setToken = (t) => localStorage.setItem('token', t);
-
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: options.method || 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
-
-  let data;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error('Invalid server response');
-  }
-
-  if (!res.ok) {
-    throw new Error(data.message || 'Request failed');
-  }
-
-  return data;
-}
 
 
 // ============================================================================
@@ -62,7 +35,7 @@ window.apiFetch = async (path, opts = {}) => {
   if (res.status === 401) {
     clearToken();
     if (!location.pathname.includes('login')) {
-      location.href = '/login.html';
+      location.href = '/index.html?login=1';
     }
     throw new Error('Unauthorized');
   }

@@ -18,6 +18,35 @@ function fmtUSD(cents) {
   });
 }
 
+/* ===========================
+   MESSAGES
+=========================== */
+function showMessage(message, type = 'info') {
+  if (typeof window.showToast === 'function') {
+    window.showToast(message, type);
+    return;
+  }
+
+  const box = document.createElement('div');
+  box.className =
+    'fixed left-1/2 -translate-x-1/2 bottom-6 z-[9999] px-4 py-3 rounded-2xl text-sm font-medium border shadow-lg';
+
+  if (type === 'error') {
+    box.classList.add('bg-red-500/10', 'border-red-500/25', 'text-red-300');
+  } else if (type === 'success') {
+    box.classList.add('bg-[#00D2B1]/10', 'border-[#00D2B1]/25', 'text-white');
+  } else {
+    box.classList.add('bg-white/10', 'border-white/10', 'text-white');
+  }
+
+  box.textContent = message;
+  document.body.appendChild(box);
+
+  setTimeout(() => {
+    box.remove();
+  }, 2200);
+}
+
   /* ===========================
      STATE
   =========================== */
@@ -176,26 +205,31 @@ function renderBalances() {
   /* ===========================
      DEMO RESET
   =========================== */
+async function resetDemoBalance() {
+  if (!state.demoWallet) return;
 
-  async function resetDemoBalance() {
-    if (!state.demoWallet) return;
+  const proceed = window.showToast
+    ? true
+    : confirm('Reset demo balance back to $10,000?');
 
-    const ok = confirm('Reset demo balance back to $10,000?');
-    if (!ok) return;
+  if (!proceed) return;
 
-    try {
-      await window.apiFetch(`/wallets/${state.demoWallet.id}/demo-reset`, {
-        method: 'POST'
-      });
+  try {
+    await window.apiFetch(`/wallets/${state.demoWallet.id}/demo-reset`, {
+      method: 'POST'
+    });
 
-      await window.loadWallets?.();
-      window.syncWalletsFromGlobal();
-      renderDashboard();
+    await window.loadWallets?.();
+    window.syncWalletsFromGlobal();
+    renderDashboard();
 
-    } catch (e) {
-      console.error('demo reset failed', e);
-    }
+    showMessage('Demo balance reset successfully', 'success');
+
+  } catch (e) {
+    console.error('demo reset failed', e);
+    showMessage('Failed to reset demo balance', 'error');
   }
+}
 
   function updateDemoResetVisibility() {
     const btn = qs('demo-reset');
@@ -232,7 +266,7 @@ function renderBalances() {
   if (!openBtn) return;
 
   // 👇 FORCE dashboard active
-  if (typeof showTab === 'function') {
+  if (typeof window.showTab === 'function') {
     showTab('dashboard');
   }
 
@@ -365,12 +399,14 @@ function input(ph = '', mode = 'text', role = '', value = '') {
 function btnDanger(label) {
   return `
     <button type="button"
-      class="cancel-btn w-full h-14 rounded-2xl border border-red-500/25 bg-red-500/12 text-red-300 text-sm font-semibold transition active:scale-[0.98] active:scale-[0.98]
+      class="cancel-btn w-full h-14 rounded-2xl border border-red-500/20 bg-gradient-to-b from-red-500/10 to-red-500/5 text-red-400 text-sm font-semibold transition active:scale-[0.98] active:scale-[0.98]
 hover:bg-red-500/16">
       ${label}
     </button>
   `;
 }
+
+
 
   function bindRules(type) {
     const amount = dynamic.querySelector('[data-role="amount"]');
@@ -819,11 +855,18 @@ dynamic.querySelector('.copy-wallet').onclick = (e) => {
         }
 
       } catch (err) {
-        console.error(err);
-        btn.disabled = false;
-        btn.textContent = 'Continue';
-        alert(err.message || 'Deposit failed');
-      }
+  console.error('Deposit flow error:', err);
+
+  btn.disabled = false;
+  btn.textContent = 'Continue';
+
+  const message =
+    err?.message ||
+    err?.error ||
+    'Deposit failed. Please try again.';
+
+  showMessage(message, 'error');
+}
     };
   }
 
@@ -1006,7 +1049,7 @@ function initWithdrawTabs() {
 
         ${actionButton(
           'Cancel',
-          'cancel-btn border border-red-500/35 bg-red-500/10 text-red-400'
+          'cancel-btn border border-red-500/20 bg-gradient-to-b from-red-500/10 to-red-500/5 text-red-400'
         )}
 
       </div>
@@ -1104,7 +1147,7 @@ function initWithdrawTabs() {
 
         ${actionButton(
           'Cancel',
-          'cancel-btn border border-red-500/35 bg-red-500/10 text-red-400'
+          'cancel-btn border border-red-500/20 bg-gradient-to-b from-red-500/10 to-red-500/5 text-red-400'
         )}
 
       </div>

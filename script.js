@@ -24,6 +24,8 @@ const lockBody = (locked) => {
   document.body.classList.toggle('overflow-hidden', locked);
 };
 
+
+
 /* ==================================================
    API
 ================================================== */
@@ -79,12 +81,12 @@ function initAuthForms() {
         /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
       if (!email || !password) {
-        alert('Email and password are required.');
+        showAuthBanner('Email and password are required.', 'error');
         return;
       }
 
       if (!strongPassword.test(password)) {
-        alert('Password must contain a letter, number, symbol and be at least 8 characters.');
+        showAuthBanner('Use 8+ characters with letter, number and symbol.', 'error');
         return;
       }
 
@@ -101,7 +103,7 @@ function initAuthForms() {
         storage.set('otpEmail', email);
         window.location.href = 'otp.html';
       } catch (error) {
-        alert(error.message || 'Registration failed.');
+        showAuthBanner(error.message || 'Registration failed.', 'error');
       }
     });
   }
@@ -114,7 +116,7 @@ function initAuthForms() {
       const password = $('#loginPassword')?.value.trim();
 
       if (!email || !password) {
-        alert('Email and password are required.');
+        showAuthBanner('Email and password are required.', 'error');
         return;
       }
 
@@ -134,7 +136,7 @@ function initAuthForms() {
         const role = data.user.role || 'user';
         window.location.href = role === 'admin' ? 'admin.html' : 'app.html';
       } catch (error) {
-        alert(error.message || 'Login failed.');
+        showAuthBanner(error.message || 'Login failed.', 'error');
       }
     });
   }
@@ -169,6 +171,7 @@ function initAuthModal() {
     const firstInput = $('input', modal);
     firstInput?.focus();
     isOpen = true;
+    clearAuthBanner();
   }
 
   function closeModal() {
@@ -181,8 +184,11 @@ function initAuthModal() {
     }, 250);
 
     isOpen = false;
+    clearAuthBanner();
   }
 
+
+  // Tab switching
 function showRegister() {
   registerForm?.classList.remove('hidden');
   loginForm?.classList.add('hidden');
@@ -200,8 +206,10 @@ function showRegister() {
   if (slider) {
     slider.style.left = '4px';
   }
+  clearAuthBanner();
 }
 
+//
 function showLogin() {
   loginForm?.classList.remove('hidden');
   registerForm?.classList.add('hidden');
@@ -219,6 +227,7 @@ function showLogin() {
   if (slider) {
     slider.style.left = 'calc(50% + 2px)';
   }
+  clearAuthBanner();
 }
 
   window.toggleAuthPanel = () => (isOpen ? closeModal() : openModal());
@@ -231,8 +240,118 @@ function showLogin() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isOpen) closeModal();
   });
-
   showRegister();
+}
+
+
+/* ==================================================
+   BANNERS
+================================================== */
+
+function getActiveAuthForm() {
+  const registerForm = document.getElementById('register-form');
+  const loginForm = document.getElementById('login-form');
+
+  if (registerForm && !registerForm.classList.contains('hidden')) {
+    return registerForm;
+  }
+
+  return loginForm;
+}
+
+function getAuthBannerHost() {
+  const form = getActiveAuthForm();
+  if (!form) return null;
+
+  return (
+    form.querySelector('.auth-banner-host') ||
+    form.querySelector('.space-y-4') ||
+    form.querySelector('.space-y-3') ||
+    form
+  );
+}
+
+function clearAuthBanner() {
+  document.querySelectorAll('.auth-inline-banner').forEach(el => el.remove());
+}
+
+function showAuthBanner(message, type = 'error') {
+  const host = getAuthBannerHost();
+  if (!host) return;
+
+  clearAuthBanner();
+
+  const isSuccess = type === 'success';
+
+  const banner = document.createElement('div');
+  banner.className =
+    'auth-inline-banner rounded-2xl border px-4 py-3 text-sm leading-6 mb-4';
+
+  banner.classList.add(
+    ...(isSuccess
+      ? [
+          'border-[#00D2B1]/30',
+          'bg-[#00D2B1]/10',
+          'text-[#7ef7e2]'
+        ]
+      : [
+          'border-red-500/40',
+          'bg-red-950/60',
+          'text-red-300'
+        ])
+  );
+
+  banner.innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <span>${message}</span>
+      <button type="button" class="text-white/40 hover:text-white text-base leading-none">
+        ×
+      </button>
+    </div>
+  `;
+
+  banner.querySelector('button').onclick = () => banner.remove();
+
+  host.prepend(banner);
+}
+
+/* ==================================================
+   MESSAGES
+================================================== */
+function showMessage(message, type = 'info') {
+  const old = document.getElementById('gv-message');
+  if (old) old.remove();
+
+  const color =
+    type === 'error'
+      ? 'border-red-500/20 bg-red-500/10 text-red-300'
+      : type === 'success'
+      ? 'border-[#00D2B1]/20 bg-[#00D2B1]/10 text-[#7fffe7]'
+      : 'border-white/10 bg-[#121212] text-white';
+
+  const box = document.createElement('div');
+  box.id = 'gv-message';
+  box.className = `
+    fixed inset-x-4 top-5 z-[9999]
+    rounded-2xl border ${color}
+    px-4 py-4 backdrop-blur-xl
+    shadow-[0_20px_60px_rgba(0,0,0,.45)]
+    transition-all duration-300
+  `;
+  box.innerHTML = `
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm font-medium leading-6">${message}</p>
+      <button id="gv-close" class="text-white/50 hover:text-white text-lg">×</button>
+    </div>
+  `;
+
+  document.body.appendChild(box);
+
+  document.getElementById('gv-close')?.addEventListener('click', () => {
+    box.remove();
+  });
+
+  setTimeout(() => box.remove(), 3200);
 }
 
 /* ==================================================
@@ -417,4 +536,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initFAQ();
   initAnimations();
   initScrollUI();
+
+  if (new URLSearchParams(location.search).get('login')) {
+    toggleAuthPanel();   // open modal
+    showLogin();         // switch to login tab
+    history.replaceState({}, '', '/index.html');
+  }
 });

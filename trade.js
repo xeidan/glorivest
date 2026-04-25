@@ -541,7 +541,7 @@ Start a cycle from the "New Cycle" tab to begin automated trading.
     <!-- Stop -->
     <button
       data-stop-cycle="${c.id}"
-      class="w-full h-11 rounded-2xl border border-red-500/35 text-red-400 text-sm font-medium hover:bg-red-500/10 transition">
+      class="w-full h-11 rounded-2xl border border-red-500/20 bg-gradient-to-b from-red-500/10 to-red-500/5 text-red-400 text-sm font-medium hover:bg-red-500/10 transition">
       Stop Cycle
     </button>
 
@@ -692,21 +692,34 @@ function loadStartCycle() {
   const wallet = getTradeWallet();
   if (!wallet) return;
 
-  qs('main-wallet-balance').textContent = fmt(wallet.balance_cents);
+  const balance = qs('main-wallet-balance');
+  const capital = qs('new-cycle-capital');
+  const slider = qs('stake-slider');
+  const pct = qs('slider-pct');
+  const amount = qs('preview-amount');
+  const duration = qs('preview-duration');
+  const expected = qs('preview-expected');
+  const btn = qs('start-new-cycle-btn');
 
-  qs('new-cycle-capital').value = '';
-  qs('stake-slider').value = 0;
-  qs('slider-pct').textContent = '0';
+  if (
+    !balance || !capital || !slider || !pct ||
+    !amount || !duration || !expected || !btn
+  ) return;
 
-  qs('preview-amount').textContent = '$0.00';
-  qs('preview-duration').textContent = '1 Month';
-  qs('preview-expected').textContent = '$0.00';
+  balance.textContent = fmt(wallet.balance_cents);
+  capital.value = '';
+  slider.value = 0;
+  pct.textContent = '0';
+
+  amount.textContent = '$0.00';
+  duration.textContent = '1 Month';
+  expected.textContent = '$0.00';
 
   selectedDurationMonths = 1;
 
-  const btn = qs('start-new-cycle-btn');
   btn.disabled = true;
   btn.textContent = 'Enter Amount';
+
   updateProfitSummary(1);
 }
 
@@ -1551,48 +1564,94 @@ document.addEventListener('demo:reset', () => {
 });
 
 
+
+// ------------------------------
+// Stop cycle modal & confirmation (delegated handler below)
+// ------------------------------
+let pendingStopCycleId = null;
+
+function clearStopBanner() {
+  const wrap = qs('stop-modal-banner-wrap');
+  if (wrap) wrap.innerHTML = '';
+}
+
+function showStopBanner(message) {
+  const wrap = qs('stop-modal-banner-wrap');
+  if (!wrap) return;
+
+  wrap.innerHTML = `
+    <div class="rounded-2xl border border-red-500/40 bg-red-950/60 px-4 py-3 text-sm text-red-300 leading-6">
+      <div class="flex items-start justify-between gap-3">
+        <span>${message}</span>
+        <button
+          type="button"
+          onclick="clearStopBanner()"
+          class="text-white/40 hover:text-white"
+        >×</button>
+      </div>
+    </div>
+  `;
+}
+
+window.clearStopBanner = clearStopBanner;
+
+function openStopModal(cycleId) {
+  pendingStopCycleId = cycleId;
+  clearStopBanner();
+
+  const modal = qs('stop-modal');
+  if (!modal) return;
+
+  modal.classList.remove('hidden');
+}
+
+function closeStopModal() {
+  pendingStopCycleId = null;
+  clearStopBanner();
+
+  const modal = qs('stop-modal');
+  if (!modal) return;
+
+  modal.classList.add('hidden');
+}
+
 // ------------------------------
 // Delegated stop-cycle handler
 // ------------------------------
 document.addEventListener('click', async (e) => {
+  const stopBtn = e.target.closest('[data-stop-cycle]');
+  if (stopBtn) {
+    e.preventDefault();
+    openStopModal(stopBtn.dataset.stopCycle);
+    return;
+  }
 
-  const btn = e.target.closest('[data-stop-cycle]');
-  if (!btn) return;
+  const confirmBtn = e.target.closest('#confirm-stop');
+  if (!confirmBtn) return;
 
-  const cycleId = btn.dataset.stopCycle;
-  if (!cycleId) return;
+  if (!pendingStopCycleId) return;
+  if (confirmBtn.disabled) return;
 
-  const ok = confirm(
-    'Stopping this cycle will forfeit all accrued profit.\n\nContinue?'
-  );
-
-  if (!ok) return;
-
-  // prevent double submission
-  if (btn.disabled) return;
-
-  btn.disabled = true;
-  btn.classList.add('opacity-50','cursor-not-allowed');
+  confirmBtn.disabled = true;
+  confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  confirmBtn.textContent = 'Stopping...';
 
   try {
-
     await apiFetch('/cycle/forfeit', {
       method: 'POST',
-      body: { cycleId }
+      body: { cycleId: pendingStopCycleId }
     });
 
+    closeStopModal();
     await refreshTradeState();
 
   } catch (err) {
-
     console.error('Stop cycle failed:', err);
-    alert(err.message || 'Failed to stop cycle');
+    showStopBanner(err.message || 'Failed to stop cycle');
 
   } finally {
-
-    btn.disabled = false;
-    btn.classList.remove('opacity-50','cursor-not-allowed');
-
+    confirmBtn.disabled = false;
+    confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    confirmBtn.textContent = 'Stop Cycle';
   }
-
 });

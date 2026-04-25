@@ -215,142 +215,218 @@ async function loadLeaderboard() {
 
 
 /* =========================================================
-   MODALS
+   EARN MODAL SYSTEM
 ========================================================= */
-function earnNotice(title, message) {
-  const wrap = document.createElement("div");
+function closeEarnModal() {
+  const wrap = document.getElementById("earn-modal-wrap");
+  if (!wrap) return;
 
-  wrap.className =
-    "fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4";
+  const bg = wrap.querySelector(".earn-backdrop");
+  const panel = wrap.querySelector(".earn-panel");
+
+  bg.classList.remove("opacity-100");
+
+  panel.classList.remove("scale-100", "opacity-100");
+  panel.classList.add("scale-95", "opacity-0");
+
+  setTimeout(() => wrap.remove(), 220);
+}
+
+function renderEarnBanner(message, type = "error") {
+  const host = document.getElementById("earn-inline-banner");
+  if (!host) return;
+
+  host.innerHTML = "";
+
+  const box = document.createElement("div");
+  box.className =
+    "rounded-2xl border px-4 py-3 text-sm leading-6";
+
+  if (type === "success") {
+    box.classList.add(
+      "border-[#00D2B1]/30",
+      "bg-[#00D2B1]/10",
+      "text-[#7ef7e2]"
+    );
+  } else {
+    box.classList.add(
+      "border-red-500/35",
+      "bg-red-950/60",
+      "text-red-300"
+    );
+  }
+
+  box.textContent = message;
+  host.appendChild(box);
+}
+
+function openEarnTransferModal() {
+  const old = document.getElementById("earn-modal-wrap");
+  if (old) old.remove();
+
+  const wrap = document.createElement("div");
+  wrap.id = "earn-modal-wrap";
+  wrap.className = "fixed inset-0 z-[9999]";
 
   wrap.innerHTML = `
-    <div class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
-      <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-        <h3 class="text-white text-lg font-semibold">${title}</h3>
-        <button class="text-white/50 hover:text-white text-xl close-btn">&times;</button>
-      </div>
+    <div class="earn-backdrop absolute inset-0 bg-black/75 backdrop-blur-sm opacity-0 transition duration-200"></div>
 
-      <div class="p-5">
-        <p class="text-white/70 text-sm leading-6">${message}</p>
+<div class="earn-panel absolute left-1/2 top-1/2 w-[calc(100%-24px)] max-w-md
+  -translate-x-1/2 -translate-y-1/2 scale-95 opacity-0
+  transition-all duration-300 ease-out
+  rounded-3xl border border-white/10 bg-[#090909]
+  px-5 py-5 shadow-[0_20px_80px_rgba(0,0,0,.65)]">
 
-        <button class="mt-5 w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold ok-btn">
-          OK
+
+
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-2xl font-semibold text-white tracking-tight">
+            Transfer Funds
+          </h3>
+          <p class="text-sm text-white/40 mt-1">
+            Move referral earnings to your main balance
+          </p>
+        </div>
+
+        <button id="earn-close-btn"
+          class="w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/60 hover:text-white">
+          ✕
         </button>
       </div>
+
+      <div id="earn-inline-banner" class="mb-4"></div>
+
+      <label class="block text-sm text-white/55 mb-2">
+        Amount (USD)
+      </label>
+
+      <input
+        id="earn-amount"
+        type="number"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        class="w-full h-12 rounded-xl bg-black/30 border border-white/10
+               px-4 text-white placeholder-white/30 outline-none
+               focus:border-[#00D2B1]"
+      >
+
+      <button
+        id="earn-submit-btn"
+        class="mt-5 w-full h-12 rounded-xl bg-[#00D2B1] text-black font-semibold">
+        Continue
+      </button>
     </div>
   `;
 
-  const close = () => wrap.remove();
-
-  wrap.querySelector(".close-btn").onclick = close;
-  wrap.querySelector(".ok-btn").onclick = close;
-  wrap.onclick = (e) => { if (e.target === wrap) close(); };
-
   document.body.appendChild(wrap);
-}
 
-function earnTransferModal() {
-  return new Promise((resolve) => {
-    const wrap = document.createElement("div");
+requestAnimationFrame(() => {
+  wrap.querySelector(".earn-backdrop").classList.add("opacity-100");
 
-    wrap.className =
-      "fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4";
+  const panel = wrap.querySelector(".earn-panel");
+  panel.classList.remove("scale-95", "opacity-0");
+  panel.classList.add("scale-100", "opacity-100");
+});
 
-    wrap.innerHTML = `
-      <div class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b0b0b] overflow-hidden">
-        <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-          <h3 class="text-white text-lg font-semibold">Transfer Funds</h3>
-          <button class="text-white/50 hover:text-white text-xl close-btn">&times;</button>
-        </div>
+  const close = () => closeEarnModal();
 
-        <div class="p-5">
-          <label class="block text-white/60 text-sm mb-2">Amount (USD)</label>
+  wrap.querySelector("#earn-close-btn").onclick = close;
+  wrap.querySelector(".earn-backdrop").onclick = close;
 
-          <input
-            id="earn-amount"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            class="w-full h-12 rounded-2xl bg-white/5 border border-white/10 px-4 text-white outline-none"
-          />
+  document.addEventListener(
+    "keydown",
+    function esc(e) {
+      if (e.key === "Escape") close();
+      document.removeEventListener("keydown", esc);
+    },
+    { once: true }
+  );
 
-          <button class="mt-5 w-full h-12 rounded-2xl bg-[#00D2B1] text-black font-semibold submit-btn">
-            Continue
-          </button>
-        </div>
-      </div>
-    `;
-
-    const close = (value = null) => {
-      wrap.remove();
-      resolve(value);
-    };
-
-    wrap.querySelector(".close-btn").onclick = () => close(null);
-
-    wrap.querySelector(".submit-btn").onclick = () => {
-      const val = wrap.querySelector("#earn-amount").value.trim();
-      close(val);
-    };
-
-    wrap.onclick = (e) => { if (e.target === wrap) close(null); };
-
-    document.body.appendChild(wrap);
-    setTimeout(() => wrap.querySelector("#earn-amount").focus(), 50);
-  });
+  setTimeout(() => {
+    wrap.querySelector("#earn-amount")?.focus();
+  }, 120);
 }
 
 
 /* =========================================================
    TRANSFER REFERRAL → MAIN WALLET
 ========================================================= */
+
 async function transferReferralToMain() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  const amountStr = await earnTransferModal();
-  if (!amountStr) return;
+  openEarnTransferModal();
 
-  const amount = Math.round(Number(amountStr) * 100);
+  const btn = document.getElementById("earn-submit-btn");
+  const input = document.getElementById("earn-amount");
 
-  if (!Number.isInteger(amount) || amount <= 0) {
-    earnNotice("Invalid Amount", "Enter a valid transfer amount.");
-    return;
-  }
+  if (!btn || !input) return;
 
-  try {
-    const res = await fetch(
-      "https://glorivest-api-a16f75b6b330.herokuapp.com/api/transfer/profits",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          amount_cents: amount,
-          source: "REFERRAL"
-        })
-      }
-    );
+  btn.onclick = async () => {
+    const amount = Math.round(Number(input.value.trim()) * 100);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      earnNotice("Transfer Failed", data.error || "Transfer failed.");
+    if (!Number.isInteger(amount) || amount <= 0) {
+      renderEarnBanner("Enter a valid transfer amount.", "error");
       return;
     }
 
-    await loadEarnTab();
-    document.dispatchEvent(new Event("wallets:refresh"));
+    btn.disabled = true;
+    btn.textContent = "Processing...";
 
-    earnNotice("Success", "Transfer completed successfully.");
+    try {
+      const res = await fetch(
+        "https://glorivest-api-a16f75b6b330.herokuapp.com/api/transfer/profits",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount_cents: amount,
+            source: "REFERRAL"
+          })
+        }
+      );
 
-  } catch (err) {
-    console.error(err);
-    earnNotice("Error", "Transfer failed.");
-  }
+      const data = await res.json();
+
+      if (!res.ok) {
+        renderEarnBanner(
+          data.error || "Transfer failed.",
+          "error"
+        );
+        btn.disabled = false;
+        btn.textContent = "Continue";
+        return;
+      }
+
+      await loadEarnTab();
+      document.dispatchEvent(new Event("wallets:refresh"));
+
+      renderEarnBanner(
+        "Transfer completed successfully.",
+        "success"
+      );
+
+      btn.textContent = "Completed";
+
+      setTimeout(() => {
+        closeEarnModal();
+      }, 900);
+
+    } catch (err) {
+      console.error(err);
+
+      renderEarnBanner("Transfer failed.", "error");
+
+      btn.disabled = false;
+      btn.textContent = "Continue";
+    }
+  };
 }
 
 
