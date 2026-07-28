@@ -56,18 +56,25 @@ window.apiFetch = async (path, opts = {}) => {
 
 
 // ============================================================================
-// 3. USER + WALLET LOADERS
+// 3. USER + ACCOUNT LOADERS
 // ============================================================================
 
-// Full loader (user + accounts)
 window.loadFullUser = async () => {
   const token = getToken();
-  if (!token) return { user: null, wallets: [] };
+
+  if (!token) {
+    return {
+      user: null,
+      accounts: []
+    };
+  }
 
   const user = await apiFetch('/auth/me');
-  const wallets = await apiFetch('/wallets');
 
-  return { user, wallets };
+  return {
+    user,
+    accounts: user.accounts || []
+  };
 };
 
 
@@ -359,23 +366,25 @@ function updateAccountModeTag() {
 
   if (!toggle || !balance) return;
 
-  const wallets = window.__wallets || [];
+  const accounts = window.__accounts || [];
 
-  const wallet =
+  const account =
     window.__accountMode === 'DEMO'
-      ? wallets.find(w => w.type === 'DEMO')
-      : wallets.find(w => w.type === 'REAL');
+      ? accounts.find(a => a.tier === 'demo')
+      : accounts.find(a => a.tier !== 'demo');
 
   toggle.classList.remove('is-demo', 'is-live');
   toggle.classList.add(
-    window.__accountMode === 'DEMO' ? 'is-demo' : 'is-live'
+    window.__accountMode === 'DEMO'
+      ? 'is-demo'
+      : 'is-live'
   );
 
-  const cents = Number(wallet?.balance_cents || 0);
+  const cents = Number(account?.balance_cents || 0);
 
-  balance.textContent = `$${(cents / 100).toLocaleString(undefined,{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
+  balance.textContent = `$${(cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   })}`;
 }
 
@@ -397,41 +406,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // ===============================
-// GLOBAL WALLET STATE (AUTHORITATIVE)
+// GLOBAL ACCOUNT STATE (AUTHORITATIVE)
 // ===============================
 window.loadWallets = async function () {
   const token = localStorage.getItem('token');
-  if (!token) {
+
+if (!token) {
+  window.__accounts = [];
+  window.__wallets = [];
+  return;
+}
+
+  try {
+    const me = await apiFetch('/auth/me');
+
+    window.__accounts = me.accounts || [];
+
+    // Backward compatibility for existing UI
+    window.__wallets = window.__accounts.map(account => ({
+      id: account.id,
+      code: account.account_code,
+      type: account.tier === 'demo'
+        ? 'DEMO'
+        : account.tier.toUpperCase(),
+      balance_cents: Number(account.balance_cents || 0),
+      profit_cents: Number(account.profit_cents || 0),
+      status: account.status
+    }));
+
+    updateAccountModeTag();
+    document.dispatchEvent(new Event('wallets:refresh'));
+
+  } catch (err) {
+    console.error('Account fetch failed:', err);
+    window.__accounts = [];
     window.__wallets = [];
-    return;
   }
-
-  const res = await fetch(
-    'https://glorivest-api-production.up.railway.app/api/wallets',
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-
-  if (!res.ok) {
-    console.error('Wallet fetch failed', res.status);
-    window.__wallets = [];
-    return;
-  }
-
-  window.__wallets = await res.json();
-
-  // 🔽🔽🔽 ADD THIS BLOCK 🔽🔽🔽
-  const demoWallet = window.__wallets.find(w => w.type === 'DEMO');
-  if (demoWallet?.demo_reset_at) {
-    const ts = new Date(demoWallet.demo_reset_at).getTime();
-    window.__demoResetAt = ts;
-    localStorage.setItem('demoResetAt', String(ts));
-  }
-  // 🔼🔼🔼 END ADDITION 🔼🔼🔼
-
-  updateAccountModeTag();
-  document.dispatchEvent(new Event('wallets:refresh'));
 };
 
 
@@ -443,8 +453,13 @@ window.getAllWallets = function () {
 };
 
 window.getActiveWallet = function () {
-  // legacy helper — default to REAL
-  return window.__wallets.find(w => w.type === 'REAL') || null;
+  const accounts = window.__accounts || [];
+
+  return (
+    accounts.find(a => a.tier !== 'demo') ||
+    accounts.find(a => a.tier === 'demo') ||
+    null
+  );
 };
 
 
