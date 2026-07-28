@@ -407,7 +407,7 @@ window.loadWallets = async function () {
   }
 
   const res = await fetch(
-    'https://https://glorivest-api-production.up.railway.app/api/wallets',
+    'https://glorivest-api-production.up.railway.app/api/wallets',
     {
       headers: { Authorization: `Bearer ${token}` }
     }
