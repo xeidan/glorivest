@@ -49,10 +49,25 @@ async function apiFetch(path, options = {}) {
   const response = await fetch(`${BASE_URL}${path}`, config);
 
   let data = {};
+
   try {
     data = await response.json();
   } catch {
     throw new Error('Invalid server response');
+  }
+
+  /* ==========================================
+     GLOBAL MAINTENANCE CHECK
+     ========================================== */
+  if (response.status === 503 && data.maintenance) {
+    sessionStorage.setItem(
+      'glorivest-maintenance',
+      JSON.stringify(data)
+    );
+
+    window.location.href = 'maintenance.html';
+
+    return;
   }
 
   if (!response.ok) {

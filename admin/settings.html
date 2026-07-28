@@ -1,0 +1,360 @@
+<main class="flex-1 p-4 md:p-8 space-y-8 overflow-auto">
+
+    <section class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-3xl font-semibold">
+                Platform Settings
+            </h2>
+
+            <p class="text-slate-400 mt-2">
+                Configure platform-wide settings.
+            </p>
+
+        </div>
+
+        <div
+            id="statusBadge"
+            class="px-5 py-2 rounded-full bg-emerald-500 font-semibold">
+
+            LIVE
+
+        </div>
+
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 p-6">
+
+        <div class="flex items-center justify-between">
+
+            <div>
+
+                <h3 class="text-2xl font-semibold">
+
+                    Maintenance Mode
+
+                </h3>
+
+                <p class="text-slate-400 mt-2">
+
+                    Temporarily disable access to Glorivest while updates or maintenance are in progress.
+
+                </p>
+
+            </div>
+
+            <label class="relative inline-flex items-center cursor-pointer">
+
+                <input
+                    id="maintenanceEnabled"
+                    type="checkbox"
+                    class="sr-only peer">
+
+                <div class="w-16 h-9 bg-slate-700 rounded-full peer peer-checked:bg-blue-600 transition"></div>
+
+                <div class="absolute left-1 top-1 w-7 h-7 bg-white rounded-full transition peer-checked:translate-x-7"></div>
+
+            </label>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mt-10">
+
+            <div>
+
+                <label class="block text-sm text-slate-400 mb-2">
+
+                    Maintenance Title
+
+                </label>
+
+                <input
+                    id="maintenanceTitle"
+                    class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none"
+                    placeholder="We'll be back shortly">
+
+            </div>
+
+            <div>
+
+                <label class="block text-sm text-slate-400 mb-2">
+
+                    End Time (Optional)
+
+                </label>
+
+                <input
+                    id="maintenanceEnds"
+                    type="datetime-local"
+                    class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none">
+
+            </div>
+
+        </div>
+
+        <div class="mt-6">
+
+            <label class="block text-sm text-slate-400 mb-2">
+
+                Maintenance Message
+
+            </label>
+
+            <textarea
+                id="maintenanceMessage"
+                rows="6"
+                class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 outline-none"
+                placeholder="We're currently performing scheduled maintenance. Please check back later."></textarea>
+
+        </div>
+
+        <div class="mt-8 flex justify-end gap-4">
+
+            <button
+                onclick="loadSettings()"
+                class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700">
+
+                Reload
+
+            </button>
+
+            <button
+                onclick="saveSettings()"
+                class="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-500">
+
+                Save Changes
+
+            </button>
+
+        </div>
+
+    </section>
+
+    <section class="rounded-3xl border border-white/10 bg-white/5 p-6">
+
+        <h3 class="text-xl font-semibold mb-5">
+
+            Preview
+
+        </h3>
+
+        <div class="rounded-2xl bg-slate-900 p-6">
+
+            <h2
+                id="previewTitle"
+                class="text-3xl font-bold">
+
+                We'll be back shortly
+
+            </h2>
+
+            <p
+                id="previewMessage"
+                class="text-slate-400 mt-4">
+
+                We're currently performing scheduled maintenance.
+
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script>
+const BASE_URL = "https://glorivest-api-production.up.railway.app/api";
+
+function guardAdmin() {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!token || (user.role || "").toLowerCase() !== "admin") {
+        location.href = "./login.html";
+    }
+}
+
+const token = localStorage.getItem("token");
+
+const maintenanceEnabled = document.getElementById("maintenanceEnabled");
+const maintenanceTitle = document.getElementById("maintenanceTitle");
+const maintenanceMessage = document.getElementById("maintenanceMessage");
+const maintenanceEnds = document.getElementById("maintenanceEnds");
+
+const previewTitle = document.getElementById("previewTitle");
+const previewMessage = document.getElementById("previewMessage");
+
+const statusBadge = document.getElementById("statusBadge");
+
+function updatePreview() {
+
+    previewTitle.textContent =
+        maintenanceTitle.value || "We'll be back shortly";
+
+    previewMessage.textContent =
+        maintenanceMessage.value ||
+        "We're currently performing scheduled maintenance.";
+
+}
+
+function updateBadge() {
+
+    if (maintenanceEnabled.checked) {
+
+        statusBadge.textContent = "MAINTENANCE";
+
+        statusBadge.className =
+            "px-5 py-2 rounded-full bg-yellow-500 text-black font-semibold";
+
+    } else {
+
+        statusBadge.textContent = "LIVE";
+
+        statusBadge.className =
+            "px-5 py-2 rounded-full bg-emerald-500 font-semibold";
+
+    }
+
+}
+
+maintenanceTitle.addEventListener("input", updatePreview);
+maintenanceMessage.addEventListener("input", updatePreview);
+
+maintenanceEnabled.addEventListener("change", updateBadge);
+
+async function loadSettings() {
+
+    try {
+
+        const res = await fetch(BASE_URL + "/admin/settings", {
+
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+
+        });
+
+        if (!res.ok) return;
+
+        const settings = await res.json();
+
+        maintenanceEnabled.checked =
+            settings.maintenance || false;
+
+        maintenanceTitle.value =
+            settings.title || "";
+
+        maintenanceMessage.value =
+            settings.message || "";
+
+        if (settings.endsAt) {
+
+            maintenanceEnds.value =
+                settings.endsAt.slice(0,16);
+
+        }
+
+        updateBadge();
+
+        updatePreview();
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+}
+
+async function saveSettings() {
+
+    try {
+
+        const body = {
+
+            maintenance:
+                maintenanceEnabled.checked,
+
+            title:
+                maintenanceTitle.value,
+
+            message:
+                maintenanceMessage.value,
+
+            endsAt:
+                maintenanceEnds.value || null
+
+        };
+
+        const res = await fetch(BASE_URL + "/admin/settings", {
+
+            method: "PUT",
+
+            headers: {
+
+                Authorization: `Bearer ${token}`,
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify(body)
+
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+
+            alert(data.message || "Failed to save");
+
+            return;
+
+        }
+
+        alert("Settings updated successfully.");
+
+        loadSettings();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Server error");
+
+    }
+
+}
+
+document
+.getElementById("menuBtn")
+.addEventListener("click", () => {
+
+    document
+    .getElementById("sidebar")
+    .classList
+    .toggle("hidden");
+
+});
+
+document
+.getElementById("logoutBtn")
+.addEventListener("click", () => {
+
+    localStorage.clear();
+
+    location.href = "./login.html";
+
+});
+
+guardAdmin();
+
+updatePreview();
+
+updateBadge();
+
+loadSettings();
+
+</script>
