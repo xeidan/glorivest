@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Glorivest | Maintenance</title>
+
+  <link href="output.css" rel="stylesheet" />
+  <link rel="stylesheet" href="maintenance.css" />
+
+  <link rel="manifest" href="manifest.json" />
+
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="icon" href="favicon.ico" />
+
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
+    crossorigin="anonymous">
+  </script>
+</head>
+
+<body class="min-h-screen overflow-hidden text-white">
+
+  <!-- Background -->
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-[#050816]"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+  </div>
+
+  <!-- Main -->
+  <main class="min-h-screen flex items-center justify-center px-6">
+
+    <div class="maintenance-card">
+
+      <!-- Logo -->
+      <div class="logo-wrap">
+        <img
+          src="images/logo.png"
+          alt="Glorivest"
+          class="logo"
+          onerror="this.style.display='none'"
+        />
+
+        <div class="logo-fallback">GV</div>
+      </div>
+
+      <!-- Status -->
+      <div class="status-badge">
+        <i class="fas fa-tools"></i>
+        Maintenance Mode
+      </div>
+
+      <!-- Title -->
+      <h1 id="maintenance-title" class="title">
+        We'll be back shortly
+      </h1>
+
+      <!-- Message -->
+      <p id="maintenance-message" class="message">
+        We are currently performing scheduled maintenance.
+      </p>
+
+      <!-- Countdown -->
+      <div
+        id="countdown-container"
+        class="hidden mt-8"
+      >
+        <p class="countdown-label">
+          Estimated completion
+        </p>
+
+        <div
+          id="countdown"
+          class="countdown"
+        >
+          00:00:00
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        Thank you for your patience.
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="maintenance.js"></script>
+
+</body>
+</html>
