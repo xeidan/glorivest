@@ -45,9 +45,24 @@ window.apiFetch = async (path, opts = {}) => {
     ? await res.json()
     : await res.text();
 
-  if (!res.ok) {
-    throw new Error(data?.message || 'Request failed');
-  }
+/* ==========================================
+   GLOBAL MAINTENANCE REDIRECT
+========================================== */
+if (res.status === 503 && data?.maintenance) {
+  sessionStorage.setItem(
+    'glorivest-maintenance',
+    JSON.stringify(data)
+  );
+
+  window.location.replace('/maintenance.html');
+
+  // Stop execution immediately
+  return new Promise(() => {});
+}
+
+if (!res.ok) {
+  throw new Error(data?.message || 'Request failed');
+}
 
   return data;
 };
