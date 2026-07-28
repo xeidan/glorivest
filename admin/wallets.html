@@ -49,7 +49,7 @@
   </main>
 </div>
 <script>
-const BASE_URL='https://glorivest-api-a16f75b6b330.herokuapp.com/api'; let rows=[];
+const BASE_URL='https://glorivest-api-production.up.railway.app/api'; let rows=[];
 function guard(){const t=localStorage.getItem('token');const u=JSON.parse(localStorage.getItem('user')||'{}');if(!t||(u.role||'').toLowerCase()!=='admin'){location.href='./login.html';}}
 async function api(path,opt={}){const t=localStorage.getItem('token');const r=await fetch(BASE_URL+path,{...opt,headers:{'Content-Type':'application/json',Authorization:`Bearer ${t}`}});if(r.status===401){localStorage.clear();location.href='./login.html';return;}return await r.json();}
 async function load(){rows=await api('/admin/wallets');render();}

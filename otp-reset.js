@@ -1,5 +1,5 @@
 // otp-reset.js
-const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+const API_BASE = 'https://glorivest-api-production.up.railway.app/api';
 
 const otpInput = document.getElementById('otp');
 const statusEl = document.getElementById('status');

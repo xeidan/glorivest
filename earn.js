@@ -8,7 +8,7 @@ async function loadEarnTab() {
 
   try {
     const res = await fetch(
-      "https://glorivest-api-a16f75b6b330.herokuapp.com/api/auth/me",
+      "https://https://glorivest-api-production.up.railway.app/api/auth/me",
       {
         headers: { Authorization: `Bearer ${token}` }
       }
@@ -188,7 +188,7 @@ async function loadLeaderboard() {
 
   try {
     const res = await fetch(
-      "https://glorivest-api-a16f75b6b330.herokuapp.com/api/leaderboard",
+      "https://https://glorivest-api-production.up.railway.app/api/leaderboard",
       {
         headers: { Authorization: `Bearer ${token}` }
       }
@@ -378,7 +378,7 @@ async function transferReferralToMain() {
 
     try {
       const res = await fetch(
-        "https://glorivest-api-a16f75b6b330.herokuapp.com/api/transfer/profits",
+        "https://https://glorivest-api-production.up.railway.app/api/transfer/profits",
         {
           method: "POST",
           headers: {

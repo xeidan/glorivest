@@ -1,5 +1,5 @@
 // forgot-password.js
-const API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+const API_BASE = 'https://glorivest-api-production.up.railway.app/api';
 
 const emailInput = document.getElementById('email');
 const statusEl = document.getElementById('status');

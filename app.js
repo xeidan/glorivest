@@ -9,7 +9,7 @@
 // ============================================================================
 // 1. BASE API + TOKEN HELPERS
 // ============================================================================
-window.API_BASE = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+window.API_BASE = 'https://glorivest-api-production.up.railway.app/api';
 
 window.getToken  = () => localStorage.getItem('token');
 window.setToken  = (t) => localStorage.setItem('token', t);
@@ -407,7 +407,7 @@ window.loadWallets = async function () {
   }
 
   const res = await fetch(
-    'https://glorivest-api-a16f75b6b330.herokuapp.com/api/wallets',
+    'https://https://glorivest-api-production.up.railway.app/api/wallets',
     {
       headers: { Authorization: `Bearer ${token}` }
     }

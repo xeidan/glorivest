@@ -1,4 +1,4 @@
-const BASE_URL = 'https://glorivest-api-a16f75b6b330.herokuapp.com/api';
+const BASE_URL = 'https://glorivest-api-production.up.railway.app/api';
 
 /* ==================================================
    HELPERS
