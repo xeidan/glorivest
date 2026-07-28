@@ -32,37 +32,53 @@ window.apiFetch = async (path, opts = {}) => {
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
 
-  if (res.status === 401) {
-    clearToken();
-    if (!location.pathname.includes('login')) {
-      location.href = '/index.html?login=1';
-    }
-    throw new Error('Unauthorized');
-  }
-
   const ct = res.headers.get('content-type') || '';
+
   const data = ct.includes('application/json')
     ? await res.json()
     : await res.text();
 
-/* ==========================================
-   GLOBAL MAINTENANCE REDIRECT
-========================================== */
-if (res.status === 503 && data?.maintenance) {
-  sessionStorage.setItem(
-    'glorivest-maintenance',
-    JSON.stringify(data)
-  );
+  // ==========================================================================
+  // GLOBAL MAINTENANCE REDIRECT
+  // ==========================================================================
+  if (res.status === 503 && data?.maintenance) {
+    sessionStorage.setItem(
+      'glorivest-maintenance',
+      JSON.stringify(data)
+    );
 
-  window.location.replace('/maintenance.html');
+const maintenanceUrl = new URL(
+  'maintenance.html',
+  window.location.href
+);
 
-  // Stop execution immediately
-  return new Promise(() => {});
-}
+window.location.replace(maintenanceUrl.href);
 
-if (!res.ok) {
-  throw new Error(data?.message || 'Request failed');
-}
+    // Stop any further execution
+    return;
+  }
+
+  // ==========================================================================
+  // AUTH HANDLING
+  // ==========================================================================
+  if (res.status === 401) {
+    clearToken();
+
+    if (!location.pathname.includes('login')) {
+      location.href = '/index.html?login=1';
+    }
+
+    throw new Error('Unauthorized');
+  }
+
+  // ==========================================================================
+  // OTHER ERRORS
+  // ==========================================================================
+  if (!res.ok) {
+    throw new Error(
+      data?.message || 'Request failed'
+    );
+  }
 
   return data;
 };
