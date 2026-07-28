@@ -3,19 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Glorivest App</title>
+
+  <!-- Styles -->
   <link href="output.css" rel="stylesheet" />
-  <link rel="stylesheet" href="app.css">
-  <link rel="manifest" href="/manifest.json">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
-    <!-- Icons -->
-<link rel="shortcut icon" href="/favicon.ico">
-<link rel="icon" href="/favicon.ico" class="w-48 h-48">
+  <link rel="stylesheet" href="app.css" />
 
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
 
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="icon" href="/favicon.ico" />
 
+  <!-- Font Awesome -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
+    crossorigin="anonymous"
+  ></script>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+
+  <!-- Maintenance Redirect -->
+  <script>
+    (() => {
+      const maintenance = sessionStorage.getItem('glorivest-maintenance');
+
+      if (
+        maintenance &&
+        !window.location.pathname.endsWith('maintenance.html')
+      ) {
+        window.location.replace('maintenance.html');
+      }
+    })();
+  </script>
 </head>
 <body class="text-gray-300 min-h-screen">
 
