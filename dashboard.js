@@ -1286,53 +1286,165 @@ function initTransactionTabs() {
 /* ===========================
    LOAD TRANSACTIONS
 =========================== */
+/* ===========================
+   LOAD TRANSACTIONS
+=========================== */
 async function loadTransactions(filter = 'all') {
   const list = qs('transaction-mobile-list');
   const table = qs('transaction-table-body');
   const pageInfo = qs('tx-page-info');
 
   if (list) {
-    list.innerHTML = '<div class="text-white/40 p-4">Loading...</div>';
+    list.innerHTML =
+      '<div class="text-white/40 p-4">Loading...</div>';
   }
 
   try {
-    const [deposits, withdrawals] = await Promise.all([
-      window.apiFetch('/deposit'),
-      window.apiFetch('/withdrawals')
-    ]);
+    /*
+     * Get the user's accounts first.
+     *
+     * LIVE mode  -> LIVE account
+     * DEMO mode  -> DEMO account
+     */
+    const accounts = await window.apiFetch('/accounts');
 
-    const depRows = (Array.isArray(deposits) ? deposits : []).map(row => ({
-      kind: 'deposit',
-      amount_cents: Number(
-        row.amount_cents ??
-        row.amount_requested_cents ??
-        row.credited_amount_cents ??
-        row.amount ??
-        0
-      ),
-      status: row.status || 'PENDING',
-      created_at: row.created_at
-    }));
+    if (!Array.isArray(accounts)) {
+      throw new Error('Invalid accounts response');
+    }
 
-    const wdRows = (Array.isArray(withdrawals) ? withdrawals : []).map(row => ({
-      kind: 'withdrawal',
-      amount_cents: Number(row.amount_cents || 0),
-      status: row.status || 'PENDING',
-      created_at: row.created_at
-    }));
+    const accountType =
+      getMode() === 'DEMO'
+        ? 'DEMO'
+        : 'LIVE';
 
-    let items = [...depRows, ...wdRows];
+    const account = accounts.find(
+      a => String(a.account_type).toUpperCase() === accountType
+    );
 
-    items.sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
+    if (!account) {
+      if (list) {
+        list.innerHTML =
+          '<div class="text-white/40 p-4">No account found</div>';
+      }
+
+      if (table) {
+        table.innerHTML = '';
+      }
+
+      if (pageInfo) {
+        pageInfo.textContent = '0 Transactions';
+      }
+
+      return;
+    }
+
+    console.log(
+      '[TRANSACTIONS] Loading account:',
+      {
+        id: account.id,
+        type: account.account_type,
+        code: account.account_code
+      }
+    );
+
+    /*
+     * Load actual financial transaction history.
+     *
+     * IMPORTANT:
+     * This is different from /deposit and /withdrawals.
+     *
+     * /transactions contains completed account movements.
+     */
+    const response = await window.apiFetch(
+      `/transactions?accountId=${account.id}`
+    );
+
+    console.log(
+      '[TRANSACTIONS] API response:',
+      response
+    );
+
+    const rows = Array.isArray(response)
+      ? response
+      : Array.isArray(response?.transactions)
+        ? response.transactions
+        : [];
+
+    /*
+     * Convert backend transaction records
+     * into the format used by the UI.
+     */
+    const items = rows.map(row => {
+
+      const rawType =
+        String(row.type || '').toUpperCase();
+
+      let kind = 'transaction';
+      let status = 'COMPLETED';
+
+      if (
+        rawType === 'DEPOSIT_SUCCESS' ||
+        rawType.includes('DEPOSIT')
+      ) {
+        kind = 'deposit';
+      }
+
+      if (
+        rawType === 'WITHDRAWAL' ||
+        rawType.includes('WITHDRAW')
+      ) {
+        kind = 'withdrawal';
+      }
+
+      /*
+       * Amount is already signed in transactions.
+       *
+       * Deposit:
+       *   +357
+       *
+       * Withdrawal:
+       *   -23928
+       */
+      const amountCents =
+        Number(row.amount_cents || 0);
+
+      return {
+        id: row.id,
+        kind,
+        type: rawType,
+        amount_cents: Math.abs(amountCents),
+        status,
+        created_at: row.created_at,
+        balance_after_cents:
+          Number(row.balance_after_cents || 0),
+        reference: row.reference || null
+      };
     });
 
+    /*
+     * Sort newest first.
+     */
+    items.sort((a, b) => {
+      return (
+        new Date(b.created_at) -
+        new Date(a.created_at)
+      );
+    });
+
+    /*
+     * Apply tab filter.
+     */
+    let filteredItems = items;
+
     if (filter !== 'all') {
-      items = items.filter(tx => tx.kind === filter);
+      filteredItems = items.filter(
+        tx => tx.kind === filter
+      );
     }
 
     function badge(status) {
-      const raw = String(status || '').toUpperCase();
+      const raw =
+        String(status || '').toUpperCase();
 
       if (
         raw.includes('COMPLETED') ||
@@ -1341,7 +1453,8 @@ async function loadTransactions(filter = 'all') {
       ) {
         return {
           label: 'Completed',
-          cls: 'bg-emerald-500/15 text-emerald-400'
+          cls:
+            'bg-emerald-500/15 text-emerald-400'
         };
       }
 
@@ -1351,34 +1464,47 @@ async function loadTransactions(filter = 'all') {
       ) {
         return {
           label: 'Cancelled',
-          cls: 'bg-red-500/15 text-red-400'
+          cls:
+            'bg-red-500/15 text-red-400'
         };
       }
 
       if (raw.includes('EXPIRED')) {
         return {
           label: 'Expired',
-          cls: 'bg-gray-500/15 text-gray-300'
+          cls:
+            'bg-gray-500/15 text-gray-300'
         };
       }
 
       return {
         label: 'Processing',
-        cls: 'bg-yellow-500/15 text-yellow-300'
+        cls:
+          'bg-yellow-500/15 text-yellow-300'
       };
     }
 
-    /* MOBILE */
+    /* ===========================
+       MOBILE
+    =========================== */
+
     if (list) {
-      if (!items.length) {
+      if (!filteredItems.length) {
         list.innerHTML =
           '<div class="text-white/40 p-4">No transactions yet</div>';
       } else {
-        list.innerHTML = items.map(tx => {
+        list.innerHTML = filteredItems.map(tx => {
+
           const b = badge(tx.status);
+
+          const sign =
+            tx.kind === 'withdrawal'
+              ? '-'
+              : '+';
 
           return `
             <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+
               <div class="flex justify-between items-start gap-3 mb-4">
 
                 <div>
@@ -1387,7 +1513,9 @@ async function loadTransactions(filter = 'all') {
                   </div>
 
                   <div class="text-white/40 text-xs">
-                    ${new Date(tx.created_at).toLocaleDateString()}
+                    ${new Date(
+                      tx.created_at
+                    ).toLocaleDateString()}
                   </div>
                 </div>
 
@@ -1398,27 +1526,39 @@ async function loadTransactions(filter = 'all') {
               </div>
 
               <div class="text-right text-lg font-semibold text-white">
-                ${tx.kind === 'withdrawal' ? '-' : '+'}${fmtUSD(tx.amount_cents)}
+                ${sign}${fmtUSD(tx.amount_cents)}
               </div>
+
             </div>
           `;
+
         }).join('');
       }
     }
 
-    /* DESKTOP */
+    /* ===========================
+       DESKTOP
+    =========================== */
+
     if (table) {
-      table.innerHTML = items.map(tx => {
+      table.innerHTML = filteredItems.map(tx => {
+
         const b = badge(tx.status);
+
+        const sign =
+          tx.kind === 'withdrawal'
+            ? '-'
+            : '+';
 
         return `
           <tr class="border-b border-white/5">
+
             <td class="py-3 text-white capitalize">
               ${tx.kind}
             </td>
 
             <td class="py-3 text-right text-white">
-              ${tx.kind === 'withdrawal' ? '-' : '+'}${fmtUSD(tx.amount_cents)}
+              ${sign}${fmtUSD(tx.amount_cents)}
             </td>
 
             <td class="py-3 text-right">
@@ -1428,23 +1568,41 @@ async function loadTransactions(filter = 'all') {
             </td>
 
             <td class="py-3 text-right text-white/50">
-              ${new Date(tx.created_at).toLocaleDateString()}
+              ${new Date(
+                tx.created_at
+              ).toLocaleDateString()}
             </td>
+
           </tr>
         `;
+
       }).join('');
     }
 
     if (pageInfo) {
-      pageInfo.textContent = `${items.length} Transactions`;
+      pageInfo.textContent =
+        `${filteredItems.length} Transactions`;
     }
 
   } catch (err) {
-    console.error(err);
+
+    console.error(
+      '[TRANSACTIONS] Failed to load:',
+      err
+    );
 
     if (list) {
       list.innerHTML =
         '<div class="text-red-400 p-4">Failed to load transactions</div>';
+    }
+
+    if (table) {
+      table.innerHTML = '';
+    }
+
+    if (pageInfo) {
+      pageInfo.textContent =
+        'Failed to load transactions';
     }
   }
 }
