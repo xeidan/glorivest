@@ -1421,6 +1421,8 @@ async function loadTransactions(filter = 'all') {
       };
     });
 
+    console.log('[TRANSACTIONS] Parsed items:', items);
+console.log('[TRANSACTIONS] Current filter:', filter);
     /*
      * Sort newest first.
      */
@@ -1435,6 +1437,11 @@ async function loadTransactions(filter = 'all') {
      * Apply tab filter.
      */
     let filteredItems = items;
+
+    console.log(
+  '[TRANSACTIONS] Filtered items:',
+  filteredItems
+);
 
     if (filter !== 'all') {
       filteredItems = items.filter(
