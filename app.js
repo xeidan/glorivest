@@ -401,10 +401,15 @@ function updateAccountModeTag() {
 
   const account =
     window.__accountMode === 'DEMO'
-      ? accounts.find(a => a.tier === 'demo')
-      : accounts.find(a => a.tier !== 'demo');
+      ? accounts.find(
+          a => String(a.account_type).toUpperCase() === 'DEMO'
+        )
+      : accounts.find(
+          a => String(a.account_type).toUpperCase() === 'LIVE'
+        );
 
   toggle.classList.remove('is-demo', 'is-live');
+
   toggle.classList.add(
     window.__accountMode === 'DEMO'
       ? 'is-demo'

@@ -1286,9 +1286,6 @@ function initTransactionTabs() {
 /* ===========================
    LOAD TRANSACTIONS
 =========================== */
-/* ===========================
-   LOAD TRANSACTIONS
-=========================== */
 async function loadTransactions(filter = 'all') {
   const list = qs('transaction-mobile-list');
   const table = qs('transaction-table-body');
@@ -1338,14 +1335,6 @@ async function loadTransactions(filter = 'all') {
       return;
     }
 
-    console.log(
-      '[TRANSACTIONS] Loading account:',
-      {
-        id: account.id,
-        type: account.account_type,
-        code: account.account_code
-      }
-    );
 
     /*
      * Load actual financial transaction history.
@@ -1357,11 +1346,6 @@ async function loadTransactions(filter = 'all') {
      */
     const response = await window.apiFetch(
       `/transactions?accountId=${account.id}`
-    );
-
-    console.log(
-      '[TRANSACTIONS] API response:',
-      response
     );
 
     const rows = Array.isArray(response)
@@ -1421,8 +1405,7 @@ async function loadTransactions(filter = 'all') {
       };
     });
 
-    console.log('[TRANSACTIONS] Parsed items:', items);
-console.log('[TRANSACTIONS] Current filter:', filter);
+
     /*
      * Sort newest first.
      */
@@ -1438,16 +1421,13 @@ console.log('[TRANSACTIONS] Current filter:', filter);
      */
     let filteredItems = items;
 
-    console.log(
-  '[TRANSACTIONS] Filtered items:',
-  filteredItems
-);
-
     if (filter !== 'all') {
       filteredItems = items.filter(
         tx => tx.kind === filter
       );
     }
+
+
 
     function badge(status) {
       const raw =
@@ -1490,6 +1470,7 @@ console.log('[TRANSACTIONS] Current filter:', filter);
           'bg-yellow-500/15 text-yellow-300'
       };
     }
+
 
     /* ===========================
        MOBILE
@@ -1541,7 +1522,7 @@ console.log('[TRANSACTIONS] Current filter:', filter);
 
         }).join('');
       }
-    }
+    } 
 
     /* ===========================
        DESKTOP
@@ -1585,6 +1566,7 @@ console.log('[TRANSACTIONS] Current filter:', filter);
 
       }).join('');
     }
+
 
     if (pageInfo) {
       pageInfo.textContent =
