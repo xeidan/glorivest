@@ -51,13 +51,13 @@ function showMessage(message, type = 'info') {
      STATE
   =========================== */
 
-  const state = {
-    user: null,
-    wallets: [],
-    realWallet: null,
-    demoWallet: null,
-    referralWallet: null
-  };
+ const state = {
+  user: null,
+  wallets: [],
+  liveWallet: null,
+  demoWallet: null,
+  referralWallet: null
+};
 
   /* ===========================
      ACCOUNT MODE
@@ -118,14 +118,20 @@ function initAccountToggle() {
      WALLET SYNC
   =========================== */
 
-  window.syncWalletsFromGlobal = function () {
-    const wallets = window.getAllWallets?.() || [];
+    window.syncWalletsFromGlobal = function () {
+      const wallets = window.getAllWallets?.() || [];
 
-    state.wallets = wallets;
-    state.realWallet = wallets.find(w => w.type === 'REAL') || null;
-    state.demoWallet = wallets.find(w => w.type === 'DEMO') || null;
-    state.referralWallet = wallets.find(w => w.type === 'REFERRAL') || null;
-  };
+      state.wallets = wallets;
+
+      state.liveWallet =
+        wallets.find(w => w.type === 'LIVE') || null;
+
+      state.demoWallet =
+        wallets.find(w => w.type === 'DEMO') || null;
+
+      state.referralWallet =
+        wallets.find(w => w.type === 'REFERRAL') || null;
+    };
 
   /* ===========================
      LOAD USER
@@ -158,6 +164,18 @@ function initAccountToggle() {
     renderBalances();
     const isDemo = getMode() === 'DEMO';
 
+    // ==========================================
+    // HEADER ACCOUNT MODE BALANCE
+    // ==========================================
+
+    const activeWallet =
+      isDemo ? demoWallet : liveWallet;
+
+    if (qs('account-mode-balance')) {
+      qs('account-mode-balance').textContent =
+        fmtUSD(activeWallet?.balance_cents || 0);
+    }
+
 qs('demo-card')?.classList.toggle('hidden', !isDemo);
 qs('live-card')?.classList.toggle('hidden', isDemo);
     updateDemoResetVisibility();
@@ -166,68 +184,159 @@ qs('live-card')?.classList.toggle('hidden', isDemo);
 function renderBalances() {
   const wallets = window.getAllWallets?.() || [];
 
-  const realWallet = wallets.find(w => w.type === 'REAL') || null;
-  const demoWallet = wallets.find(w => w.type === 'DEMO') || null;
-  const referralWallet = wallets.find(w => w.type === 'REFERRAL') || null;
+  const liveWallet =
+    wallets.find(w => w.type === 'LIVE') || null;
 
-  state.realWallet = realWallet;
+  const demoWallet =
+    wallets.find(w => w.type === 'DEMO') || null;
+
+  const referralWallet =
+    wallets.find(w => w.type === 'REFERRAL') || null;
+
+  state.wallets = wallets;
+  state.liveWallet = liveWallet;
   state.demoWallet = demoWallet;
   state.referralWallet = referralWallet;
 
   const isDemo = getMode() === 'DEMO';
 
-  // ===== TITLE =====
-  if (qs('account-title')) {
-    qs('account-title').textContent = isDemo ? 'Demo' : 'Live';
+  // ==========================================
+  // ACCOUNT TITLE
+  // ==========================================
+
+  qs('account-title')?.replaceChildren(
+    document.createTextNode(isDemo ? 'Demo' : 'Live')
+  );
+
+  // ==========================================
+  // DEMO BALANCE
+  // ==========================================
+
+  if (qs('demo-total')) {
+    qs('demo-total').textContent =
+      fmtUSD(demoWallet?.balance_cents || 0);
   }
 
-  // ===== DEMO =====
-  if (demoWallet && qs('demo-total')) {
-    qs('demo-total').textContent = fmtUSD(demoWallet.balance_cents);
+  // ==========================================
+  // LIVE BALANCE
+  // ==========================================
+
+  if (qs('live-total')) {
+    qs('live-total').textContent =
+      fmtUSD(liveWallet?.balance_cents || 0);
   }
 
-  // ===== LIVE =====
-  if (realWallet && qs('live-total')) {
-    qs('live-total').textContent = fmtUSD(realWallet.balance_cents);
+  // ==========================================
+  // LIVE AVAILABLE BALANCE
+  // ==========================================
+
+  if (qs('live-available')) {
+    const balance =
+      Number(liveWallet?.balance_cents || 0);
+
+    const locked =
+      Number(liveWallet?.locked_balance_cents || 0);
+
+    const available =
+      Math.max(balance - locked, 0);
+
+    qs('live-available').textContent =
+      fmtUSD(available);
   }
 
-  // ===== AVAILABLE =====
-  if (realWallet && qs('live-available')) {
-    qs('live-available').textContent = fmtUSD(realWallet.balance_cents);
-  }
+  // ==========================================
+  // REFERRAL
+  // ==========================================
 
-  // ===== REFERRAL =====
-  if (referralWallet && qs('live-referral')) {
-    qs('live-referral').textContent = fmtUSD(referralWallet.balance_cents);
+  if (qs('live-referral')) {
+    qs('live-referral').textContent =
+      fmtUSD(referralWallet?.balance_cents || 0);
   }
 }
 
-  /* ===========================
-     DEMO RESET
-  =========================== */
+
+/* ===========================
+   DEMO RESET MODAL
+=========================== */
+
+function openDemoResetModal() {
+  const modal = qs('demo-reset-modal');
+
+  if (!modal) return;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeDemoResetModal() {
+  const modal = qs('demo-reset-modal');
+
+  if (!modal) return;
+
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+
+  modal.setAttribute('aria-hidden', 'true');
+}
+
 async function resetDemoBalance() {
   if (!state.demoWallet) return;
 
-  const proceed = window.showToast
-    ? true
-    : confirm('Reset demo balance back to $10,000?');
+  openDemoResetModal();
+}
 
-  if (!proceed) return;
+
+/* ===========================
+   CONFIRM DEMO RESET
+=========================== */
+
+async function confirmDemoReset() {
+  if (!state.demoWallet) return;
+
+  const btn = qs('demo-reset-confirm');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Resetting...';
+  }
 
   try {
-    await window.apiFetch(`/wallets/${state.demoWallet.id}/demo-reset`, {
-      method: 'POST'
-    });
+
+    await window.apiFetch(
+      `/wallets/${state.demoWallet.id}/demo-reset`,
+      {
+        method: 'POST'
+      }
+    );
 
     await window.loadWallets?.();
+
     window.syncWalletsFromGlobal();
+
     renderDashboard();
 
-    showMessage('Demo balance reset successfully', 'success');
+    closeDemoResetModal();
+
+    showMessage(
+      'Demo balance restored to $10,000.00',
+      'success'
+    );
 
   } catch (e) {
+
     console.error('demo reset failed', e);
-    showMessage('Failed to reset demo balance', 'error');
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Reset Balance';
+    }
+
+    showMessage(
+      'Failed to reset demo balance',
+      'error'
+    );
   }
 }
 
@@ -1603,45 +1712,146 @@ async function loadTransactions(filter = 'all') {
      INIT
   =========================== */
 document.addEventListener('DOMContentLoaded', async () => {
+
   initModals();
   initDepositTabs();
   initWithdrawTabs();
   initTransactionTabs();
 
-  qs('demo-reset')?.addEventListener('click', resetDemoBalance);
+  // ===========================
+  // DEMO RESET
+  // ===========================
+
+  qs('demo-reset')?.addEventListener(
+    'click',
+    resetDemoBalance
+  );
+
+  qs('demo-reset-cancel')?.addEventListener(
+    'click',
+    closeDemoResetModal
+  );
+
+  qs('demo-reset-close')?.addEventListener(
+    'click',
+    closeDemoResetModal
+  );
+
+  qs('demo-reset-backdrop')?.addEventListener(
+    'click',
+    closeDemoResetModal
+  );
+
+  qs('demo-reset-confirm')?.addEventListener(
+    'click',
+    confirmDemoReset
+  );
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDemoResetModal();
+    }
+  });
+
+
+  // ===========================
+  // ACCOUNT MODE
+  // ===========================
 
   document.addEventListener('accountMode:changed', () => {
     renderDashboard();
   });
 
-let refreshing = false;
 
-async function refreshDashboardData() {
-  if (refreshing) return;
-  refreshing = true;
+  // ===========================
+  // DASHBOARD REFRESH
+  // ===========================
 
-  try {
-    await window.loadWallets?.();
-    window.syncWalletsFromGlobal?.();
-    renderDashboard?.();
-  } catch (err) {
-    console.error('background refresh failed', err);
-  } finally {
-    refreshing = false;
+  let refreshing = false;
+
+  async function refreshDashboardData() {
+
+    if (refreshing) return;
+
+    refreshing = true;
+
+    try {
+
+      await window.loadWallets?.();
+
+      window.syncWalletsFromGlobal?.();
+
+      renderDashboard?.();
+
+    } catch (err) {
+
+      console.error(
+        'background refresh failed',
+        err
+      );
+
+    } finally {
+
+      refreshing = false;
+
+    }
   }
-}
+
+
+  // ===========================
+  // INITIAL LOAD
+  // ===========================
 
   await loadUser();
+
   await refreshDashboardData();
 
-  setInterval(refreshDashboardData, 30000);
-  window.addEventListener('focus', refreshDashboardData);
 
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refreshDashboardData();
-  });
+  // ===========================
+  // PERIODIC REFRESH
+  // ===========================
 
-  document.dispatchEvent(new Event('accountMode:changed'));
+  setInterval(
+    refreshDashboardData,
+    30000
+  );
+
+
+  // ===========================
+  // REFRESH ON FOCUS
+  // ===========================
+
+  window.addEventListener(
+    'focus',
+    refreshDashboardData
+  );
+
+
+  // ===========================
+  // REFRESH WHEN TAB BECOMES
+  // VISIBLE AGAIN
+  // ===========================
+
+  document.addEventListener(
+    'visibilitychange',
+    () => {
+
+      if (!document.hidden) {
+        refreshDashboardData();
+      }
+
+    }
+  );
+
+
+  // ===========================
+  // INITIAL ACCOUNT MODE SYNC
+  // ===========================
+
+  document.dispatchEvent(
+    new Event('accountMode:changed')
+  );
+
 });
 
 })();

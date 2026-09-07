@@ -1,82 +1,131 @@
 // ============================================================================
-//  GLOBAL.JS  —  Loaded FIRST on every page
-//  Contains ONLY cross-page utilities, API helpers, tab navigation, header load,
-//  and global balance visibility logic.
+// GLOBAL.JS
+// Loaded FIRST on every page.
+//
+// Contains:
+// - API configuration
+// - authentication/token helpers
+// - universal API fetch wrapper
+// - user/account loading helpers
+// - global DOM selector
+// - top-level tab navigation
+// - user header loading
 // ============================================================================
-
 
 
 // ============================================================================
 // 1. BASE API + TOKEN HELPERS
 // ============================================================================
-window.API_BASE = 'https://glorivest-api-production.up.railway.app/api';
 
-window.getToken  = () => localStorage.getItem('token');
-window.setToken  = (t) => localStorage.setItem('token', t);
-window.clearToken = () => localStorage.removeItem('token');
+window.API_BASE =
+  'https://glorivest-api-production.up.railway.app/api';
+
+window.getToken = function () {
+  return localStorage.getItem('token');
+};
+
+window.setToken = function (token) {
+  localStorage.setItem('token', token);
+};
+
+window.clearToken = function () {
+  localStorage.removeItem('token');
+};
 
 
 // ============================================================================
-// 2. UNIVERSAL FETCH WRAPPER
+// 2. UNIVERSAL API FETCH WRAPPER
 // ============================================================================
-window.apiFetch = async (path, opts = {}) => {
-  const token = getToken();
 
-  const res = await fetch(`${API_BASE}${path}`, {
+window.apiFetch = async function (path, opts = {}) {
+  const token = window.getToken();
+
+  const res = await fetch(`${window.API_BASE}${path}`, {
     method: opts.method || 'GET',
+
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`
+          }
+        : {}),
+
       ...(opts.headers || {})
     },
-    body: opts.body ? JSON.stringify(opts.body) : undefined
+
+    body: opts.body
+      ? JSON.stringify(opts.body)
+      : undefined
   });
 
-  const ct = res.headers.get('content-type') || '';
+  const contentType =
+    res.headers.get('content-type') || '';
 
-  const data = ct.includes('application/json')
-    ? await res.json()
-    : await res.text();
+  const data =
+    contentType.includes('application/json')
+      ? await res.json()
+      : await res.text();
+
 
   // ==========================================================================
-  // GLOBAL MAINTENANCE REDIRECT
+  // MAINTENANCE MODE
   // ==========================================================================
-  if (res.status === 503 && data?.maintenance) {
+
+  if (
+    res.status === 503 &&
+    data &&
+    typeof data === 'object' &&
+    data.maintenance
+  ) {
     sessionStorage.setItem(
       'glorivest-maintenance',
       JSON.stringify(data)
     );
 
-const maintenanceUrl = new URL(
-  'maintenance.html',
-  window.location.href
-);
+    const maintenanceUrl = new URL(
+      'maintenance.html',
+      window.location.href
+    );
 
-window.location.replace(maintenanceUrl.href);
+    window.location.replace(
+      maintenanceUrl.href
+    );
 
-    // Stop any further execution
     return;
   }
 
-  // ==========================================================================
-  // AUTH HANDLING
-  // ==========================================================================
-  if (res.status === 401) {
-    clearToken();
 
-    if (!location.pathname.includes('login')) {
-      location.href = '/index.html?login=1';
+  // ==========================================================================
+  // AUTHENTICATION
+  // ==========================================================================
+
+  if (res.status === 401) {
+    window.clearToken();
+
+    if (
+      !window.location.pathname.includes('login')
+    ) {
+      window.location.href =
+        '/index.html?login=1';
     }
 
     throw new Error('Unauthorized');
   }
 
+
   // ==========================================================================
-  // OTHER ERRORS
+  // OTHER API ERRORS
   // ==========================================================================
+
   if (!res.ok) {
     throw new Error(
-      data?.message || 'Request failed'
+      data &&
+      typeof data === 'object' &&
+      data.message
+        ? data.message
+        : 'Request failed'
     );
   }
 
@@ -84,14 +133,12 @@ window.location.replace(maintenanceUrl.href);
 };
 
 
-
-
 // ============================================================================
-// 3. USER + ACCOUNT LOADERS
+// 3. USER + ACCOUNT LOADER
 // ============================================================================
 
-window.loadFullUser = async () => {
-  const token = getToken();
+window.loadFullUser = async function () {
+  const token = window.getToken();
 
   if (!token) {
     return {
@@ -100,419 +147,1115 @@ window.loadFullUser = async () => {
     };
   }
 
-  const user = await apiFetch('/auth/me');
+  const user =
+    await window.apiFetch('/auth/me');
 
   return {
     user,
-    accounts: user.accounts || []
+    accounts: Array.isArray(user?.accounts)
+      ? user.accounts
+      : []
   };
 };
 
 
 // ============================================================================
-// 4. HEADER LOADER
+// 4. HEADER / CURRENT USER LOADER
 // ============================================================================
-window.loadMe = async () => {
-  const token = getToken();
-  if (!token) return null;
+
+window.loadMe = async function () {
+  const token = window.getToken();
+
+  if (!token) {
+    return null;
+  }
 
   try {
-    const me = await apiFetch('/auth/me');
+    const me =
+      await window.apiFetch('/auth/me');
 
-    document.querySelectorAll('[data-me="email"]').forEach(el => {
-      el.textContent = me.email ?? '';
-    });
+    document
+      .querySelectorAll('[data-me="email"]')
+      .forEach(el => {
+        el.textContent = me.email ?? '';
+      });
 
     return me;
-  } catch (e) {
-    console.error("loadMe failed:", e);
+
+  } catch (err) {
+    console.error(
+      'loadMe failed:',
+      err
+    );
+
     return null;
   }
 };
 
 
+// ============================================================================
+// 5. GLOBAL DOM SELECTOR
+// ============================================================================
+
+window.qs = function (id) {
+  return document.getElementById(id);
+};
 
 
 // ============================================================================
-// 5. GLOBAL SELECTOR
+// 6. GLOBAL TOP-LEVEL TAB NAVIGATION
 // ============================================================================
-window.qs = (id) => document.getElementById(id);
 
-
-
-// ============================================================================
-// 6. GLOBAL TAB NAVIGATION
-// ============================================================================
 window.showTab = function (tab) {
-  // Hide all top-level tabs
-  document.querySelectorAll('.tab-section').forEach(el => {
-    el.classList.add('hidden');
-  });
 
-  const target = document.getElementById(`tab-${tab}`);
-  if (!target) return;
+  // Hide all top-level tab sections.
+  document
+    .querySelectorAll('.tab-section')
+    .forEach(section => {
+      section.classList.add('hidden');
+    });
 
+
+  // Find requested tab.
+  const target =
+    document.getElementById(`tab-${tab}`);
+
+  if (!target) {
+    return;
+  }
+
+
+  // Show requested tab.
   target.classList.remove('hidden');
 
-  // Update bottom nav
-  document.querySelectorAll('[data-tab]').forEach(btn => {
-    btn.classList.toggle('active-tab', btn.dataset.tab === tab);
-  });
 
-  // 🔒 CRITICAL: Trade manages its own internal routing
-  if (tab === 'trade' && typeof window.showTradeTabContent === 'function') {
+  // Update bottom navigation state.
+  document
+    .querySelectorAll('[data-tab]')
+    .forEach(button => {
+      button.classList.toggle(
+        'active-tab',
+        button.dataset.tab === tab
+      );
+    });
+
+
+  // Trade owns its own internal navigation.
+  if (
+    tab === 'trade' &&
+    typeof window.showTradeTabContent === 'function'
+  ) {
     window.showTradeTabContent('overview');
   }
 };
 
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-refer-now]');
-  if (!btn) return;
 
-  window.showTab('earn');
-});
+// ============================================================================
+// REFER NOW → EARN TAB
+// ============================================================================
 
+document.addEventListener(
+  'click',
+  function (event) {
 
-// Auto activate dashboard on page load
-document.addEventListener("DOMContentLoaded", () => {
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  tabButtons.forEach(btn =>
-    btn.addEventListener("click", () => showTab(btn.dataset.tab))
-  );
+    const button =
+      event.target.closest(
+        '[data-refer-now]'
+      );
 
-  showTab("dashboard");
-});
+    if (!button) {
+      return;
+    }
 
+    window.showTab('earn');
+  }
+);
 
 
 // ============================================================================
-// 6. USER HEADER LOADING (email, ID, initials)
+// INITIALIZE TOP-LEVEL TABS
 // ============================================================================
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function () {
+
+    const tabButtons =
+      document.querySelectorAll(
+        '.tab-btn'
+      );
+
+    tabButtons.forEach(button => {
+
+      button.addEventListener(
+        'click',
+        function () {
+
+          window.showTab(
+            button.dataset.tab
+          );
+
+        }
+      );
+
+    });
+
+
+    // Dashboard is the default tab.
+    window.showTab('dashboard');
+
+  }
+);
+
+
+// ============================================================================
+// 7. USER HEADER LOADING
+// ============================================================================
+
 async function loadUserHeader() {
+
   try {
-    const user = await apiFetch('/auth/me');
-    if (!user) return;
 
-    const email = user.email || "user@example.com";
-    const glorivestId = user.glorivest_id || `GV${String(user.id).padStart(6, '0')}`;
-    const initials = email.slice(0, 2).toUpperCase();
+    const user =
+      await window.apiFetch('/auth/me');
 
-    qs("user-email").textContent = email;
-    qs("glorivest-id").textContent = glorivestId;
-    qs("user-initials").textContent = initials;
+    if (!user) {
+      return;
+    }
+
+
+    const email =
+      user.email ||
+      'user@example.com';
+
+    const glorivestId =
+      user.glorivest_id ||
+      `GV${String(user.id).padStart(6, '0')}`;
+
+    const initials =
+      email
+        .slice(0, 2)
+        .toUpperCase();
+
+
+    const emailElement =
+      window.qs('user-email');
+
+    const idElement =
+      window.qs('glorivest-id');
+
+    const initialsElement =
+      window.qs('user-initials');
+
+
+    if (emailElement) {
+      emailElement.textContent =
+        email;
+    }
+
+    if (idElement) {
+      idElement.textContent =
+        glorivestId;
+    }
+
+    if (initialsElement) {
+      initialsElement.textContent =
+        initials;
+    }
 
   } catch (err) {
-    console.error("Error loading user header:", err);
+
+    console.error(
+      'Error loading user header:',
+      err
+    );
+
   }
 }
 
-window.addEventListener('DOMContentLoaded', loadUserHeader);
 
+window.addEventListener(
+  'DOMContentLoaded',
+  loadUserHeader
+);
+
+// ============================================================================
+// 8. GLOBAL SHEET SYSTEM — Notifications & Guide
+// ============================================================================
 
 
 // ============================================================================
-// 7. GLOBAL BALANCE VISIBILITY TOGGLE (show/hide balances with eye icon)
+// GLOBAL SHEET ELEMENTS
 // ============================================================================
 
+const sheetNotif =
+  qs('sheet-notifications');
 
+const sheetNotifBg =
+  qs('sheet-notifications-backdrop');
+
+const sheetNotifPanel =
+  qs('sheet-notifications-panel');
+
+
+const sheetGuide =
+  qs('sheet-guide');
+
+const sheetGuideBg =
+  qs('sheet-guide-backdrop');
+
+const sheetGuidePanel =
+  qs('sheet-guide-panel');
+
+
+const btnNotif =
+  qs('btn-open-notifications');
+
+const btnGuide =
+  qs('btn-open-guide');
 
 
 // ============================================================================
-// 8. GLOBAL SHEET SYSTEM — Notifications & Guide (System A)
+// RESET ACTIVE ICONS
 // ============================================================================
 
-// Elements
-const sheetNotif      = qs("sheet-notifications");
-const sheetNotifBg    = qs("sheet-notifications-backdrop");
-const sheetNotifPanel = qs("sheet-notifications-panel");
-
-const sheetGuide      = qs("sheet-guide");
-const sheetGuideBg    = qs("sheet-guide-backdrop");
-const sheetGuidePanel = qs("sheet-guide-panel");
-
-const btnNotif = qs("btn-open-notifications");
-const btnGuide = qs("btn-open-guide");
-
-
-// Reset active icons
 function clearIconActive() {
-  btnNotif?.classList.remove("icon-active");
-  btnGuide?.classList.remove("icon-active");
+  btnNotif?.classList.remove('icon-active');
+  btnGuide?.classList.remove('icon-active');
 }
 
 
-// Opening a sheet
-function openGlobalSheet(sheet, backdrop, panel, triggerBtn) {
-  sheet.classList.remove("hidden");
+// ============================================================================
+// OPEN GLOBAL SHEET
+// ============================================================================
+
+function openGlobalSheet(
+  sheet,
+  backdrop,
+  panel,
+  triggerBtn
+) {
+  if (!sheet || !backdrop || !panel) {
+    return;
+  }
+
+  sheet.classList.remove('hidden');
+
   clearIconActive();
-  triggerBtn?.classList.add("icon-active");
+
+  triggerBtn?.classList.add('icon-active');
 
   requestAnimationFrame(() => {
-    backdrop.classList.add("opacity-100");
-    panel.classList.remove("translate-y-full");
+    backdrop.classList.add('opacity-100');
+    panel.classList.remove('translate-y-full');
   });
 }
 
 
-// Closing a sheet
-function closeGlobalSheet(sheet, backdrop, panel, triggerBtn) {
-  backdrop.classList.remove("opacity-100");
-  panel.classList.add("translate-y-full");
-  triggerBtn?.classList.remove("icon-active");
+// ============================================================================
+// CLOSE GLOBAL SHEET
+// ============================================================================
 
-  setTimeout(() => sheet.classList.add("hidden"), 220);
+function closeGlobalSheet(
+  sheet,
+  backdrop,
+  panel,
+  triggerBtn
+) {
+  if (!sheet || !backdrop || !panel) {
+    return;
+  }
+
+  backdrop.classList.remove('opacity-100');
+
+  panel.classList.add('translate-y-full');
+
+  triggerBtn?.classList.remove('icon-active');
+
+  setTimeout(() => {
+    sheet.classList.add('hidden');
+  }, 220);
 }
 
 
-// Drag to close
-function attachGlobalDrag(panel, closeFn) {
+// ============================================================================
+// DRAG-TO-CLOSE
+// ============================================================================
+
+function attachGlobalDrag(
+  panel,
+  closeFn
+) {
+  if (!panel) {
+    return;
+  }
+
   let startY = 0;
   let dragging = false;
 
-  panel.addEventListener("mousedown", start);
-  panel.addEventListener("touchstart", start, { passive: true });
 
   function start(e) {
     dragging = true;
-    startY = (e.touches ? e.touches[0].clientY : e.clientY);
-    panel.style.transition = "none";
+
+    startY =
+      e.touches
+        ? e.touches[0].clientY
+        : e.clientY;
+
+    panel.style.transition = 'none';
   }
 
-  window.addEventListener("mousemove", move);
-  window.addEventListener("touchmove", move, { passive: true });
 
   function move(e) {
-    if (!dragging) return;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY);
-    const dy = Math.max(0, y - startY);
-    panel.style.transform = `translateY(${dy}px)`;
+    if (!dragging) {
+      return;
+    }
+
+    const y =
+      e.touches
+        ? e.touches[0].clientY
+        : e.clientY;
+
+    const dy =
+      Math.max(0, y - startY);
+
+    panel.style.transform =
+      `translateY(${dy}px)`;
   }
 
-  window.addEventListener("mouseup", end);
-  window.addEventListener("touchend", end);
 
   function end() {
-    if (!dragging) return;
+    if (!dragging) {
+      return;
+    }
+
     dragging = false;
 
-    const dy = parseFloat(panel.style.transform.replace("translateY(", "")) || 0;
-    panel.style.transition = "";
+    const transform =
+      panel.style.transform || '';
 
-    if (dy > 70) closeFn();
-    else panel.style.transform = "";
+    const match =
+      transform.match(
+        /translateY\(([-\d.]+)px\)/
+      );
+
+    const dy =
+      match
+        ? parseFloat(match[1])
+        : 0;
+
+    panel.style.transition = '';
+
+    if (dy > 70) {
+      closeFn();
+    } else {
+      panel.style.transform = '';
+    }
   }
+
+
+  panel.addEventListener(
+    'mousedown',
+    start
+  );
+
+  panel.addEventListener(
+    'touchstart',
+    start,
+    { passive: true }
+  );
+
+
+  window.addEventListener(
+    'mousemove',
+    move
+  );
+
+  window.addEventListener(
+    'touchmove',
+    move,
+    { passive: true }
+  );
+
+
+  window.addEventListener(
+    'mouseup',
+    end
+  );
+
+  window.addEventListener(
+    'touchend',
+    end
+  );
 }
 
 
-// Attach drag
-if (sheetNotifPanel) attachGlobalDrag(sheetNotifPanel, () =>
-  closeGlobalSheet(sheetNotif, sheetNotifBg, sheetNotifPanel, btnNotif)
-);
+// ============================================================================
+// ATTACH SHEET DRAG HANDLERS
+// ============================================================================
 
-if (sheetGuidePanel) attachGlobalDrag(sheetGuidePanel, () =>
-  closeGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide)
-);
+if (sheetNotifPanel) {
+  attachGlobalDrag(
+    sheetNotifPanel,
+    () =>
+      closeGlobalSheet(
+        sheetNotif,
+        sheetNotifBg,
+        sheetNotifPanel,
+        btnNotif
+      )
+  );
+}
 
 
-// Buttons
-btnNotif?.addEventListener("click", () => {
-  closeGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide);
-  setTimeout(() => openGlobalSheet(sheetNotif, sheetNotifBg, sheetNotifPanel, btnNotif), 120);
-});
+if (sheetGuidePanel) {
+  attachGlobalDrag(
+    sheetGuidePanel,
+    () =>
+      closeGlobalSheet(
+        sheetGuide,
+        sheetGuideBg,
+        sheetGuidePanel,
+        btnGuide
+      )
+  );
+}
 
-btnGuide?.addEventListener("click", () => {
-  const notifOpen = !sheetNotif?.classList.contains("hidden");
 
-  closeGlobalSheet(sheetNotif, sheetNotifBg, sheetNotifPanel, btnNotif);
+// ============================================================================
+// NOTIFICATIONS BUTTON
+// ============================================================================
 
-  if (notifOpen) {
+btnNotif?.addEventListener(
+  'click',
+  () => {
+
+    closeGlobalSheet(
+      sheetGuide,
+      sheetGuideBg,
+      sheetGuidePanel,
+      btnGuide
+    );
+
     setTimeout(() => {
-      openGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide);
-    }, 180);
-  } else {
-    openGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide);
+
+      openGlobalSheet(
+        sheetNotif,
+        sheetNotifBg,
+        sheetNotifPanel,
+        btnNotif
+      );
+
+    }, 120);
   }
-});
-
-
-// Backdrop click
-sheetNotifBg?.addEventListener("click", () =>
-  closeGlobalSheet(sheetNotif, sheetNotifBg, sheetNotifPanel, btnNotif)
-);
-
-sheetGuideBg?.addEventListener("click", () =>
-  closeGlobalSheet(sheetGuide, sheetGuideBg, sheetGuidePanel, btnGuide)
 );
 
 
+// ============================================================================
+// GUIDE BUTTON
+// ============================================================================
+
+btnGuide?.addEventListener(
+  'click',
+  () => {
+
+    const notificationOpen =
+      !sheetNotif?.classList.contains('hidden');
+
+
+    closeGlobalSheet(
+      sheetNotif,
+      sheetNotifBg,
+      sheetNotifPanel,
+      btnNotif
+    );
+
+
+    if (notificationOpen) {
+
+      setTimeout(() => {
+
+        openGlobalSheet(
+          sheetGuide,
+          sheetGuideBg,
+          sheetGuidePanel,
+          btnGuide
+        );
+
+      }, 180);
+
+    } else {
+
+      openGlobalSheet(
+        sheetGuide,
+        sheetGuideBg,
+        sheetGuidePanel,
+        btnGuide
+      );
+
+    }
+  }
+);
+
 
 // ============================================================================
-//JS HELPER
+// BACKDROP CLOSE
 // ============================================================================
-window.showToast = function (msg = "", timeout = 2500) {
-  const toast = document.getElementById("toast");
-  const text = document.getElementById("toast-text");
-  if (!toast || !text) return;
+
+sheetNotifBg?.addEventListener(
+  'click',
+  () =>
+    closeGlobalSheet(
+      sheetNotif,
+      sheetNotifBg,
+      sheetNotifPanel,
+      btnNotif
+    )
+);
+
+
+sheetGuideBg?.addEventListener(
+  'click',
+  () =>
+    closeGlobalSheet(
+      sheetGuide,
+      sheetGuideBg,
+      sheetGuidePanel,
+      btnGuide
+    )
+);
+
+
+// ============================================================================
+// GLOBAL TOAST HELPER
+// ============================================================================
+
+window.showToast = function (
+  msg = '',
+  timeout = 2500
+) {
+  const toast =
+    document.getElementById('toast');
+
+  const text =
+    document.getElementById('toast-text');
+
+  if (!toast || !text) {
+    return;
+  }
 
   text.textContent = msg;
-  toast.classList.remove("opacity-0");
-  toast.classList.add("opacity-100");
+
+  toast.classList.remove(
+    'opacity-0'
+  );
+
+  toast.classList.add(
+    'opacity-100'
+  );
+
 
   setTimeout(() => {
-    toast.classList.remove("opacity-100");
-    toast.classList.add("opacity-0");
+
+    toast.classList.remove(
+      'opacity-100'
+    );
+
+    toast.classList.add(
+      'opacity-0'
+    );
+
   }, timeout);
 };
 
 
-
-
-
-
-
-// ===============================
+// ============================================================================
 // GLOBAL ACCOUNT MODE
-// ===============================
-window.__accountMode = localStorage.getItem('accountMode') || 'LIVE';
+// ============================================================================
+//
+// Current supported modes:
+//   LIVE
+//   DEMO
+//
+// This value controls which account is displayed by the dashboard.
+// It does NOT itself modify account balances.
+// ============================================================================
+
+window.__accountMode =
+  localStorage.getItem('accountMode') || 'LIVE';
+
 
 window.setAccountMode = function (mode) {
-  if (!['LIVE', 'DEMO'].includes(mode)) return;
 
-  window.__accountMode = mode;
-  localStorage.setItem('accountMode', mode);
+  const normalized =
+    String(mode || '').toUpperCase();
 
-  // ❌ do NOT touch UI here
-  document.dispatchEvent(new Event('accountMode:changed'));
+
+  if (
+    !['LIVE', 'DEMO'].includes(
+      normalized
+    )
+  ) {
+    return;
+  }
+
+
+  window.__accountMode =
+    normalized;
+
+
+  localStorage.setItem(
+    'accountMode',
+    normalized
+  );
+
+
+  // Other dashboard components listen
+  // for this event and refresh themselves.
+  document.dispatchEvent(
+    new Event('accountMode:changed')
+  );
 };
 
 
+// ============================================================================
+// NORMALIZED ACTIVE ACCOUNT LOOKUP
+// ============================================================================
 
-document.addEventListener('accountMode:changed', updateAccountModeTag);
+function getAccountForMode(mode) {
+
+  const wallets =
+    window.__wallets || [];
 
 
+  const normalizedMode =
+    String(mode || '').toUpperCase();
+
+
+  return wallets.find(
+    wallet =>
+      String(wallet.type || '').toUpperCase() ===
+      normalizedMode
+  ) || null;
+}
+
+
+// ============================================================================
+// UPDATE HEADER ACCOUNT MODE + BALANCE
+// ============================================================================
 
 function updateAccountModeTag() {
-  const toggle = qs('account-mode-toggle');
-  const balance = qs('account-mode-balance');
 
-  if (!toggle || !balance) return;
+  const toggle =
+    qs('account-mode-toggle');
 
-  const accounts = window.__accounts || [];
+  const balance =
+    qs('account-mode-balance');
+
+
+  if (!toggle || !balance) {
+    return;
+  }
+
+
+  const mode =
+    window.__accountMode === 'DEMO'
+      ? 'DEMO'
+      : 'LIVE';
+
 
   const account =
-    window.__accountMode === 'DEMO'
-      ? accounts.find(
-          a => String(a.account_type).toUpperCase() === 'DEMO'
-        )
-      : accounts.find(
-          a => String(a.account_type).toUpperCase() === 'LIVE'
-        );
+    getAccountForMode(mode);
 
-  toggle.classList.remove('is-demo', 'is-live');
+
+  // Update toggle styling.
+  toggle.classList.remove(
+    'is-demo',
+    'is-live'
+  );
+
 
   toggle.classList.add(
-    window.__accountMode === 'DEMO'
+    mode === 'DEMO'
       ? 'is-demo'
       : 'is-live'
   );
 
-  const cents = Number(account?.balance_cents || 0);
 
-  balance.textContent = `$${(cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}`;
+  // Account balances are stored in cents.
+  const cents =
+    Number(
+      account?.balance_cents || 0
+    );
+
+
+  const dollars =
+    cents / 100;
+
+
+  balance.textContent =
+    `$${dollars.toLocaleString(
+      undefined,
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    )}`;
 }
 
 
-
-window.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('account-mode-toggle');
-  if (!btn) return;
-
-  btn.addEventListener('click', () => {
-    const next =
-      window.__accountMode === 'LIVE'
-        ? 'DEMO'
-        : 'LIVE';
-
-    window.setAccountMode(next);
-  });
-});
+// Make it available to the rest of the dashboard.
+window.updateAccountModeTag =
+  updateAccountModeTag;
 
 
-// ===============================
-// GLOBAL ACCOUNT STATE (AUTHORITATIVE)
-// ===============================
-window.loadWallets = async function () {
-  const token = localStorage.getItem('token');
+// ============================================================================
+// ACCOUNT MODE CHANGE LISTENER
+// ============================================================================
 
-if (!token) {
-  window.__accounts = [];
-  window.__wallets = [];
-  return;
-}
-
-  try {
-    const me = await apiFetch('/auth/me');
-
-    window.__accounts = me.accounts || [];
-
-    // Backward compatibility for existing UI
-    window.__wallets = window.__accounts.map(account => ({
-      id: account.id,
-      code: account.account_code,
-      type: account.tier === 'demo'
-        ? 'DEMO'
-        : account.tier.toUpperCase(),
-      balance_cents: Number(account.balance_cents || 0),
-      profit_cents: Number(account.profit_cents || 0),
-      status: account.status
-    }));
+document.addEventListener(
+  'accountMode:changed',
+  () => {
 
     updateAccountModeTag();
-    document.dispatchEvent(new Event('wallets:refresh'));
 
-  } catch (err) {
-    console.error('Account fetch failed:', err);
+    // Tell other dashboard components
+    // that the selected account changed.
+    document.dispatchEvent(
+      new Event('wallets:refresh')
+    );
+
+  }
+);
+
+
+// ============================================================================
+// ACCOUNT MODE TOGGLE
+// ============================================================================
+
+window.addEventListener(
+  'DOMContentLoaded',
+  () => {
+
+    const btn =
+      document.getElementById(
+        'account-mode-toggle'
+      );
+
+
+    if (!btn) {
+      return;
+    }
+
+
+    btn.addEventListener(
+      'click',
+      () => {
+
+        const next =
+          window.__accountMode === 'LIVE'
+            ? 'DEMO'
+            : 'LIVE';
+
+
+        window.setAccountMode(
+          next
+        );
+
+      }
+    );
+
+  }
+);
+
+
+// ============================================================================
+// GLOBAL ACCOUNT STATE
+// ============================================================================
+//
+// IMPORTANT:
+//
+// The current financial engine has separate account records:
+//
+//   DEMO
+//   LIVE
+//   REFERRAL
+//
+// We must NOT determine LIVE by saying:
+//     "anything that isn't DEMO is LIVE"
+//
+// Instead:
+//   1. Prefer account_type from the API.
+//   2. Fall back to account_code.
+//   3. Only use tier as a legacy fallback.
+//
+// /accounts is the authoritative account endpoint.
+// ============================================================================
+
+window.loadWallets = async function () {
+
+  const token =
+    window.getToken();
+
+
+  if (!token) {
+
     window.__accounts = [];
     window.__wallets = [];
+
+    updateAccountModeTag();
+
+    return;
+
+  }
+
+
+  try {
+
+    const accounts =
+      await window.apiFetch(
+        '/accounts'
+      );
+
+
+    if (!Array.isArray(accounts)) {
+      throw new Error(
+        'Invalid accounts response'
+      );
+    }
+
+
+    // Preserve the raw API response.
+    window.__accounts =
+      accounts;
+
+
+    // Normalize account records for
+    // the rest of the frontend.
+    window.__wallets =
+      accounts.map(account => {
+
+        const accountType =
+          String(
+            account.account_type || ''
+          ).toUpperCase();
+
+
+        const accountCode =
+          String(
+            account.account_code || ''
+          ).toUpperCase();
+
+
+        const tierSlug =
+          String(
+            account.tier_slug ||
+            account.tier ||
+            ''
+          ).toLowerCase();
+
+
+        let type = null;
+
+
+        // ------------------------------------------------
+        // 1. Explicit account_type
+        // ------------------------------------------------
+
+        if (
+          accountType === 'DEMO'
+        ) {
+          type = 'DEMO';
+
+        } else if (
+          accountType === 'LIVE'
+        ) {
+          type = 'LIVE';
+
+        } else if (
+          accountType === 'REFERRAL'
+        ) {
+          type = 'REFERRAL';
+        }
+
+
+        // ------------------------------------------------
+        // 2. Account-code fallback
+        // ------------------------------------------------
+
+        if (!type) {
+
+          if (
+            accountCode.includes('-DEM')
+          ) {
+            type = 'DEMO';
+
+          } else if (
+            accountCode.includes('-LIVE')
+          ) {
+            type = 'LIVE';
+
+          } else if (
+            accountCode.startsWith('REF-')
+          ) {
+            type = 'REFERRAL';
+          }
+
+        }
+
+
+        // ------------------------------------------------
+        // 3. Legacy tier fallback
+        // ------------------------------------------------
+
+        if (!type) {
+
+          if (
+            tierSlug === 'demo'
+          ) {
+            type = 'DEMO';
+
+          } else {
+            type = 'LIVE';
+          }
+
+        }
+
+
+        return {
+
+          id:
+            account.id,
+
+          code:
+            account.account_code,
+
+          account_code:
+            account.account_code,
+
+          type,
+
+          account_type:
+            accountType || type,
+
+          balance_cents:
+            Number(
+              account.balance_cents || 0
+            ),
+
+          locked_balance_cents:
+            Number(
+              account.locked_balance_cents || 0
+            ),
+
+          profit_cents:
+            Number(
+              account.profit_cents || 0
+            ),
+
+          status:
+            account.status,
+
+          tier_id:
+            account.tier_id,
+
+          tier_name:
+            account.tier_name,
+
+          tier_slug:
+            account.tier_slug
+
+        };
+
+      });
+
+
+
+
+
+    // Update header immediately.
+    updateAccountModeTag();
+
+
+    // Notify dashboard components.
+    document.dispatchEvent(
+      new Event('wallets:refresh')
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      '[ACCOUNTS] Failed to load accounts:',
+      err
+    );
+
+
+    window.__accounts = [];
+    window.__wallets = [];
+
+
+    updateAccountModeTag();
+
   }
 };
 
 
+// ============================================================================
+// GLOBAL ACCOUNT ACCESSORS
+// ============================================================================
 
-
-// Accessors
 window.getAllWallets = function () {
+
   return window.__wallets || [];
+
 };
+
 
 window.getActiveWallet = function () {
-  const accounts = window.__accounts || [];
 
-  return (
-    accounts.find(a => a.tier !== 'demo') ||
-    accounts.find(a => a.tier === 'demo') ||
-    null
+  return getAccountForMode(
+    window.__accountMode
   );
+
 };
 
 
+// ============================================================================
+// PREVENT ACCIDENTAL REPLACEMENT OF loadWallets
+// ============================================================================
 
-Object.defineProperty(window, 'loadWallets', {
-  writable: false,
-  configurable: false
-});
+Object.defineProperty(
+  window,
+  'loadWallets',
+  {
+    writable: false,
+    configurable: false
+  }
+);
 
 
+// ============================================================================
+// DEMO RESET STATE
+// ============================================================================
+
+window.__demoResetAt =
+  Number(
+    localStorage.getItem(
+      'demoResetAt'
+    ) || 0
+  );
 
 
-window.__demoResetAt = Number(localStorage.getItem('demoResetAt') || 0);
+// ============================================================================
+// INITIAL ACCOUNT MODE DISPLAY
+// ============================================================================
 
+window.addEventListener(
+  'DOMContentLoaded',
+  () => {
 
+    updateAccountModeTag();
 
-
-window.addEventListener('DOMContentLoaded', () => {
-  updateAccountModeTag();
-});
+  }
+);
