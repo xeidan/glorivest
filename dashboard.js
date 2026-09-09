@@ -1585,6 +1585,7 @@ function initTransactionTabs() {
    LOAD TRANSACTIONS
 =========================== */
 async function loadTransactions(filter = 'all') {
+  console.log('[TRANSACTIONS] loadTransactions called', { filter });
   const list = qs('transaction-mobile-list');
   const table = qs('transaction-table-body');
   const pageInfo = qs('tx-page-info');
@@ -1646,11 +1647,16 @@ async function loadTransactions(filter = 'all') {
       `/transactions?accountId=${account.id}`
     );
 
+    console.log('[TRANSACTIONS] API response:', response);
+
     const rows = Array.isArray(response)
+    
       ? response
       : Array.isArray(response?.transactions)
         ? response.transactions
         : [];
+
+        console.log('[TRANSACTIONS] rows:', rows);
 
     /*
      * Convert backend transaction records
@@ -1885,6 +1891,8 @@ async function loadTransactions(filter = 'all') {
     }
   }
 }
+
+
 
 
 
