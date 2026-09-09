@@ -55,8 +55,14 @@ window.__completedCycles = [];
 
 /* ---------- Wallet Helpers ---------- */
 function getModeFilteredCycles(cycles) {
-  const mode = window.__accountMode === 'DEMO' ? 'DEMO' : 'REAL';
-  return cycles.filter(c => c.wallet_type === mode);
+  const mode =
+    window.__accountMode === 'DEMO'
+      ? 'DEMO'
+      : 'LIVE';
+
+  return cycles.filter(
+    c => c.wallet_type === mode
+  );
 }
 
 function getTradeWallet() {
@@ -67,7 +73,7 @@ function getTradeWallet() {
   }
 
   // LIVE
-  return wallets.find(w => w.type === 'REAL') || null;
+  return wallets.find(w => w.type === 'LIVE') || null;
 }
 
 /* ---------- UI Locking During Submission ---------- */
@@ -180,38 +186,54 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadActiveCycles() {
   try {
     const wallet = getTradeWallet();
+
     if (!wallet) {
       window.__activeCycles = [];
       return [];
     }
 
+    const accountType =
+      window.__accountMode === 'DEMO'
+        ? 'DEMO'
+        : 'LIVE';
+
     const res = await apiFetch(
-      `/cycle/active?walletId=${wallet.id}`
+      `/cycle/active?accountType=${accountType}`
     );
 
     const resetAt = window.__demoResetAt || 0;
 
-    window.__activeCycles = Array.isArray(res.cycles)
-      ? res.cycles
-          .filter(c => {
-            // LIVE cycles are never affected by demo reset
-            if (wallet.type !== 'DEMO') return true;
+    window.__activeCycles =
+      Array.isArray(res.cycles)
+        ? res.cycles
+            .filter(c => {
+              if (wallet.type !== 'DEMO') return true;
 
-            if (!resetAt) return true;
+              if (!resetAt) return true;
 
-            return new Date(c.started_at).getTime() >= resetAt;
-          })
-          .map(c =>
-            normalizeCycle({
-              ...c,
-              wallet_type: wallet.type
+              return (
+                new Date(c.started_at).getTime() >= resetAt
+              );
             })
-          )
-      : [];
+            .map(c =>
+              normalizeCycle({
+                ...c,
+                wallet_type:
+                  String(
+                    c.wallet_type || wallet.type
+                  ).toUpperCase()
+              })
+            )
+        : [];
 
     return window.__activeCycles;
+
   } catch (err) {
-    console.error('Active cycles load failed:', err);
+    console.error(
+      'Failed to load active cycles:',
+      err
+    );
+
     window.__activeCycles = [];
     return [];
   }
@@ -227,8 +249,13 @@ async function loadCompletedCycles() {
       return [];
     }
 
+    const accountType =
+  window.__accountMode === 'DEMO'
+    ? 'DEMO'
+    : 'LIVE';
+
     const res = await apiFetch(
-      `/cycle/completed?walletId=${wallet.id}`
+      `/cycle/completed?accountType=${accountType}`
     );
 
     const resetAt = window.__demoResetAt || 0;
@@ -297,12 +324,19 @@ function normalizeCycle(c) {
       ? Math.max(0, Math.ceil(remainingMs / 86400000))
       : 0;
 
-  return {
-    id: c.id,
-    wallet_id: c.wallet_id,
-    wallet_type: c.wallet_type || 'REAL',
+return {
+  id: c.id,
 
-    capital_cents: Number(c.capital_cents || 0),
+  account_id: c.account_id,
+
+  wallet_id: c.account_id,
+
+  wallet_type:
+    String(
+      c.account_type ||
+      c.wallet_type ||
+      'LIVE'
+    ).toUpperCase(),
 
     expected_profit_cents: Math.floor(
       Number(c.capital_cents || 0) *
@@ -466,7 +500,7 @@ Start a cycle from the "New Cycle" tab to begin automated trading.
 
       <div class="flex gap-2 flex-wrap">
         <span class="text-[11px] px-3 py-1 rounded-full bg-white/10 text-white/80">
-          ${c.wallet_type === 'REAL' ? 'LIVE' : 'DEMO'}
+          ${c.wallet_type === 'LIVE' ? 'LIVE' : 'DEMO'}
         </span>
 
         <span class="text-[11px] px-3 py-1 rounded-full bg-[#00D2B1]/15 text-[#00D2B1] font-semibold">
@@ -587,40 +621,74 @@ function updateProfitSummary(months) {
 function renderPortfolioSummary() {
 
   const wallet = getTradeWallet();
-  const active = getModeFilteredCycles(window.__activeCycles);
-  const completed = getModeFilteredCycles(window.__completedCycles);
 
-  const walletBalance = wallet ? Number(wallet.balance_cents || 0) : 0;
+  const active =
+    getModeFilteredCycles(window.__activeCycles);
 
-  const lockedCapital = active.reduce(
-    (sum, c) => sum + Number(c.capital_cents || 0),
-    0
-  );
+  const completed =
+    getModeFilteredCycles(window.__completedCycles);
+
+  const walletBalance =
+    wallet
+      ? Number(wallet.balance_cents || 0)
+      : 0;
+
+  const lockedCapital =
+    wallet
+      ? Number(wallet.locked_balance_cents || 0)
+      : 0;
 
   const activePnL = active.reduce(
-    (sum, c) => sum + Number(c.live_profit_cents || 0),
+    (sum, c) =>
+      sum + Number(c.live_profit_cents || 0),
     0
   );
 
   const completedPnL = completed.reduce(
-    (sum, c) => sum + Number(c.realized_profit_cents || 0),
+    (sum, c) =>
+      sum + Number(c.realized_profit_cents || 0),
     0
   );
 
-  const availableEl = qs('summary-available-capital');
-  if (availableEl) availableEl.textContent = fmt(walletBalance);
+  const availableEl =
+    qs('summary-available-capital');
 
-  const lockedEl = qs('summary-locked-capital');
-  if (lockedEl) lockedEl.textContent = fmt(lockedCapital);
+  if (availableEl) {
+    availableEl.textContent =
+      fmt(walletBalance);
+  }
 
-  const activePnlEl = qs('summary-live-profit');
-  if (activePnlEl) activePnlEl.textContent = fmt(activePnL);
+  const lockedEl =
+    qs('summary-locked-capital');
 
-  const completedEl = qs('summary-total-earnings');
-  if (completedEl) completedEl.textContent = fmt(completedPnL);
+  if (lockedEl) {
+    lockedEl.textContent =
+      fmt(lockedCapital);
+  }
 
-  const activeCountEl = qs('summary-active-count');
-  if (activeCountEl) activeCountEl.textContent = active.length;
+  const activePnlEl =
+    qs('summary-live-profit');
+
+  if (activePnlEl) {
+    activePnlEl.textContent =
+      fmt(activePnL);
+  }
+
+  const completedEl =
+    qs('summary-total-earnings');
+
+  if (completedEl) {
+    completedEl.textContent =
+      fmt(completedPnL);
+  }
+
+  const activeCountEl =
+    qs('summary-active-count');
+
+  if (activeCountEl) {
+    activeCountEl.textContent =
+      active.length;
+  }
 }
 
 
@@ -806,13 +874,20 @@ async function startNewCycle() {
         'Idempotency-Key': crypto.randomUUID()
       },
       body: {
-        walletId: wallet.id,
-        capitalAmount: amountCents,
-        expectedProfit: Math.floor(
-          calculateExpectedReturns(amount, selectedDurationMonths) * 100
-        ),
-        durationMonths: selectedDurationMonths
-      }
+      walletId: wallet.id,
+      accountType:
+        window.__accountMode === 'DEMO'
+          ? 'DEMO'
+          : 'LIVE',
+      capitalAmount: amountCents,
+      expectedProfit: Math.floor(
+        calculateExpectedReturns(
+          amount,
+          selectedDurationMonths
+        ) * 100
+      ),
+      durationMonths: selectedDurationMonths
+    }
     });
 
     await refreshTradeState();

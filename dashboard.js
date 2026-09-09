@@ -1586,6 +1586,7 @@ function initTransactionTabs() {
 =========================== */
 async function loadTransactions(filter = 'all') {
   console.log('[TRANSACTIONS] loadTransactions called', { filter });
+
   const list = qs('transaction-mobile-list');
   const table = qs('transaction-table-body');
   const pageInfo = qs('tx-page-info');
@@ -1595,29 +1596,42 @@ async function loadTransactions(filter = 'all') {
       '<div class="text-white/40 p-4">Loading...</div>';
   }
 
+  if (table) {
+    table.innerHTML = '';
+  }
+
   try {
-    /*
-     * Get the user's accounts first.
-     *
-     * LIVE mode  -> LIVE account
-     * DEMO mode  -> DEMO account
-     */
+    /* ===========================
+       GET USER ACCOUNTS
+    =========================== */
+
     const accounts = await window.apiFetch('/accounts');
 
     if (!Array.isArray(accounts)) {
       throw new Error('Invalid accounts response');
     }
 
+    /*
+     * Dashboard mode determines which account
+     * transaction history to display.
+     */
     const accountType =
       getMode() === 'DEMO'
         ? 'DEMO'
         : 'LIVE';
 
     const account = accounts.find(
-      a => String(a.account_type).toUpperCase() === accountType
+      a =>
+        String(a.account_type || '').toUpperCase() ===
+        accountType
     );
 
     if (!account) {
+      console.log('[TRANSACTIONS] No account found', {
+        accountType,
+        accounts
+      });
+
       if (list) {
         list.innerHTML =
           '<div class="text-white/40 p-4">No account found</div>';
@@ -1634,36 +1648,32 @@ async function loadTransactions(filter = 'all') {
       return;
     }
 
+    console.log('[TRANSACTIONS] Account:', account);
 
-    /*
-     * Load actual financial transaction history.
-     *
-     * IMPORTANT:
-     * This is different from /deposit and /withdrawals.
-     *
-     * /transactions contains completed account movements.
-     */
+    /* ===========================
+       GET TRANSACTIONS
+    =========================== */
+
     const response = await window.apiFetch(
       `/transactions?accountId=${account.id}`
     );
 
     console.log('[TRANSACTIONS] API response:', response);
 
-    const rows = Array.isArray(response)
-    
-      ? response
-      : Array.isArray(response?.transactions)
-        ? response.transactions
-        : [];
+    const rows =
+      Array.isArray(response)
+        ? response
+        : Array.isArray(response?.transactions)
+          ? response.transactions
+          : [];
 
-        console.log('[TRANSACTIONS] rows:', rows);
+    console.log('[TRANSACTIONS] rows:', rows);
 
-    /*
-     * Convert backend transaction records
-     * into the format used by the UI.
-     */
+    /* ===========================
+       NORMALIZE TRANSACTIONS
+    =========================== */
+
     const items = rows.map(row => {
-
       const rawType =
         String(row.type || '').toUpperCase();
 
@@ -1675,36 +1685,57 @@ async function loadTransactions(filter = 'all') {
         kind = 'withdrawal';
       }
 
+      /*
+       * Transactions are already completed financial
+       * movements because they are written after
+       * approval/success.
+       */
       const status = 'COMPLETED';
 
       /*
-      * Amount is stored as signed cents:
-      *
-      * DEPOSIT_SUCCESS     → positive
-      * WITHDRAWAL_APPROVED → negative
-      *
-      * The UI applies the correct sign based on kind.
-      */
+       * amount_cents is stored as a signed value:
+       *
+       * DEPOSIT_SUCCESS     = positive
+       * WITHDRAWAL_APPROVED = negative
+       *
+       * Store the absolute value here.
+       * The UI applies the correct +/- sign below.
+       */
       const amountCents =
         Number(row.amount_cents || 0);
 
       return {
         id: row.id,
-        kind,
+        user_id: row.user_id,
+        account_id: row.account_id,
+
         type: rawType,
+        kind,
+
         amount_cents: Math.abs(amountCents),
+
         status,
-        created_at: row.created_at,
+
         balance_after_cents:
           Number(row.balance_after_cents || 0),
-        reference: row.reference || null
+
+        reference:
+          row.reference || null,
+
+        meta:
+          row.meta || null,
+
+        created_at:
+          row.created_at
       };
     });
 
+    console.log('[TRANSACTIONS] normalized items:', items);
 
-    /*
-     * Sort newest first.
-     */
+    /* ===========================
+       SORT NEWEST FIRST
+    =========================== */
+
     items.sort((a, b) => {
       return (
         new Date(b.created_at) -
@@ -1712,18 +1743,31 @@ async function loadTransactions(filter = 'all') {
       );
     });
 
-    /*
-     * Apply tab filter.
-     */
+    /* ===========================
+       APPLY FILTER
+    =========================== */
+
     let filteredItems = items;
 
-    if (filter !== 'all') {
+    if (
+      filter === 'deposit' ||
+      filter === 'withdrawal'
+    ) {
       filteredItems = items.filter(
         tx => tx.kind === filter
       );
     }
 
+    console.log('[TRANSACTIONS] render:', {
+      filter,
+      total: items.length,
+      filtered: filteredItems.length,
+      items: filteredItems
+    });
 
+    /* ===========================
+       STATUS BADGE
+    =========================== */
 
     function badge(status) {
       const raw =
@@ -1767,7 +1811,6 @@ async function loadTransactions(filter = 'all') {
       };
     }
 
-
     /* ===========================
        MOBILE
     =========================== */
@@ -1777,92 +1820,112 @@ async function loadTransactions(filter = 'all') {
         list.innerHTML =
           '<div class="text-white/40 p-4">No transactions yet</div>';
       } else {
-        list.innerHTML = filteredItems.map(tx => {
+        list.innerHTML = filteredItems
+          .map(tx => {
+            const b = badge(tx.status);
 
-          const b = badge(tx.status);
+            const sign =
+              tx.kind === 'withdrawal'
+                ? '-'
+                : '+';
 
-          const sign =
-            tx.kind === 'withdrawal'
-              ? '-'
-              : '+';
+            return `
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
 
-          return `
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div class="flex justify-between items-start gap-3 mb-4">
 
-              <div class="flex justify-between items-start gap-3 mb-4">
+                  <div>
+                    <div class="text-white text-sm font-semibold capitalize">
+                      ${tx.kind}
+                    </div>
 
-                <div>
-                  <div class="text-white text-sm font-semibold capitalize">
-                    ${tx.kind}
+                    <div class="text-white/40 text-xs">
+                      ${new Date(
+                        tx.created_at
+                      ).toLocaleDateString()}
+                    </div>
                   </div>
 
-                  <div class="text-white/40 text-xs">
-                    ${new Date(
-                      tx.created_at
-                    ).toLocaleDateString()}
+                  <div
+                    class="text-xs px-3 py-1 rounded-full whitespace-nowrap ${b.cls}"
+                  >
+                    ${b.label}
                   </div>
+
                 </div>
 
-                <div class="text-xs px-3 py-1 rounded-full whitespace-nowrap ${b.cls}">
-                  ${b.label}
+                <div class="text-right text-lg font-semibold text-white">
+                  ${sign}${fmtUSD(tx.amount_cents)}
                 </div>
 
               </div>
-
-              <div class="text-right text-lg font-semibold text-white">
-                ${sign}${fmtUSD(tx.amount_cents)}
-              </div>
-
-            </div>
-          `;
-
-        }).join('');
+            `;
+          })
+          .join('');
       }
-    } 
+    }
 
     /* ===========================
        DESKTOP
     =========================== */
 
     if (table) {
-      table.innerHTML = filteredItems.map(tx => {
-
-        const b = badge(tx.status);
-
-        const sign =
-          tx.kind === 'withdrawal'
-            ? '-'
-            : '+';
-
-        return `
-          <tr class="border-b border-white/5">
-
-            <td class="py-3 text-white capitalize">
-              ${tx.kind}
+      if (!filteredItems.length) {
+        table.innerHTML = `
+          <tr>
+            <td
+              colspan="4"
+              class="py-8 text-center text-white/40"
+            >
+              No transactions yet
             </td>
-
-            <td class="py-3 text-right text-white">
-              ${sign}${fmtUSD(tx.amount_cents)}
-            </td>
-
-            <td class="py-3 text-right">
-              <span class="text-xs px-3 py-1 rounded-full ${b.cls}">
-                ${b.label}
-              </span>
-            </td>
-
-            <td class="py-3 text-right text-white/50">
-              ${new Date(
-                tx.created_at
-              ).toLocaleDateString()}
-            </td>
-
           </tr>
         `;
+      } else {
+        table.innerHTML = filteredItems
+          .map(tx => {
+            const b = badge(tx.status);
 
-      }).join('');
+            const sign =
+              tx.kind === 'withdrawal'
+                ? '-'
+                : '+';
+
+            return `
+              <tr class="border-b border-white/5">
+
+                <td class="py-3 text-white capitalize">
+                  ${tx.kind}
+                </td>
+
+                <td class="py-3 text-right text-white">
+                  ${sign}${fmtUSD(tx.amount_cents)}
+                </td>
+
+                <td class="py-3 text-right">
+                  <span
+                    class="text-xs px-3 py-1 rounded-full ${b.cls}"
+                  >
+                    ${b.label}
+                  </span>
+                </td>
+
+                <td class="py-3 text-right text-white/50">
+                  ${new Date(
+                    tx.created_at
+                  ).toLocaleDateString()}
+                </td>
+
+              </tr>
+            `;
+          })
+          .join('');
+      }
     }
 
+    /* ===========================
+       TRANSACTION COUNT
+    =========================== */
 
     if (pageInfo) {
       pageInfo.textContent =
@@ -1870,7 +1933,6 @@ async function loadTransactions(filter = 'all') {
     }
 
   } catch (err) {
-
     console.error(
       '[TRANSACTIONS] Failed to load:',
       err
@@ -1882,7 +1944,16 @@ async function loadTransactions(filter = 'all') {
     }
 
     if (table) {
-      table.innerHTML = '';
+      table.innerHTML = `
+        <tr>
+          <td
+            colspan="4"
+            class="py-8 text-center text-red-400"
+          >
+            Failed to load transactions
+          </td>
+        </tr>
+      `;
     }
 
     if (pageInfo) {

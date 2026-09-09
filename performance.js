@@ -19,7 +19,7 @@
   ============================================ */
 
   function getMode() {
-    return window.__accountMode === 'DEMO' ? 'DEMO' : 'REAL';
+    return window.__accountMode === 'DEMO' ? 'DEMO' : 'LIVE';
   }
 
   function getCycles() {
@@ -173,7 +173,7 @@ function renderChart(trades) {
 
 
   /* ============================================
-     BACKEND POSITIONS TABLE (REAL DATA)
+     BACKEND POSITIONS TABLE (LIVE DATA)
   ============================================ */
 async function loadPositions() {
   if (tableLoaded) return;
