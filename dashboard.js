@@ -22,29 +22,38 @@ function fmtUSD(cents) {
    MESSAGES
 =========================== */
 function showMessage(message, type = 'info') {
-  if (typeof window.showToast === 'function') {
-    window.showToast(message, type);
-    return;
-  }
-
   const box = document.createElement('div');
+
   box.className =
-    'fixed left-1/2 -translate-x-1/2 bottom-6 z-[9999] px-4 py-3 rounded-2xl text-sm font-medium border shadow-lg';
+    'fixed left-1/2 -translate-x-1/2 bottom-6 z-[99999] px-5 py-3 rounded-2xl text-sm font-medium border shadow-lg';
 
   if (type === 'error') {
-    box.classList.add('bg-red-500/10', 'border-red-500/25', 'text-red-300');
+    box.classList.add(
+      'bg-red-500/15',
+      'border-red-500/30',
+      'text-red-300'
+    );
   } else if (type === 'success') {
-    box.classList.add('bg-[#00D2B1]/10', 'border-[#00D2B1]/25', 'text-white');
+    box.classList.add(
+      'bg-[#00D2B1]/10',
+      'border-[#00D2B1]/30',
+      'text-white'
+    );
   } else {
-    box.classList.add('bg-white/10', 'border-white/10', 'text-white');
+    box.classList.add(
+      'bg-white/10',
+      'border-white/10',
+      'text-white'
+    );
   }
 
   box.textContent = message;
+
   document.body.appendChild(box);
 
   setTimeout(() => {
     box.remove();
-  }, 2200);
+  }, 3000);
 }
 
   /* ===========================
@@ -155,137 +164,149 @@ function initAccountToggle() {
      RENDER
   =========================== */
 
-  function renderDashboard() {
-    if (!state.user) return;
+    function renderDashboard() {
+      if (!state.user) return;
 
-    if (qs('user-email')) qs('user-email').textContent = state.user.email;
-    if (qs('glorivest-id')) qs('glorivest-id').textContent = state.user.glorivest_id;
+      if (qs('user-email')) {
+        qs('user-email').textContent = state.user.email;
+      }
 
-    renderBalances();
-    const isDemo = getMode() === 'DEMO';
+      if (qs('glorivest-id')) {
+        qs('glorivest-id').textContent =
+          state.user.glorivest_id;
+      }
 
-    // ==========================================
-    // HEADER ACCOUNT MODE BALANCE
-    // ==========================================
+      // Always refresh local references from authoritative global state
+      window.syncWalletsFromGlobal();
 
-    const activeWallet =
-      isDemo ? demoWallet : liveWallet;
+      renderBalances();
 
-    if (qs('account-mode-balance')) {
-      qs('account-mode-balance').textContent =
-        fmtUSD(activeWallet?.balance_cents || 0);
+      const isDemo = getMode() === 'DEMO';
+
+      const activeWallet =
+        isDemo
+          ? state.demoWallet
+          : state.liveWallet;
+
+      if (qs('account-mode-balance')) {
+        qs('account-mode-balance').textContent =
+          fmtUSD(activeWallet?.balance_cents || 0);
+      }
+
+      qs('demo-card')
+        ?.classList.toggle('hidden', !isDemo);
+
+      qs('live-card')
+        ?.classList.toggle('hidden', isDemo);
+
+      updateDemoResetVisibility();
     }
 
-qs('demo-card')?.classList.toggle('hidden', !isDemo);
-qs('live-card')?.classList.toggle('hidden', isDemo);
-    updateDemoResetVisibility();
-  }
+    function renderBalances() {
+      const wallets = window.getAllWallets?.() || [];
 
-function renderBalances() {
-  const wallets = window.getAllWallets?.() || [];
+      const liveWallet =
+        wallets.find(w => w.type === 'LIVE') || null;
 
-  const liveWallet =
-    wallets.find(w => w.type === 'LIVE') || null;
+      const demoWallet =
+        wallets.find(w => w.type === 'DEMO') || null;
 
-  const demoWallet =
-    wallets.find(w => w.type === 'DEMO') || null;
+      const referralWallet =
+        wallets.find(w => w.type === 'REFERRAL') || null;
 
-  const referralWallet =
-    wallets.find(w => w.type === 'REFERRAL') || null;
+      state.wallets = wallets;
+      state.liveWallet = liveWallet;
+      state.demoWallet = demoWallet;
+      state.referralWallet = referralWallet;
 
-  state.wallets = wallets;
-  state.liveWallet = liveWallet;
-  state.demoWallet = demoWallet;
-  state.referralWallet = referralWallet;
+      const isDemo = getMode() === 'DEMO';
 
-  const isDemo = getMode() === 'DEMO';
+      // ==========================================
+      // ACCOUNT TITLE
+      // ==========================================
 
-  // ==========================================
-  // ACCOUNT TITLE
-  // ==========================================
+      qs('account-title')?.replaceChildren(
+        document.createTextNode(isDemo ? 'Demo' : 'Live')
+      );
 
-  qs('account-title')?.replaceChildren(
-    document.createTextNode(isDemo ? 'Demo' : 'Live')
-  );
+      // ==========================================
+      // DEMO BALANCE
+      // ==========================================
 
-  // ==========================================
-  // DEMO BALANCE
-  // ==========================================
+      if (qs('demo-total')) {
+        qs('demo-total').textContent =
+          fmtUSD(demoWallet?.balance_cents || 0);
+      }
 
-  if (qs('demo-total')) {
-    qs('demo-total').textContent =
-      fmtUSD(demoWallet?.balance_cents || 0);
-  }
+      // ==========================================
+      // LIVE BALANCE
+      // ==========================================
 
-  // ==========================================
-  // LIVE BALANCE
-  // ==========================================
+      if (qs('live-total')) {
+        qs('live-total').textContent =
+          fmtUSD(liveWallet?.balance_cents || 0);
+      }
 
-  if (qs('live-total')) {
-    qs('live-total').textContent =
-      fmtUSD(liveWallet?.balance_cents || 0);
-  }
+      // ==========================================
+      // LIVE AVAILABLE BALANCE
+      // ==========================================
 
-  // ==========================================
-  // LIVE AVAILABLE BALANCE
-  // ==========================================
+      if (qs('live-available')) {
+        const balance =
+          Number(liveWallet?.balance_cents || 0);
 
-  if (qs('live-available')) {
-    const balance =
-      Number(liveWallet?.balance_cents || 0);
+        const locked =
+          Number(liveWallet?.locked_balance_cents || 0);
 
-    const locked =
-      Number(liveWallet?.locked_balance_cents || 0);
+        const available =
+          Math.max(balance - locked, 0);
 
-    const available =
-      Math.max(balance - locked, 0);
+        qs('live-available').textContent =
+          fmtUSD(available);
+      }
 
-    qs('live-available').textContent =
-      fmtUSD(available);
-  }
+      // ==========================================
+      // REFERRAL
+      // ==========================================
 
-  // ==========================================
-  // REFERRAL
-  // ==========================================
-
-  if (qs('live-referral')) {
-    qs('live-referral').textContent =
-      fmtUSD(referralWallet?.balance_cents || 0);
-  }
-}
+      if (qs('live-referral')) {
+        qs('live-referral').textContent =
+          fmtUSD(referralWallet?.balance_cents || 0);
+      }
+    }
 
 
-/* ===========================
-   DEMO RESET MODAL
-=========================== */
+    /* ===========================
+      DEMO RESET MODAL
+    =========================== */
 
-function openDemoResetModal() {
-  const modal = qs('demo-reset-modal');
+      function openDemoResetModal() {
+        const modal = qs('demo-reset-modal');
 
-  if (!modal) return;
+        if (!modal) return;
 
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
 
-  modal.setAttribute('aria-hidden', 'false');
-}
+        modal.setAttribute('aria-hidden', 'false');
+      }
 
-function closeDemoResetModal() {
-  const modal = qs('demo-reset-modal');
+      function closeDemoResetModal() {
+        const modal = qs('demo-reset-modal');
 
-  if (!modal) return;
+        if (!modal) return;
 
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
 
-  modal.setAttribute('aria-hidden', 'true');
-}
+        modal.setAttribute('aria-hidden', 'true');
+      }
 
-async function resetDemoBalance() {
-  if (!state.demoWallet) return;
+      async function resetDemoBalance() {
+        if (!state.demoWallet) return;
 
-  openDemoResetModal();
-}
+        openDemoResetModal();
+      }
 
 
 /* ===========================
@@ -342,11 +363,22 @@ async function confirmDemoReset() {
 
   function updateDemoResetVisibility() {
     const btn = qs('demo-reset');
-    if (!btn || !state.demoWallet) return;
+
+    if (!btn) return;
+
+    const mode = getMode();
+
+    const demoWallet =
+      (window.getAllWallets?.() || [])
+        .find(wallet => wallet.type === 'DEMO');
+
+    const demoBalance =
+      Number(demoWallet?.balance_cents || 0);
 
     const show =
-      getMode() === 'DEMO' &&
-      Number(state.demoWallet.balance_cents) !== 1_000_000;
+      mode === 'DEMO' &&
+      demoWallet &&
+      demoBalance !== 1_000_000;
 
     btn.classList.toggle('hidden', !show);
   }
@@ -807,138 +839,191 @@ dynamic.innerHTML = `
           return;
         }
 
-        /* ================= CRYPTO FLOW ================= */
+/* ================= CRYPTO FLOW ================= */
 if (type === 'crypto') {
-  const amount = fields[0].value.trim();
+  const amount = fields[0].value
+    .trim()
+    .replace(/[$,\s]/g, '');
+
+  const amountNumber = Number(amount);
+
+  if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+    throw new Error('Invalid deposit amount');
+  }
 
   const res = await window.apiFetch('/deposit', {
     method: 'POST',
     body: {
-      amount_cents: Math.round(Number(amount) * 100),
+      amount_cents: Math.round(amountNumber * 100),
       method: 'CRYPTO'
     }
   });
 
-dynamic.innerHTML = `
-  <div class="space-y-4">
+  dynamic.innerHTML = `
+    <div class="space-y-4">
 
-    <div class="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-5">
+      <div class="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-5">
 
-
-
-      <div class="space-y-2">
-        <p class="text-white/55 text-xs uppercase tracking-wide">
-          Wallet Address
-        </p>
-
-        <div class="flex items-center gap-3 rounded-2xl bg-black/25 border border-white/5 p-3">
-
-          <p class="flex-1 text-sm font-semibold break-all leading-6" style="color:#56D8FF">
-            ${res.address}
-          </p>
-
-          <button
-            class="copy-wallet copy-btn w-11 h-11 rounded-xl border border-white/10 bg-white/5 text-white/55 flex items-center justify-center transition shrink-0"
-            type="button">
-
-            <svg xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.9">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M8 16H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 19h7a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2z"/>
-            </svg>
-
-          </button>
-
-        </div>
-      </div>
-
-      <div class="rounded-2xl bg-white p-3 flex justify-center">
-        <div class="w-56 h-56 rounded-2xl overflow-hidden bg-white flex items-center justify-center">
-          <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(res.address)}"
-            class="w-full h-full object-contain"
-          >
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-
-        <div class="rounded-2xl bg-black/20 border border-white/5 p-4">
+        <!-- WALLET ADDRESS -->
+        <div class="space-y-2">
           <p class="text-white/55 text-xs uppercase tracking-wide">
-            Network
+            Wallet Address
           </p>
 
-          <p class="text-white/90 text-base font-semibold mt-1">
-            ${res.network} 
-          </p>
+          <div class="flex items-center gap-3 rounded-2xl bg-black/25 border border-white/5 p-3">
+
+            <p
+              class="flex-1 text-sm font-semibold break-all leading-6"
+              style="color:#56D8FF"
+            >
+              ${res.address}
+            </p>
+
+            <button
+              class="copy-wallet copy-btn w-11 h-11 rounded-xl border border-white/10 bg-white/5 text-white/55 flex items-center justify-center transition shrink-0"
+              type="button"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.9"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8 16H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 19h7a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2z"
+                />
+              </svg>
+            </button>
+
+          </div>
         </div>
 
-        <div class="rounded-2xl bg-black/20 border border-white/5 p-4">
+        <!-- QR CODE -->
+        <div class="rounded-2xl bg-white p-3 flex justify-center">
+          <div class="w-56 h-56 rounded-2xl overflow-hidden bg-white flex items-center justify-center">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(res.address)}"
+              class="w-full h-full object-contain"
+              alt="USDT deposit QR code"
+            >
+          </div>
+        </div>
+
+        <!-- NETWORK / TOKEN -->
+        <div class="grid grid-cols-2 gap-3">
+
+          <div class="rounded-2xl bg-black/20 border border-white/5 p-4">
+            <p class="text-white/55 text-xs uppercase tracking-wide">
+              Network
+            </p>
+
+            <p class="text-white/90 text-base font-semibold mt-1">
+              ${res.network || 'TRON'}
+            </p>
+          </div>
+
+          <div class="rounded-2xl bg-black/20 border border-white/5 p-4">
+            <p class="text-white/55 text-xs uppercase tracking-wide">
+              Token
+            </p>
+
+            <p class="text-white/90 text-base font-semibold mt-1">
+              ${res.token || 'USDT'} TRC-20
+            </p>
+          </div>
+
+        </div>
+
+        <!-- DEPOSIT AMOUNT -->
+        <div class="rounded-2xl bg-[#00D2B1]/10 border border-[#00D2B1]/20 p-4">
+
           <p class="text-white/55 text-xs uppercase tracking-wide">
-            Token
+            Deposit Amount
           </p>
 
-          <p class="text-white/90 text-base font-semibold mt-1">
-            ${res.token} TRC-20
+          <p class="text-white text-2xl font-semibold mt-1">
+            $${amountNumber.toFixed(2)}
           </p>
+
+          <p class="text-white/65 text-sm mt-2">
+            Send exact amount to avoid delays
+          </p>
+
         </div>
 
       </div>
 
-      <div class="rounded-2xl bg-[#00D2B1]/10 border border-[#00D2B1]/20 p-4">
-        <p class="text-white/55 text-xs uppercase tracking-wide">
-          Deposit Amount
+      <!-- WARNING -->
+      <div class="rounded-2xl border !border-yellow-300/35 !bg-yellow-400/18 px-4 py-4 text-xs space-y-2 leading-6">
+
+        <p class="!text-[#F8E38A]">
+          ⚠ Send only ${res.token || 'USDT'} on ${res.network || 'TRON'}
         </p>
 
-        <p class="text-white text-2xl font-semibold mt-1">
-          $${(Number(res.amount_requested_cents) / 100).toFixed(2)}
+        <p class="!text-[#F8E38A]">
+          ⚠ Wrong network may permanently lose funds
         </p>
 
-        <p class="text-white/65 text-sm mt-2">
-          Send exact amount to avoid delays
+        <p class="!text-[#F8E38A]">
+          ⚠ Confirm only after payment is sent
         </p>
+
       </div>
+
+      ${btnGreen('I Have Sent Payment')}
+      ${btnDanger('Cancel')}
 
     </div>
+  `;
 
-    <div class="rounded-2xl border !border-yellow-300/35 !bg-yellow-400/18 px-4 py-4 text-xs space-y-2 leading-6">
-      <p class="!text-[#F8E38A]">⚠ Send only ${res.token} on ${res.network}</p>
-      <p class="!text-[#F8E38A]">⚠ Wrong network may permanently lose funds</p>
-      <p class="!text-[#F8E38A]">⚠ Confirm only after payment is sent</p>
-    </div>
+  /* ================= COPY WALLET ================= */
 
-    ${btnGreen('I Have Sent Payment')}
-    ${btnDanger('Cancel')}
+  dynamic.querySelector('.copy-wallet').onclick = (e) => {
+    copyText(res.address, e.currentTarget);
+  };
 
-  </div>
-`;
-
-dynamic.querySelector('.copy-wallet').onclick = (e) => {
-  copyText(res.address, e.currentTarget);
-};
+  /* ================= PAYMENT SENT ================= */
 
   dynamic.querySelector('.continue-btn').onclick = async () => {
-    await window.apiFetch(`/deposit/${res.id}/mark-paid`, {
-      method: 'POST'
-    });
+
+    const btn = dynamic.querySelector('.continue-btn');
+
+    btn.disabled = true;
+    btn.textContent = 'Please wait...';
+
+    /*
+     * IMPORTANT:
+     * Crypto deposits currently return id: null.
+     * Therefore we DO NOT call:
+     *
+     * /deposit/${res.id}/mark-paid
+     *
+     * because that becomes:
+     *
+     * /deposit/null/mark-paid
+     */
 
     dynamic.innerHTML = `
       <div class="space-y-4">
 
         <div class="rounded-2xl border border-[#00D2B1]/30 bg-[#00D2B1]/10 p-5 space-y-3">
-          <p class="text-white font-semibold">Payment Submitted</p>
 
-          <p class="text-white/70 text-sm">
-            Waiting for blockchain confirmation and review.
+          <p class="text-white font-semibold">
+            Payment Submitted
           </p>
 
           <p class="text-white/70 text-sm">
-            Once approved, your balance will update automatically.
+            Waiting for blockchain confirmation.
           </p>
+
+          <p class="text-white/70 text-sm">
+            Once your USDT payment is detected and confirmed, your balance will update automatically.
+          </p>
+
         </div>
 
         ${btnPrimary('Done')}
@@ -950,6 +1035,8 @@ dynamic.querySelector('.copy-wallet').onclick = (e) => {
       render('crypto');
     };
   };
+
+  /* ================= CANCEL ================= */
 
   dynamic.querySelector('.cancel-btn').onclick = () => {
     render('crypto');
@@ -963,19 +1050,30 @@ dynamic.querySelector('.copy-wallet').onclick = (e) => {
           return;
         }
 
-      } catch (err) {
-  console.error('Deposit flow error:', err);
+    } catch (err) {
+      console.error('Deposit flow error:', err);
 
-  btn.disabled = false;
-  btn.textContent = 'Continue';
+      btn.disabled = false;
+      btn.textContent = 'Continue';
 
-  const message =
-    err?.message ||
-    err?.error ||
-    'Deposit failed. Please try again.';
+      const message =
+        err?.message ||
+        err?.error ||
+        'Deposit failed. Please try again.';
 
-  showMessage(message, 'error');
-}
+      const errorBox = document.createElement('div');
+
+      errorBox.className =
+        'mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-300';
+
+      errorBox.textContent = message;
+
+      dynamic.prepend(errorBox);
+
+      setTimeout(() => {
+        errorBox.remove();
+      }, 4000);
+    }
     };
   }
 
@@ -1005,6 +1103,7 @@ function initWithdrawTabs() {
       showToast(msg, type);
       return;
     }
+
     console.log(`[${type}] ${msg}`);
   };
 
@@ -1015,13 +1114,20 @@ function initWithdrawTabs() {
 
   const money = (v) => {
     const n = Number(v);
-    if (!Number.isFinite(n)) return '0.00';
+
+    if (!Number.isFinite(n)) {
+      return '0.00';
+    }
+
     return n.toFixed(2);
   };
 
   const getLiveWallet = () => {
     const wallets = window.getAllWallets?.() || [];
-    return wallets.find(w => w.type === 'REAL') || null;
+
+    return wallets.find(
+      w => w.type === 'LIVE'
+    ) || null;
   };
 
   function field({
@@ -1052,23 +1158,32 @@ function initWithdrawTabs() {
   function warn(lines = []) {
     return `
       <div class="rounded-2xl border border-yellow-300/35 bg-yellow-400/15 px-4 py-4 text-xs space-y-2 leading-6">
-        ${lines.map(t => `<p class="text-[#F8E38A]">⚠ ${t}</p>`).join('')}
+        ${lines
+          .map(t => `<p class="text-[#F8E38A]">⚠ ${t}</p>`)
+          .join('')}
       </div>
     `;
   }
 
   function actionButton(label, cls = '') {
     return `
-      <button class="${cls} w-full h-14 rounded-2xl font-semibold transition active:scale-[.99]">
+      <button
+        type="button"
+        class="${cls} w-full h-14 rounded-2xl font-semibold transition active:scale-[.99]"
+      >
         ${label}
       </button>
     `;
   }
 
   function validateAmount(raw) {
-    const amount = Number(raw);
+    const cleaned = String(raw || '')
+      .trim()
+      .replace(/[$,\s]/g, '');
 
-    if (!raw || !Number.isFinite(amount) || amount <= 0) {
+    const amount = Number(cleaned);
+
+    if (!cleaned || !Number.isFinite(amount) || amount <= 0) {
       toast('Enter a valid amount', 'error');
       return null;
     }
@@ -1079,6 +1194,7 @@ function initWithdrawTabs() {
   function renderSuccess(message) {
     dynamic.innerHTML = `
       <div class="space-y-4">
+
         <div class="rounded-2xl border border-[#00D2B1]/45 bg-[#00D2B1]/12 p-5">
           <p class="text-white text-2xl font-semibold mb-2">
             Request Submitted
@@ -1089,22 +1205,30 @@ function initWithdrawTabs() {
           </p>
         </div>
 
-        <button class="done-btn w-full h-14 rounded-2xl bg-white text-black font-semibold">
+        <button
+          type="button"
+          class="done-btn w-full h-14 rounded-2xl bg-white text-black font-semibold"
+        >
           Done
         </button>
+
       </div>
     `;
 
-    dynamic.querySelector('.done-btn').onclick = async () => {
-      try {
-        await window.loadWallets?.();
-        window.syncWalletsFromGlobal?.();
-        renderDashboard?.();
-        await safeLoadTransactions?.();
-      } catch (_) {}
+    const doneBtn = dynamic.querySelector('.done-btn');
 
-      closeWithdrawModal();
-    };
+    if (doneBtn) {
+      doneBtn.onclick = async () => {
+        try {
+          await window.loadWallets?.();
+          window.syncWalletsFromGlobal?.();
+          renderDashboard?.();
+          await safeLoadTransactions?.();
+        } catch (_) {}
+
+        closeWithdrawModal();
+      };
+    }
   }
 
   async function submitWithdrawal({
@@ -1122,14 +1246,27 @@ function initWithdrawTabs() {
         return;
       }
 
+      const walletId = Number(wallet.id);
+      const withdrawalAmount = Number(amount);
+
+      if (!Number.isFinite(walletId)) {
+        toast('Invalid live wallet', 'error');
+        return;
+      }
+
+      if (!Number.isFinite(withdrawalAmount) || withdrawalAmount <= 0) {
+        toast('Invalid withdrawal amount', 'error');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'Processing...';
 
       await window.apiFetch('/withdrawals', {
         method: 'POST',
         body: {
-          wallet_id: Number(wallet.id),
-          amount_usd: Number(amount),
+          wallet_id: walletId,
+          amount_usd: withdrawalAmount,
           destination,
           method
         }
@@ -1143,12 +1280,12 @@ function initWithdrawTabs() {
 
     } catch (err) {
       console.error('withdrawal error:', err);
+
       btn.disabled = false;
       btn.textContent = label;
 
       toast(
-        err?.message ||
-        'Withdrawal failed',
+        err?.message || 'Withdrawal failed',
         'error'
       );
     }
@@ -1165,8 +1302,14 @@ function initWithdrawTabs() {
         })}
 
         <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-          <p class="text-white/50 text-xs mb-2">Withdrawal Account</p>
-          <p class="text-white text-base font-semibold">Your Verified Bank</p>
+          <p class="text-white/50 text-xs mb-2">
+            Withdrawal Account
+          </p>
+
+          <p class="text-white text-base font-semibold">
+            Your Verified Bank
+          </p>
+
           <p class="text-white/60 text-sm mt-1">
             Funds will be sent to your linked account
           </p>
@@ -1186,9 +1329,12 @@ function initWithdrawTabs() {
       </div>
     `;
 
-    dynamic.querySelector('.continue-btn').onclick = () => {
-      const raw = dynamic.querySelector('.wd-amount').value.trim();
+    const continueBtn = dynamic.querySelector('.continue-btn');
+
+    continueBtn.onclick = () => {
+      const raw = dynamic.querySelector('.wd-amount')?.value || '';
       const amount = validateAmount(raw);
+
       if (!amount) return;
 
       renderBankConfirm(amount);
@@ -1200,9 +1346,17 @@ function initWithdrawTabs() {
       <div class="space-y-4">
 
         <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
-          <p class="text-white/50 text-xs">Bank Withdrawal</p>
-          <p class="text-white text-2xl font-semibold">$${money(amount)}</p>
-          <p class="text-white/60 text-sm">To your verified bank account</p>
+          <p class="text-white/50 text-xs">
+            Bank Withdrawal
+          </p>
+
+          <p class="text-white text-2xl font-semibold">
+            $${money(amount)}
+          </p>
+
+          <p class="text-white/60 text-sm">
+            To your verified bank account
+          </p>
         </div>
 
         ${warn([
@@ -1223,7 +1377,9 @@ function initWithdrawTabs() {
       </div>
     `;
 
-    dynamic.querySelector('.cancel-btn').onclick = renderBank;
+    dynamic.querySelector('.cancel-btn').onclick = () => {
+      renderBank();
+    };
 
     dynamic.querySelector('.submit-btn').onclick = async () => {
       const btn = dynamic.querySelector('.submit-btn');
@@ -1268,19 +1424,23 @@ function initWithdrawTabs() {
       </div>
     `;
 
-    dynamic.querySelector('.continue-btn').onclick = () => {
-      const raw = dynamic.querySelector('.wd-amount').value.trim();
-      const wallet = dynamic.querySelector('.wd-wallet').value.trim();
+    const continueBtn = dynamic.querySelector('.continue-btn');
+
+    continueBtn.onclick = () => {
+      const raw = dynamic.querySelector('.wd-amount')?.value || '';
+      const walletAddress =
+        dynamic.querySelector('.wd-wallet')?.value.trim() || '';
 
       const amount = validateAmount(raw);
+
       if (!amount) return;
 
-      if (!wallet) {
+      if (!walletAddress) {
         toast('Enter wallet address', 'error');
         return;
       }
 
-      renderCryptoConfirm(amount, wallet);
+      renderCryptoConfirm(amount, walletAddress);
     };
   }
 
@@ -1289,10 +1449,23 @@ function initWithdrawTabs() {
       <div class="space-y-4">
 
         <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
-          <p class="text-white/50 text-xs">Crypto Withdrawal</p>
-          <p class="text-white text-2xl font-semibold">$${money(amount)}</p>
-          <p class="text-sky-400 text-sm break-all">${walletAddress}</p>
-          <p class="text-white/60 text-sm">Network: TRC20</p>
+
+          <p class="text-white/50 text-xs">
+            Crypto Withdrawal
+          </p>
+
+          <p class="text-white text-2xl font-semibold">
+            $${money(amount)}
+          </p>
+
+          <p class="text-sky-400 text-sm break-all">
+            ${walletAddress}
+          </p>
+
+          <p class="text-white/60 text-sm">
+            Network: TRC20
+          </p>
+
         </div>
 
         ${warn([
@@ -1313,7 +1486,9 @@ function initWithdrawTabs() {
       </div>
     `;
 
-    dynamic.querySelector('.cancel-btn').onclick = renderCrypto;
+    dynamic.querySelector('.cancel-btn').onclick = () => {
+      renderCrypto();
+    };
 
     dynamic.querySelector('.submit-btn').onclick = async () => {
       const btn = dynamic.querySelector('.submit-btn');
@@ -1329,8 +1504,15 @@ function initWithdrawTabs() {
   }
 
   function render(type) {
-    if (type === 'bank') return renderBank();
-    if (type === 'crypto') return renderCrypto();
+    if (type === 'bank') {
+      renderBank();
+      return;
+    }
+
+    if (type === 'crypto') {
+      renderCrypto();
+      return;
+    }
   }
 
   buttons.forEach(btn => {
@@ -1343,11 +1525,11 @@ function initWithdrawTabs() {
   buttons[0].click();
 }
 
-
 let txLoading = false;
 let lastTxLoad = 0;
 
 async function safeLoadTransactions(filter = 'all') {
+
   const now = Date.now();
 
   if (txLoading) return;
@@ -1359,13 +1541,20 @@ async function safeLoadTransactions(filter = 'all') {
   lastTxLoad = now;
 
   try {
+
     await loadTransactions(filter);
+
   } catch (err) {
+
     console.error('transactions load failed', err);
+
   } finally {
+
     txLoading = false;
+
   }
 }
+
 
 /* ===========================
    TRANSACTIONS TAB SWITCHING
@@ -1473,31 +1662,23 @@ async function loadTransactions(filter = 'all') {
         String(row.type || '').toUpperCase();
 
       let kind = 'transaction';
-      let status = 'COMPLETED';
 
-      if (
-        rawType === 'DEPOSIT_SUCCESS' ||
-        rawType.includes('DEPOSIT')
-      ) {
+      if (rawType.includes('DEPOSIT')) {
         kind = 'deposit';
-      }
-
-      if (
-        rawType === 'WITHDRAWAL' ||
-        rawType.includes('WITHDRAW')
-      ) {
+      } else if (rawType.includes('WITHDRAW')) {
         kind = 'withdrawal';
       }
 
+      const status = 'COMPLETED';
+
       /*
-       * Amount is already signed in transactions.
-       *
-       * Deposit:
-       *   +357
-       *
-       * Withdrawal:
-       *   -23928
-       */
+      * Amount is stored as signed cents:
+      *
+      * DEPOSIT_SUCCESS     → positive
+      * WITHDRAWAL_APPROVED → negative
+      *
+      * The UI applies the correct sign based on kind.
+      */
       const amountCents =
         Number(row.amount_cents || 0);
 
@@ -1762,6 +1943,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderDashboard();
   });
 
+  document.addEventListener('wallets:refresh', () => {
+  window.syncWalletsFromGlobal?.();
+  renderDashboard?.();
+  updateDemoResetVisibility();
+});
 
   // ===========================
   // DASHBOARD REFRESH
